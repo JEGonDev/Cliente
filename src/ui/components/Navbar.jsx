@@ -56,9 +56,9 @@ export const Navbar = () => {
                     </ul>
 
                 </div>
-
-
             ) : ''}
+            <ItemsNavbar link='/login' style='text-white' text='Login' />
+            <ItemsNavbar link='/register' style='text-white' text='Register' />
 
         </nav>
     )
