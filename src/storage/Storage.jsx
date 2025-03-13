@@ -2,27 +2,31 @@ import React from 'react'
 
 export const Storage = {
     get(key) {
-        //obtiene el valor del token o clave
-        const val = window.localStorage.getItem(key)
-        //si no existe el valor retorna null
-        if (!val) {
-            return null
-        }
-        //retorna el valor en formato JSON
-        return JSON.parse(val)       
+      // Obtiene el valor de localStorage
+      const val = window.localStorage.getItem(key);
+  
+      // Si el valor es null o "undefined" (como string), retorna null directamente
+      if (!val || val === "undefined") {
+        return null;
+      }
+  
+      try {
+        return JSON.parse(val);
+      } catch (error) {
+        console.error(`Error al parsear JSON desde localStorage con clave "${key}":`, error);
+        return null; // Retorna null si el JSON es inválido
+      }
     },
     set(key, val) {
-        //almacena el token o clave
-        window.localStorage.setItem(key, JSON.stringify(val));
-},
-remove(key) {
-    //elimina el token o clave
-    window.localStorage.removeItem(key);
-},
-clear() {
-    //elimina todos los tokens o claves
-    window.localStorage.clear();
-}
-}
-export default Storage
+      window.localStorage.setItem(key, JSON.stringify(val));
+    },
+    remove(key) {
+      window.localStorage.removeItem(key);
+    },
+    clear() {
+      window.localStorage.clear();
+    },
+  };
+  
+  export default Storage;
   
