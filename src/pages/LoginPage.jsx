@@ -16,13 +16,28 @@ export const LoginPage = () => {
   const login = async (e) => {
     e.preventDefault();
     const form = { email: email, password: password };
-    const res = await sendRequest('POST', form, '/api/login', '', false);
-    if (res.status == true) {
+  
+    const res = await sendRequest('/login', 'POST', form, '', false);
+    console.log(res)
+  
+    if (res && res.token) {
       Storage.set('authToken', res.token);
       Storage.set('authUser', res.data);
       go('/');
     }
-  }
+  };
+  
+
+  // const login = async (e) => {
+  //   e.preventDefault();
+  //   const form = { email: email, password: password };
+  //   const res = await sendRequest('POST', form, '/login', '', false);
+  //   if (res.status == true) {
+  //     Storage.set('authToken', res.token);
+  //     Storage.set('authUser', res.data);
+  //     go('/');
+  //   }
+  // }
 
   return (
     <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
@@ -39,9 +54,7 @@ export const LoginPage = () => {
             handleChange={(e) => setPassword(e.target.value)} />
         </div>
 
-        <div className="text-center">
-          <a href="/edit-password/:id" className="text-blue text-sm">¿Olvidó su contraseña?</a>
-        </div>
+
         <button
           type="submit"
           className="bg-primary text-white w-full py-2 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
@@ -49,14 +62,18 @@ export const LoginPage = () => {
           <RiDoorOpenLine className="text-lg" />
           Iniciar Sesión
         </button>
-        <div className="text-center text-sm">
-          <span className="text-gray-600">No tienes una cuenta? </span>
-          <Link to="/register" className="flex items-center justify-center gap-1 text-blue-600 hover:text-blue-800 font-semibold inline-block">
-            <RiUserAddFill className="text-lg" />
-            Registrarse
-          </Link>
-        </div>
+
       </form>
+      <div className="text-center text-sm">
+        <span className="text-gray-600">No tienes una cuenta? </span>
+        <Link to="/register" className="flex items-center justify-center gap-1 text-blue-600 hover:text-blue-800 font-semibold inline-block">
+          <RiUserAddFill className="text-lg" />
+          Registrarse
+        </Link>
+      </div>
+      <div className="text-center">
+        <a href="/edit-password/:id" className="text-blue text-sm">¿Olvidó su contraseña?</a>
+      </div>
     </div>
   )
 }
