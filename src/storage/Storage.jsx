@@ -11,7 +11,7 @@ export const Storage = {
         //retorna el valor en formato JSON
         return JSON.parse(val)       
     },
-    Set(key, val) {
+    set(key, val) {
         //almacena el token o clave
         window.localStorage.setItem(key, JSON.stringify(val));
 },

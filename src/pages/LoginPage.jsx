@@ -28,17 +28,7 @@ export const LoginPage = () => {
   };
   
 
-  // const login = async (e) => {
-  //   e.preventDefault();
-  //   const form = { email: email, password: password };
-  //   const res = await sendRequest('POST', form, '/login', '', false);
-  //   if (res.status == true) {
-  //     Storage.set('authToken', res.token);
-  //     Storage.set('authUser', res.data);
-  //     go('/');
-  //   }
-  // }
-
+  
   return (
     <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-bold text-center mb-6">Iniciar Sesion</h2>
