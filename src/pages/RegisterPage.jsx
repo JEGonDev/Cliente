@@ -20,7 +20,7 @@ export const RegisterPage = () => {
 
   const register = async (e) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
+    if (password !== confirmPass) {
       setError('Las contraseñas no coinciden');
       return;
     }
@@ -43,12 +43,12 @@ export const RegisterPage = () => {
         <div className="relative">
           <DivInput type='text' icon={<RiMailLockLine className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />}
             value={lastName} className='form-control' placeholder='Apellido' required='required'
-            handleChange={(e) => setlastName(e.target.value)} />
+            handleChange={(e) => setLastName(e.target.value)} />
         </div>
         <div className="relative">
           <DivInput type='text' icon={<RiUserLine className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />}
             value={username} className='form-control' placeholder='Nombre de Usuario' required='required'
-            handleChange={(e) => setUsername(e.target.value)} />
+            handleChange={(e) => setUserName(e.target.value)} />
         </div>
         <div className="relative">
           <DivInput type='email' icon={<RiMailLockLine className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />}
@@ -63,7 +63,7 @@ export const RegisterPage = () => {
         <div className="relative">
           <DivInput type='password' icon={<RiLockPasswordLine className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />}
             value={confirmPassword} className='form-control' placeholder='Confirmar Contraseña' required='required'
-            handleChange={(e) => setConfirmPassword(e.target.value)} />
+            handleChange={(e) => setConfirmPass(e.target.value)} />
         </div>
         {error && <div className="text-red-500 text-sm">{error}</div>}
 
