@@ -6,21 +6,28 @@ import Storage from '../storage/Storage'
 import { RiMailLockLine } from "react-icons/ri";
 import { RiLockPasswordLine } from "react-icons/ri";
 import { RiDoorOpenLine } from "react-icons/ri";
-import { RiUserAddFill } from "react-icons/ri";
+import { RiUserAddFill, RiUserLine } from "react-icons/ri";
 
 export const RegisterPage = () => {
   const [name, setName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [userName, setUserName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPass, setConfirmPass] = useState('');
+  const [error, setError] = useState('');
   const go = useNavigate();
 
   const register = async (e) => {
     e.preventDefault();
-    const form = { name: name, lastName: lastName, email: email, password: password };
-    const res = await sendRequest('POST', form, '/api/register', '', false);
+    if (password !== confirmPassword) {
+      setError('Las contraseñas no coinciden');
+      return;
+    }
+    const form = { name: name, lastName: lastName, userName: userName, email: email, password: password };
+    const res = await sendRequest('POST', form, '/register', '', false);
     if (res.status == true) {
-      go('/login');
+      go('/');
     }
   }
 
@@ -30,13 +37,18 @@ export const RegisterPage = () => {
       <form onSubmit={register} className="space-y-4">
         <div className="relative">
           <DivInput type='text' icon={<RiMailLockLine className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />}
-            value={name} className='form-control' placeholder='Name' required='required'
+            value={name} className='form-control' placeholder='Nombre' required='required'
             handleChange={(e) => setName(e.target.value)} />
         </div>
         <div className="relative">
           <DivInput type='text' icon={<RiMailLockLine className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />}
-            value={lastName} className='form-control' placeholder='lastName' required='required'
+            value={lastName} className='form-control' placeholder='Apellido' required='required'
             handleChange={(e) => setlastName(e.target.value)} />
+        </div>
+        <div className="relative">
+          <DivInput type='text' icon={<RiUserLine className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />}
+            value={username} className='form-control' placeholder='Nombre de Usuario' required='required'
+            handleChange={(e) => setUsername(e.target.value)} />
         </div>
         <div className="relative">
           <DivInput type='email' icon={<RiMailLockLine className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />}
@@ -48,8 +60,13 @@ export const RegisterPage = () => {
             value={password} className='form-control' placeholder='password' required='required'
             handleChange={(e) => setPassword(e.target.value)} />
         </div>
+        <div className="relative">
+          <DivInput type='password' icon={<RiLockPasswordLine className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />}
+            value={confirmPassword} className='form-control' placeholder='Confirmar Contraseña' required='required'
+            handleChange={(e) => setConfirmPassword(e.target.value)} />
+        </div>
+        {error && <div className="text-red-500 text-sm">{error}</div>}
 
-       
         <button
           type="submit"
           className="bg-primary text-white w-full py-2 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
