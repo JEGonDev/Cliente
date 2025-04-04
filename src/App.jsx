@@ -9,6 +9,7 @@ import { CreatePassword } from "./features/user/pages/CreatePassword"
 import { EditPassword } from "./features/user/pages/EditPassword"
 import { CommunityPage } from "./features/community/pages/CommunityPage"
 import { ProtectedRoutes } from "./ui/components/ProtectedRoutes"
+import Footer from "./ui/layouts/Footer"
 
 export const App = () => {
   return (
@@ -27,6 +28,7 @@ export const App = () => {
             <Route path="/edit-password/:id" element={<EditPassword />} />
           </Route>
         </Routes>
+        <Footer />
       </BrowserRouter>
     </div>
   )
