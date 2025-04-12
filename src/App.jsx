@@ -6,11 +6,12 @@ import { RouterApp } from "./routes/RouterApp"
 
 export const App = () => {
   return (
-    <div>
+    <div className="flex flex-col min-h-screen">
       <Header />
-      <RouterApp />
+      <main className="flex-grow pt-0 pb-0"> {/* Ajusta el padding según la altura del Header/Footer */}
+        <RouterApp />
+      </main>
       <Footer />
-
     </div>
   )
 }
