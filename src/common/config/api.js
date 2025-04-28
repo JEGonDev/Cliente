@@ -5,7 +5,7 @@ import axios from 'axios';
 //    - timeout: tiempo máximo de espera (ms)
 //    - headers: headers por defecto para todas las peticiones
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
+  baseURL: import.meta.env.VITE_API_URL,
   timeout: 8000,
   headers: {
     'Content-Type': 'application/json',  // Enviamos siempre JSON
