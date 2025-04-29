@@ -6,10 +6,10 @@ export const authService = {
   register: async (userData) => {
     try {
       const response = await API.post('/auth/register', userData);
-      const { token, user } = response.data;
-      // Almacenamos token y datos del usuario
+      const { token } = response.data;
+      // Almacenamos token
       localStorage.setItem('jwtToken', token);
-      return { token, user };
+      return { token };
     } catch (error) {
       console.error('Error durante el registro:', error);
       throw error;
@@ -44,10 +44,10 @@ export const authService = {
   login: async (credentials) => {
     try {
       const response = await API.post('/auth/login', credentials);
-      const { token, user } = response.data;
+      const { token } = response.data;
       // Almacena el JWT en localStorage
       localStorage.setItem('jwtToken', token);
-      return { token, user };
+      return { token };
     } catch (error) {
       console.error('Error durante el login:', error);
       throw error;
@@ -57,7 +57,6 @@ export const authService = {
   // Logout: borra el JWT y la sesión
   logout: () => {
     localStorage.removeItem('jwtToken');
-    localStorage.removeItem('user');
   },
 
   // Comprueba si hay sesión activa
