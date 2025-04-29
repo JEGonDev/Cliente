@@ -4,7 +4,7 @@ import axios from 'axios';
 //    - baseURL: punto de entrada de tu backend (configurable vía .env)
 //    - timeout: tiempo máximo de espera (ms)
 //    - headers: headers por defecto para todas las peticiones
-const API = axios.create({
+export const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   timeout: 8000,
   headers: {
@@ -52,7 +52,3 @@ API.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-// 👉 Exportamos la instancia para usarla en toda tu app:
-//    import API from './api'; API.get('/ruta')…
-export default API;

@@ -1,8 +1,7 @@
-import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { HomePage } from "../pages/HomePage"
-import { LoginPage } from "../pages/LoginPage"
-import { RegisterPage } from "../pages/RegisterPage"
+import { LoginPage } from "../features/authentication/pages/LoginPage"
+import { RegisterPage } from "../features/authentication/pages/RegisterPage"
 import { NotFoundPage } from "../pages/NotFoundPage"
 import { CreatePassword } from "../features/user/pages/CreatePassword"
 import { EditPassword } from "../features/user/pages/EditPassword"
