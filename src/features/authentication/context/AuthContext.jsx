@@ -1,4 +1,3 @@
-// src/context/AuthContext.jsx
 import { createContext, useState, useEffect } from 'react';
 import { authService } from '../services/authService';
 
@@ -19,12 +18,15 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => authService.getCurrentUser());
   // Estado de autenticación (si hay token)
   const [isAuthenticated, setIsAuthenticated] = useState(authService.isAuthenticated());
+  // Estado de rol administrador como booleano
+  const [isAdmin, setIsAdmin] = useState(authService.isAdmin());
 
   // Al montar, sincronizamos el estado si ya existía sesión
   useEffect(() => {
     if (authService.isAuthenticated()) {
       setUser(authService.getCurrentUser());
       setIsAuthenticated(true);
+      setIsAdmin(authService.isAdmin());
     }
   }, []);
 
@@ -33,6 +35,7 @@ export const AuthProvider = ({ children }) => {
     const { user: loggedUser } = await authService.login(credentials);
     setUser(loggedUser);
     setIsAuthenticated(true);
+    setIsAdmin(authService.isAdmin());
     return loggedUser;
   };
 
@@ -40,6 +43,7 @@ export const AuthProvider = ({ children }) => {
     const { user: newUser } = await authService.register(userData);
     setUser(newUser);
     setIsAuthenticated(true);
+    setIsAdmin(authService.isAdmin());
     return newUser;
   };
 
@@ -53,9 +57,8 @@ export const AuthProvider = ({ children }) => {
     authService.logout();
     setUser(null);
     setIsAuthenticated(false);
+    setIsAdmin(false);
   };
-
-  const isAdmin = () => authService.isAdmin();
 
   // Lo que exponemos a componentes consumidores
   return (
