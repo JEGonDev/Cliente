@@ -1,41 +1,44 @@
-// src/pages/LoginPage.jsx
-import { useState, useContext } from 'react';
+import { Link } from 'react-router-dom';
 import DivInput from '../../../ui/components/DivInput';
-import { useNavigate, Link } from 'react-router-dom';
-import { AuthContext } from '../../../features/authentication/context/AuthContext';
-import { RiUserLine, RiEyeLine, RiEyeOffLine, RiLockPasswordLine, RiDoorOpenLine, RiUserAddFill } from 'react-icons/ri';
+import { useLoginForm } from '../../../features/authentication/hooks/useLoginForm';
+import { 
+  RiUserLine, 
+  RiEyeLine, 
+  RiEyeOffLine, 
+  RiLockPasswordLine, 
+  RiDoorOpenLine, 
+  RiUserAddFill 
+} from 'react-icons/ri';
 
+/**
+ * Componente de página de login
+ * Utiliza el custom hook useLoginForm para manejar toda la lógica
+ * y se enfoca principalmente en la presentación (UI)
+ */
 export const LoginPage = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  // Cambiamos email por username
-  const [credentials, setCredentials] = useState({ username: '', password: '' });
-  const { login } = useContext(AuthContext);
-  const navigate = useNavigate();
-
-  const handleChange = e => {
-    setCredentials({ ...credentials, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async e => {
-    e.preventDefault();
-    try {
-      await login(credentials);
-      navigate('/'); // redirige al home/dashboard
-    } catch (err) {
-      setError(err.response?.data?.message || 'Credenciales inválidas');
-    }
-  };
+  // Extraemos todos los estados y métodos del hook
+  const {
+    credentials,
+    showPassword,
+    error,
+    setShowPassword,
+    handleChange,
+    handleSubmit
+  } = useLoginForm();
 
   return (
     <div className="p-6 max-w-sm mx-auto bg-white shadow-md rounded-md">
       <h2 className="text-2xl font-bold text-center mb-6">Iniciar Sesión</h2>
+      
+      {/* Muestra mensajes de error si existen */}
       {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
+      
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Campo de usuario */}
         <div className="relative">
           <DivInput
-            name="username"                   // nombre cambiado a username
-            type="text"                       // tipo text
+            name="username"
+            type="text"
             icon={<RiUserLine className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />}
             value={credentials.username}
             placeholder="Usuario"
@@ -43,6 +46,8 @@ export const LoginPage = () => {
             handleChange={handleChange}
           />
         </div>
+        
+        {/* Campo de contraseña con botón para mostrar/ocultar */}
         <div className="relative">
           <DivInput
             name="password"
@@ -61,6 +66,8 @@ export const LoginPage = () => {
             {showPassword ? <RiEyeOffLine /> : <RiEyeLine />}
           </button>
         </div>
+        
+        {/* Botón de envío */}
         <button
           type="submit"
           className="bg-primary text-white w-full py-2 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
@@ -69,6 +76,8 @@ export const LoginPage = () => {
           Iniciar Sesión
         </button>
       </form>
+      
+      {/* Enlace a registro */}
       <p className="text-center text-sm mt-4">
         ¿No tienes cuenta?{' '}
         <Link to="/register" className="text-primary font-semibold hover:text-secondary inline-flex items-center gap-1">
