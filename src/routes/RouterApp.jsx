@@ -15,7 +15,7 @@ export const RouterApp = () => {
     <Route path="/" element={<HomePage />} />
     <Route path="/login" element={<LoginPage />} />
     <Route path="/register" element={<RegisterPage />} />
-    <Route path="/community" element={<CommunityPage />} />
+    <Route path="/comunity" element={<CommunityPage />} />
     <Route path="*" element={<NotFoundPage />} />
     <Route element={<ProtectedRoutes />} >
       <Route path="/create-password" element={<CreatePassword />} />
