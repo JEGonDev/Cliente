@@ -75,5 +75,29 @@ export const authService = {
     const user = authService.getCurrentUser();
     return user && user.authorities && 
           user.authorities.some(auth => auth === 'ADMINISTRADOR');
-  }
+  },
+
+  // Solicitar recuperación de contraseña
+  forgotPassword: async (email) => {
+    try {
+      const response = await API.post('/auth/forgot-password', null, {
+        params: { email }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error al solicitar recuperación de contraseña:', error);
+      throw error;
+    }
+  },
+
+  // Reiniciar contraseña con token
+  resetPassword: async (passwordResetData) => {
+    try {
+      const response = await API.post('/auth/reset-password', passwordResetData);
+      return response.data;
+    } catch (error) {
+      console.error('Error al reiniciar la contraseña:', error);
+      throw error;
+    }
+  },
 };
