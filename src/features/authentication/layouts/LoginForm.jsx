@@ -4,6 +4,7 @@ import { FormButton } from '../../../ui/components/FormButton';
 import { FormLink } from '../../../ui/components/FormLink';
 import { PasswordInput } from '../ui/PasswordInput';
 import { useLoginForm } from '../hooks/useLoginForm';
+import { Link } from 'react-router-dom';
 
 /**
  * Layout de formulario de login que utiliza el custom hook para su lógica
@@ -47,6 +48,12 @@ export const LoginForm = () => {
           text="Iniciar Sesión" 
           icon={<RiDoorOpenLine className="text-lg" />} 
         />
+
+        <div className="text-center mt-2">
+          <Link to="/forgot-password" className="text-sm text-primary hover:text-secondary">
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </div>
       </form>
       
       {/* Enlace a registro */}
