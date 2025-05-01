@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { authService } from '../services/authService';
 
 /**
@@ -15,7 +15,6 @@ export const useResetPasswordForm = () => {
   
   // Estado para los campos del formulario
   const [form, setForm] = useState({
-    token: tokenFromUrl || '',
     newPassword: '',
     confirmPassword: ''
   });
@@ -42,9 +41,9 @@ export const useResetPasswordForm = () => {
    * @returns {boolean} true si es válido, false si no
    */
   const validateForm = () => {
-    // Verificar que se proporcionó un token
-    if (!form.token) {
-      setError('Token de recuperación no válido');
+    // Verificar que se proporcionó un token en la URL
+    if (!tokenFromUrl) {
+      setError('Token de recuperación no válido o expirado');
       return false;
     }
     
@@ -76,7 +75,7 @@ export const useResetPasswordForm = () => {
     try {
       // Preparar datos para la petición
       const resetData = {
-        token: form.token,
+        token: tokenFromUrl,
         newPassword: form.newPassword
       };
       

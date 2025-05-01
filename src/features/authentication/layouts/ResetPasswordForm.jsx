@@ -1,8 +1,7 @@
-import { RiLockPasswordLine, RiArrowLeftLine } from 'react-icons/ri';
+import { RiArrowLeftLine } from 'react-icons/ri';
 import { FormButton } from '../../../ui/components/FormButton';
 import { FormLink } from '../../../ui/components/FormLink';
 import { PasswordInput } from '../ui/PasswordInput';
-import DivInput from '../../../ui/components/DivInput';
 import { useResetPasswordForm } from '../hooks/useResetPasswordForm';
 
 /**
@@ -36,21 +35,6 @@ export const ResetPasswordForm = () => {
           <p className="text-sm text-gray-600 mb-4">
             Ingresa tu nueva contraseña.
           </p>
-          
-          {/* Campo de token (oculto si viene en la URL) */}
-          {!form.token && (
-            <div className="relative">
-              <DivInput
-                name="token"
-                type="text"
-                icon={<RiLockPasswordLine className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />}
-                value={form.token}
-                placeholder="Token de recuperación"
-                required
-                handleChange={handleChange}
-              />
-            </div>
-          )}
           
           {/* Campo de nueva contraseña */}
           <PasswordInput
