@@ -7,6 +7,8 @@ import { CreatePassword } from "../features/user/pages/CreatePassword"
 import { EditPassword } from "../features/user/pages/EditPassword"
 import { CommunityPage } from "../features/community/pages/CommunityPage"
 import { ProtectedRoutes } from "../ui/components/ProtectedRoutes"
+import { EducationPage } from '../features/education/pages/EducationPage'
+
 export const RouterApp = () => {
 
   return (
@@ -20,6 +22,7 @@ export const RouterApp = () => {
     <Route element={<ProtectedRoutes />} >
       <Route path="/create-password" element={<CreatePassword />} />
       <Route path="/edit-password/:id" element={<EditPassword />} />
+      <Route path="/Education" element={<EducationPage/>} />
     </Route>
   </Routes>
   )
