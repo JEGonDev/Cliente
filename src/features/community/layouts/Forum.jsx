@@ -1,7 +1,7 @@
 import React from "react";
 import { useState } from "react";
-import { PostCard } from "../components/PostCard";
-import { MainLayout } from "../layouts/MainLayout";
+import { PostCard } from "../ui/PostCard";
+
 
 const dummyPosts = [
   {
@@ -28,7 +28,7 @@ export const Forum = () => {
   };
 
   return (
-    <MainLayout>
+    
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-4">Foro de Comunidad</h1>
 
@@ -65,6 +65,6 @@ export const Forum = () => {
           ))}
         </div>
       </div>
-    </MainLayout>
+    
   );
 };

@@ -1,4 +1,5 @@
-import { AuthProvider } from './../features/authentication/context/AuthContext';
+import { ContentProvider } from "../features/community/context/ContentContext";
+import { AuthProvider } from "./../features/authentication/context/AuthContext";
 
 /**
  * Componente que envuelve TODOS los providers de contexto de la app.
@@ -7,7 +8,7 @@ import { AuthProvider } from './../features/authentication/context/AuthContext';
 export function AppProviders({ children }) {
   return (
     <AuthProvider>
-      {children}
+      <ContentProvider>{children}</ContentProvider>
     </AuthProvider>
   );
 }

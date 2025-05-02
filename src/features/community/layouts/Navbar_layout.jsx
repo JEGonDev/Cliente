@@ -1,7 +1,7 @@
 import React from "react";
 import { useState } from "react";
 
-export const Navbar_laout = () => {
+export const Navbar_layout = () => {
     const [isNavOpen, setIsNavOpen] = useState(false);
   return (
     <div
