@@ -76,6 +76,20 @@ export const authService = {
     return user && user.authorities && 
           user.authorities.some(auth => auth === 'ADMINISTRADOR');
   },
+  
+  // Comprueba si el usuario actual tiene rol de moderador
+  isModerator: () => {
+    const user = authService.getCurrentUser();
+    return user && user.authorities && 
+          user.authorities.some(auth => auth === 'MODERADOR');
+  },
+  
+  // Comprueba si el usuario actual tiene un rol específico
+  hasRole: (role) => {
+    const user = authService.getCurrentUser();
+    return user && user.authorities && 
+          user.authorities.some(auth => auth === role);
+  },
 
   // Solicitar recuperación de contraseña
   forgotPassword: async (email) => {

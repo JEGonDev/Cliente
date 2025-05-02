@@ -6,6 +6,8 @@ export const AuthContext = createContext({
   user: null,
   isAuthenticated: false,
   isAdmin: false,
+  isModerator: false,
+  hasRole: (role) => false,
   login: async () => {},
   register: async () => {},
   registerAdmin: async () => {},
@@ -20,6 +22,8 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(authService.isAuthenticated());
   // Estado de rol administrador como booleano
   const [isAdmin, setIsAdmin] = useState(authService.isAdmin());
+  // Estado de rol moderador como booleano
+  const [isModerator, setIsModerator] = useState(authService.isModerator());
 
   // Al montar, sincronizamos el estado si ya existía sesión
   useEffect(() => {
@@ -27,8 +31,15 @@ export const AuthProvider = ({ children }) => {
       setUser(authService.getCurrentUser());
       setIsAuthenticated(true);
       setIsAdmin(authService.isAdmin());
+      setIsModerator(authService.isModerator());
     }
   }, []);
+
+  // Función para verificar si el usuario tiene un rol específico
+  const hasRole = (role) => {
+    if (!user || !user.authorities) return false;
+    return user.authorities.includes(role);
+  };
 
   // Funciones que llamarán a authService y actualizarán el contexto
   const login = async (credentials) => {
@@ -36,6 +47,7 @@ export const AuthProvider = ({ children }) => {
     setUser(loggedUser);
     setIsAuthenticated(true);
     setIsAdmin(authService.isAdmin());
+    setIsModerator(authService.isModerator());
     return loggedUser;
   };
 
@@ -44,6 +56,7 @@ export const AuthProvider = ({ children }) => {
     setUser(newUser);
     setIsAuthenticated(true);
     setIsAdmin(authService.isAdmin());
+    setIsModerator(authService.isModerator());
     return newUser;
   };
 
@@ -58,6 +71,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setIsAuthenticated(false);
     setIsAdmin(false);
+    setIsModerator(false);
   };
 
   // Lo que exponemos a componentes consumidores
@@ -67,6 +81,8 @@ export const AuthProvider = ({ children }) => {
         user,
         isAuthenticated,
         isAdmin,
+        isModerator,
+        hasRole,
         login,
         register,
         registerAdmin,
