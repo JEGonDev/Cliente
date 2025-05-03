@@ -1,4 +1,5 @@
 import { ArrowLeft } from 'lucide-react';
+import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 
 /**
@@ -51,4 +52,11 @@ export const ModuleFormLayout = ({
       </div>
     </div>
   );
+};
+ModuleFormLayout.propTypes = {
+  children: PropTypes.node.isRequired,
+  title: PropTypes.string.isRequired,
+  submitText: PropTypes.string,
+  onSubmit: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired,
 };
