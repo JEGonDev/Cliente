@@ -7,10 +7,13 @@ import monitoreo from '../assets/homePage/monitoreo.png';
 import userI from '../assets/homePage/usuario1.png';
 import userII from '../assets/homePage/usuario2.png';
 import userIII from '../assets/homePage/usuario3.png';
+import { Header } from '../ui/layouts/Header';
 
 export const HomePage = () => {
   return (
     <div className="font-sans">
+      {/* Header Section */}
+      <Header />
       {/* Hero Section */}
       <div className="w-full bg-white py-12 px-32 flex flex-col md:flex-row items-center justify-between border-b border-gray-200">
         <div className="md:w-1/2 space-y-4 pr-4">
