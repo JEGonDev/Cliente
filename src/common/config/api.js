@@ -12,6 +12,8 @@ export const API = axios.create({
     'Accept': 'application/json'         // Esperamos recibir JSON
   }
 });
+console.log(`[API] baseURL: ${import.meta.env.VITE_API_URL}`);
+
 
 // Interceptor de petición: se ejecuta ANTES de cada llamada.
 // Aquí añadimos el token JWT al header Authorization si existe.
