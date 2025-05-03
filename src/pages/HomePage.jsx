@@ -1,4 +1,3 @@
-import React from 'react';
 import cultivador from '../assets/homePage/cultivador.jpeg';
 import cultivo from '../assets/homePage/cultivo.jpeg';
 import educacion from '../assets/homePage/educacion.png';
