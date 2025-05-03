@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -34,4 +35,11 @@ export const ModuleDetailLayout = ({ children, moduleTitle, actions }) => {
       </div>
     </div>
   );
+};
+
+//Validacion de props
+ModuleDetailLayout.propTypes = {
+  children: PropTypes.node.isRequired,       // Los hijos son obligatorios
+  moduleTitle: PropTypes.string.isRequired,  // El título del módulo es obligatorio
+  actions: PropTypes.node,                   // Las acciones son opcionales
 };

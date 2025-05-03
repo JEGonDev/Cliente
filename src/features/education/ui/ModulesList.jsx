@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import { ModuleCard } from './components/ModuleCard';
 
 /**
@@ -31,4 +32,21 @@ export const ModulesList = ({
       ))}
     </div>
   );
+};
+// Validación de props
+ModulesList.propTypes = {
+  modules: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      title: PropTypes.string.isRequired,
+      tags: PropTypes.arrayOf(PropTypes.string),
+      videosCount: PropTypes.number,
+      articlesCount: PropTypes.number,
+      guidesCount: PropTypes.number,
+    })
+  ).isRequired,
+  isAdmin: PropTypes.bool,
+  isSelectable: PropTypes.bool,
+  onSelectModule: PropTypes.func,
+  selectedModules: PropTypes.arrayOf(PropTypes.string),
 };

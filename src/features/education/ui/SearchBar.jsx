@@ -1,8 +1,8 @@
 import { Search } from 'lucide-react';
+import PropTypes from 'prop-types';
 
 /**
  * Barra de búsqueda para módulos educativos
- * 
  * @param {Object} props - Propiedades del componente
  * @param {string} props.value - Valor actual del input
  * @param {Function} props.onChange - Función para manejar cambios
@@ -21,4 +21,11 @@ export const SearchBar = ({ value, onChange, placeholder = 'Buscar' }) => {
       <Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
     </div>
   );
+};
+
+//Validacion de props
+SearchBar.propTypes = {
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  placeholder: PropTypes.string,
 };

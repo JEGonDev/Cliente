@@ -1,4 +1,4 @@
-
+import PropTypes from 'prop-types';
 /**
  * Etiqueta para filtrado de módulos
  * 
@@ -20,4 +20,11 @@ export const FilterTag = ({ text, active = false, onClick }) => {
       #{text}
     </button>
   );
+};
+
+//Validacion de props 
+FilterTag.propTypes = {
+  text: PropTypes.string.isRequired,
+  active: PropTypes.bool,
+  onClick: PropTypes.func.isRequired
 };

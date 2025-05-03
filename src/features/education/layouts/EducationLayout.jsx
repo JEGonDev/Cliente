@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 /**
  * Layout base para la sección educativa
  * Proporciona una estructura común para todas las páginas del módulo
@@ -19,11 +20,17 @@ export const EducationLayout = ({ children, title, actions }) => {
             </div>
           )}
         </div>
-        
+  
         <div>
           {children}
         </div>
       </div>
     );
   };
-  
+
+  //Validacion de props
+  EducationLayout.propTypes = {
+    children: PropTypes.node.isRequired,  // Los hijos son obligatorios
+    title: PropTypes.string.isRequired,   // El título es obligatorio
+    actions: PropTypes.node,              // Las acciones son opcionales
+  };

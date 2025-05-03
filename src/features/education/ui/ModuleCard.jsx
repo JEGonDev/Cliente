@@ -1,3 +1,5 @@
+
+import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 
 /**
@@ -65,4 +67,19 @@ export const ModuleCard = ({
       </Link>
     </div>
   );
+};
+// Validación de propiedades con PropTypes
+ModuleCard.propTypes = {
+  module: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
+    tags: PropTypes.arrayOf(PropTypes.string),
+    videosCount: PropTypes.number,
+    articlesCount: PropTypes.number,
+    guidesCount: PropTypes.number,
+  }).isRequired,
+  isAdmin: PropTypes.bool,
+  isSelectable: PropTypes.bool,
+  onSelect: PropTypes.func,
+  isSelected: PropTypes.bool,
 };

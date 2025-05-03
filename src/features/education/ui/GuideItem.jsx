@@ -1,5 +1,4 @@
-import { Link } from 'react-router-dom';
-
+import PropTypes from 'prop-types';
 /**
  * Componente para mostrar una guía en la vista de detalle de módulo
  * 
@@ -30,4 +29,16 @@ export const GuideItem = ({ guide, index, isAdmin = false }) => {
       )}
     </div>
   );
+};
+
+//validacion de props
+GuideItem.propTypes = {
+  guide: PropTypes.shape({
+    id: PropTypes.string.isRequired, // El ID único de la guía (string, obligatorio)
+    description: PropTypes.string,    // Una descripción breve de la guía (string, opcional)
+    image: PropTypes.string,          // La URL o ruta de la imagen de la guía (string, opcional)
+    // ... añade comentarios para cualquier otra propiedad que tenga 'guide'
+  }).isRequired, // Los datos de la guía son un objeto con la estructura definida y son obligatorios
+  index: PropTypes.number.isRequired, // El índice o número de la guía (number, obligatorio)
+  isAdmin: PropTypes.bool,            // Indica si la vista está en modo administrador (boolean, opcional, por defecto es false)
 };

@@ -1,5 +1,5 @@
 import { ModulesList } from './ModulesList';
-
+import PropTypes from 'prop-types';
 /**
  * Componente para la administración de módulos educativos
  * Permite crear, modificar y eliminar módulos
@@ -32,4 +32,9 @@ export const AdminModules = ({ modules = [] }) => {
       />
     </div>
   );
+};
+
+//Validacion de props
+AdminModules.propTypes = {
+  modules: PropTypes.arrayOf(PropTypes.object), // Un array de objetos (módulos), opcional (tiene valor por defecto)
 };

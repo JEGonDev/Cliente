@@ -1,4 +1,5 @@
 import { Play } from 'lucide-react';
+import PropTypes from 'prop-types';
 
 /**
  * Componente para mostrar un video en la vista de detalle de módulo
@@ -33,4 +34,13 @@ export const VideoItem = ({ video, isAdmin = false }) => {
       )}
     </div>
   );
+};
+//validacion de Props
+VideoItem.propTypes = {
+  video: PropTypes.shape({
+    title: PropTypes.string,
+    thumbnail: PropTypes.string,
+    // ... añade aquí otras propiedades que tenga tu objeto 'video'
+  }).isRequired,
+  isAdmin: PropTypes.bool,
 };

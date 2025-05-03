@@ -1,4 +1,5 @@
-/**
+import PropTypes from 'prop-types';
+/*
  * Componente para mostrar contadores de contenido (videos, artículos, guías)
  * 
  * @param {Object} props - Propiedades del componente
@@ -16,4 +17,11 @@ export const ContentCounter = ({ videos = 0, articles = 0, guides = 0 }) => {
       <span>{guides} Guías</span>
     </div>
   );
+};
+
+//Validacion de props
+ContentCounter.propTypes = {
+  videos: PropTypes.number,
+  articles: PropTypes.number,
+  guides: PropTypes.number
 };
