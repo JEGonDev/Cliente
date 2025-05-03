@@ -1,11 +1,12 @@
-import React from 'react'
-import { Storage } from '../../storage/Storage'
+import { Storage } from '../../storage/Storage';
 import { Navigate, Outlet } from 'react-router-dom';
 
-export const ProtectedRoutes = ({ children}) => {
-    const authUser = Storage.get('authUser');
+export const ProtectedRoutes = () => {
+  const authUser = Storage.get('authUser');
+
   if (!authUser) {
-    return <Navigate to='/login' />
+    return <Navigate to="/login" replace />;
   }
-  return <Outlet />
-}
+
+  return <Outlet />;
+};

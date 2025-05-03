@@ -1,5 +1,5 @@
 import { EducationLayout } from '../layouts/EducationLayout';
-import { ModulesList } from '../components/ModulesList';
+import { ModulesList } from '../ui/ModulesList';
 
 export const DeleteModulePage = () => {
   return (

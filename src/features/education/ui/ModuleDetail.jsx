@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
-import { ContentCounter } from './components/ContentCounter';
-import { ArticleItem } from './components/ArticleItem';
-import { GuideItem } from './components/GuideItem';
-import { VideoItem } from './components/VideoItem';
+import { ContentCounter } from './ContentCounter.jsx';
+import { GuideItem } from './GuideItem.jsx';
+import { VideoItem } from './VideoItem.jsx';
+import { ArticleItem } from './ArticleItem.jsx';
 
 /**
  * Componente para mostrar el detalle de un módulo educativo

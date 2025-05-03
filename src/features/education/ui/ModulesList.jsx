@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
-import { ModuleCard } from './components/ModuleCard';
+import { ModuleCard } from './ModuleCard';
+
 
 /**
  * Componente para mostrar una lista de módulos educativos en formato grid

@@ -1,6 +1,6 @@
 import { EducationLayout } from '../layouts/EducationLayout';
-import { ModulesList } from '../ui/ModulesList';
 import { ModuleFilters } from '../ui/ModuleFilters';
+import { ModulesList } from '../ui/ModulesList';
 
 /**
  * Página principal del módulo educativo
