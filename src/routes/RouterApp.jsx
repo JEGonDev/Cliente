@@ -10,7 +10,7 @@ import { ResetPasswordPage } from "../features/authentication/pages/ResetPasswor
 // Importaciones del modulo de comunidad
 import { CommunityPage } from "../features/community/pages/CommunityPage";
 // Importaciones de módulo educativo
-import { EducationPage } from "../features/education/pages/EducationPage";
+import { EducationPage } from '../pages/EducationPage';
 
 export const RouterApp = () => {
   return (
