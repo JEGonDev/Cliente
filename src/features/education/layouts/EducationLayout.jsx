@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import { Header } from '../../../ui/layouts/Header';
-import { SidebarLayout } from './SidebarLayout';
+import { SidebarLayout } from './SidebarLayout ';
 import { FilterSidebarLayout } from './FilterSidebarLayout';
 import { SearchBar } from '../ui/SearchBar';
 
