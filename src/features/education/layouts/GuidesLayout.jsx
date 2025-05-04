@@ -31,7 +31,7 @@ export const GuidesLayout = ({ guides = [] }) => {
 };
 
 // Validación de propiedades
-GuidesSection.propTypes = {
+GuidesLayout.propTypes = {
   guides: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
@@ -39,5 +39,7 @@ GuidesSection.propTypes = {
       description: PropTypes.string.isRequired,
       imageUrl: PropTypes.string
     })
+    
   )
 };
+

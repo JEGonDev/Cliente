@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { ArticleItem } from './../ui/ArticleItem';
+import { ArticleItem } from './ArticleItem';
 
 /**
  * Sección que muestra artículos recomendados
@@ -7,7 +7,7 @@ import { ArticleItem } from './../ui/ArticleItem';
  * @param {Object} props - Propiedades del componente
  * @param {Array} props.articles - Lista de artículos a mostrar
  */
-export const ArticlesLayout = ({ articles = [] }) => {
+export const ArticlesSection = ({ articles = [] }) => {
   // Si no hay artículos, mostrar una sección vacía
   if (articles.length === 0) {
     return null;
@@ -27,7 +27,7 @@ export const ArticlesLayout = ({ articles = [] }) => {
 };
 
 // Validación de propiedades
-ArticlesLayout.propTypes = {
+ArticlesSection.propTypes = {
   articles: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,

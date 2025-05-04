@@ -27,7 +27,7 @@ export const VideosLayout = ({ videos = [] }) => {
 };
 
 // Validación de propiedades
-VideosSection.propTypes = {
+VideosLayout.propTypes = {
   videos: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,

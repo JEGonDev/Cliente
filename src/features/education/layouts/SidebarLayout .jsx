@@ -22,7 +22,7 @@ export const SidebarLayout = ({
   ];
   
   return (
-    <aside className="w-16 bg-gray-100 border-r border-gray-300 flex flex-col items-center">
+    <aside className="w-35 bg-gray-100 border-r border-gray-300 flex flex-col items-center p-4">
       {icons.map(({ id, Icon, label }) => (
         <SidebarIcon
           key={id}
