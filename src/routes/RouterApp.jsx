@@ -23,10 +23,12 @@ export const RouterApp = () => {
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="*" element={<NotFoundPage />} />
+      {/* Estas rutas deberan ser agregadas en rutas protegidas mas adelante */}
+      <Route path="/education" element={<EducationPage />} />
+      <Route path="/community" element={<CommunityPage />} />
       {/* Rutas protegidas: */}
       <Route element={<ProtectedRoutes />} >
-        <Route path="/community" element={<CommunityPage />} />
-        <Route path="/education" element={<EducationPage />} />
+        {/* Aqui van las rutas protegidas */}
       </Route>
   </Routes>
   )
