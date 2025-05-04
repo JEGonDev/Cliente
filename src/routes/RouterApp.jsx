@@ -11,6 +11,7 @@ import { ResetPasswordPage } from "../features/authentication/pages/ResetPasswor
 import { CommunityPage } from "../features/community/pages/CommunityPage";
 // Importaciones de módulo educativo
 import { EducationPage } from '../pages/EducationPage';
+import { ModuleDetailPage } from '../features/education/pages/ModuleDetailPage';
 
 export const RouterApp = () => {
   return (
@@ -25,6 +26,7 @@ export const RouterApp = () => {
       <Route path="*" element={<NotFoundPage />} />
       {/* Estas rutas deberan ser agregadas en rutas protegidas mas adelante */}
       <Route path="/education" element={<EducationPage />} />
+      <Route path="/education/module" element={<ModuleDetailPage />} />
       <Route path="/community" element={<CommunityPage />} />
       {/* Rutas protegidas: */}
       <Route element={<ProtectedRoutes />} >

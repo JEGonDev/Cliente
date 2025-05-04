@@ -1,4 +1,4 @@
-import React from "react";
+
 import imgLogo from "../../assets/header/logo2.png"; // Importa la imagen del logo
 import { MobileMenuButton } from "../components/MobileMenuButton"; // Botón para abrir el menú móvil
 import { MobileNavigation } from "../components/MobileNavigation"; // Componente para la navegación en dispositivos móviles
