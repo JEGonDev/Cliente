@@ -87,19 +87,20 @@ export const ModuleDetailPage = () => {
     <>
       <Header />
       <div className="flex">
+
         {/* Aquí agregamos el SidebarLayout con un manejo del icono activo */}
         <SidebarLayout activeIcon="settings" onIconClick={(id) => console.log(id)} />
-  
+
         <ModuleDetailLayout>
           {/* Encabezado del módulo */}
-        
+
           {/* Estadísticas de contenido */}
-          <ModuleContentStats 
+          <ModuleContentStats
             videoCount={moduleData.videos.length}
             articleCount={moduleData.articles.length}
             guideCount={moduleData.guides.length}
           />
-          
+
           {/* Secciones de contenido */}
           <ArticlesLayout articles={moduleData.articles} />
           <GuidesLayout guides={moduleData.guides} />
@@ -107,4 +108,5 @@ export const ModuleDetailPage = () => {
         </ModuleDetailLayout>
       </div>
     </>
-  );}
+  );
+}
