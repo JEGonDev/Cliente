@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import { ArticleItem } from './../ui/ArticleItem';
 
+
 /**
  * Sección que muestra artículos recomendados
  * 
@@ -22,6 +23,7 @@ export const ArticlesLayout = ({ articles = [] }) => {
           <ArticleItem key={article.id} article={article} />
         ))}
       </div>
+      
     </section>
   );
 };

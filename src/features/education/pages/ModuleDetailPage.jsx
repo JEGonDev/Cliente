@@ -1,5 +1,3 @@
-import { useState, useEffect } from 'react';
-
 import { ModuleDetailLayout } from '../layouts/ModuleDetailLayout';
 import { ModuleContentStats } from '../ui/ModuleContentStats';
 import { ArticlesLayout } from '../layouts/ArticlesLayout';
@@ -7,9 +5,6 @@ import { GuidesLayout } from '../layouts/GuidesLayout';
 import { VideosLayout } from '../layouts/VideosLayout';
 import { Header } from '../../../ui/layouts/Header';
 import { SidebarLayout } from '../layouts/SidebarLayout ';
-
-
-
 /**
  * Página que muestra el detalle completo de un módulo educativo
  * Versión simplificada sin navegación lateral ni header

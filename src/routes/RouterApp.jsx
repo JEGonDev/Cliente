@@ -12,9 +12,15 @@ import { CommunityPage } from "../features/community/pages/CommunityPage";
 // Importaciones de módulo educativo
 import { EducationPage } from '../pages/EducationPage';
 import { ModuleDetailPage } from '../features/education/pages/ModuleDetailPage';
+import { AdminModulesPage } from '../features/education/pages/AdminModulesPage'; 
+import { VideoManagementActions } from '../features/education/pages/VideoManagementActions';
+import { DeleteModulePage } from '../features/education/pages/DeleteModulePage';
+import { EditModulePage } from '../features/education/pages/EditModulePage';
+import { CreateModulePage } from '../features/education/pages/CreateModulePage';
 
 export const RouterApp = () => {
   return (
+
     // Rutas existentes de la aplicacion:
     <Routes>
       {/* Rutas publicas: */}
@@ -24,10 +30,16 @@ export const RouterApp = () => {
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="*" element={<NotFoundPage />} />
+
       {/* Estas rutas deberan ser agregadas en rutas protegidas mas adelante */}
       <Route path="/education" element={<EducationPage />} />
       <Route path="/education/module" element={<ModuleDetailPage />} />
       <Route path="/community" element={<CommunityPage />} />
+      <Route path="/education/admin" element={<AdminModulesPage />} />
+      <Route path="education/ManagementActions" element={<VideoManagementActions/>} />
+      <Route path="education/admindelete" element={<DeleteModulePage/>} />
+      <Route path="education/adminEditPage" element={<EditModulePage/>} />
+      <Route path="education/adminCreateModule" element={<CreateModulePage/>} />
       {/* Rutas protegidas: */}
       <Route element={<ProtectedRoutes />} >
         {/* Aqui van las rutas protegidas */}

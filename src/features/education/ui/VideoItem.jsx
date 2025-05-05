@@ -8,6 +8,8 @@ import { Play } from 'lucide-react';
  * @param {Object} props.video - Datos del video
  */
 export const VideoItem = ({ video }) => {
+  if (!video) return null; // O puedes mostrar un mensaje de error o un loader
+
   const { id, title, thumbnailUrl, duration } = video;
   
   return (
