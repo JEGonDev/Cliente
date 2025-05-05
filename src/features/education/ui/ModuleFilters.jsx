@@ -15,7 +15,7 @@ export const ModuleFilters = ({
   onTagClick = () => {}
 }) => {
   return (
-    <div className="mb-6 lg:hidden">
+    <div className="mb-6">
       <h3 className="text-sm font-medium mb-2">Filtrar por:</h3>
       <div className="flex flex-wrap gap-2">
         {tags.map((tag) => (

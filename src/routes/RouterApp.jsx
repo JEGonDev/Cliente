@@ -12,6 +12,8 @@ import { CommunityPage } from "../features/community/pages/CommunityPage";
 // Importaciones de módulo educativo
 import { EducationPage } from '../pages/EducationPage';
 import { ModuleDetailPage } from '../features/education/pages/ModuleDetailPage';
+import { AdminModulesPage } from '../features/education/pages/AdminModulesPage'; // Asegúrate de la ruta correcta
+
 
 export const RouterApp = () => {
   return (
@@ -28,6 +30,8 @@ export const RouterApp = () => {
       <Route path="/education" element={<EducationPage />} />
       <Route path="/education/module" element={<ModuleDetailPage />} />
       <Route path="/community" element={<CommunityPage />} />
+      <Route path="/education/admin" element={<AdminModulesPage />} />
+      
       {/* Rutas protegidas: */}
       <Route element={<ProtectedRoutes />} >
         {/* Aqui van las rutas protegidas */}
