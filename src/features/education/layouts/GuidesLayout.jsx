@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import { GuideItem } from './../ui/GuideItem';
 
+
 /**
  * Sección que muestra guías descargables
  * 

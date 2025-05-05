@@ -24,25 +24,17 @@ export const AdminModulesPage = () => {
   };
 
   return (
-    <EducationLayout
-      title="Administrar Módulos Educativos"
-      searchValue={searchValue}
-      onSearchChange={handleSearchChange}
-      tags={tags}
-      activeTags={activeTags}
-      onTagClick={handleTagClick}
-      isAdmin={true}
-    >
-    {/* Columna lateral para filtros (visible en pantallas grandes) */}
-<div className=" lg:block lg:col-span-1">
-  <ModuleFilters 
-    tags={tags}
-    activeTags={activeTags}
-    onTagClick={handleTagClick}
-  />
-</div>
+    <EducationLayout>
+      {/* Filtros */}
+      <ModuleFilters 
+        searchValue={searchValue} 
+        onSearchChange={handleSearchChange} 
+        tags={tags} 
+        activeTags={activeTags} 
+        onTagClick={handleTagClick} 
+      />
 
-      {/* ✅ Se mantiene solo AdminModules, que ya incluye ModulesList */}
+      {/* Lista de módulos */}
       <AdminModules modules={modules} />
     </EducationLayout>
   );

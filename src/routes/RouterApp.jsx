@@ -13,6 +13,7 @@ import { CommunityPage } from "../features/community/pages/CommunityPage";
 import { EducationPage } from '../pages/EducationPage';
 import { ModuleDetailPage } from '../features/education/pages/ModuleDetailPage';
 import { AdminModulesPage } from '../features/education/pages/AdminModulesPage'; // Asegúrate de la ruta correcta
+import { AdminDetailPage } from '../features/education/pages/AdminDetailPage';
 
 
 export const RouterApp = () => {
@@ -31,6 +32,7 @@ export const RouterApp = () => {
       <Route path="/education/module" element={<ModuleDetailPage />} />
       <Route path="/community" element={<CommunityPage />} />
       <Route path="/education/admin" element={<AdminModulesPage />} />
+      <Route path="education/adminEdit" element={<AdminDetailPage/>}  />
       
       {/* Rutas protegidas: */}
       <Route element={<ProtectedRoutes />} >
