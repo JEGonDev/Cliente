@@ -22,7 +22,7 @@ export const GuideCard = ({
 
         {/* Imagen debajo de la descripción */}
         {imageUrl && (
-          <div className="w-50 h-48"> 
+          <div className="w-48 h-48"> 
             <img 
               src={imageUrl} 
               alt={title}
