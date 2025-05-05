@@ -32,14 +32,19 @@ export const RouterApp = () => {
       <Route path="*" element={<NotFoundPage />} />
 
       {/* Estas rutas deberan ser agregadas en rutas protegidas mas adelante */}
+
+      {/* Rutas del modulo educativo */}
       <Route path="/education" element={<EducationPage />} />
       <Route path="/education/module" element={<ModuleDetailPage />} />
+      <Route path="/education/moduleAdmin" element={<AdminModulesPage />} />
+      <Route path="/education/managementActions" element={<VideoManagementActions/>} />
+      <Route path="/education/adminDelete" element={<DeleteModulePage/>} />
+      <Route path="/education/adminEditPage" element={<EditModulePage/>} />
+      <Route path="/education/adminCreateModule" element={<CreateModulePage/>} />
+
+      {/* Rutas del modulo de comunidad */}
       <Route path="/community" element={<CommunityPage />} />
-      <Route path="/education/admin" element={<AdminModulesPage />} />
-      <Route path="education/ManagementActions" element={<VideoManagementActions/>} />
-      <Route path="education/admindelete" element={<DeleteModulePage/>} />
-      <Route path="education/adminEditPage" element={<EditModulePage/>} />
-      <Route path="education/adminCreateModule" element={<CreateModulePage/>} />
+
       {/* Rutas protegidas: */}
       <Route element={<ProtectedRoutes />} >
         {/* Aqui van las rutas protegidas */}
