@@ -1,3 +1,4 @@
+import { ProfileProvider } from '../features/profile/context/ProfileContext';
 import { AuthProvider } from './../features/authentication/context/AuthContext';
 import { CommunityProvider } from './../features/community/context/CommunityContext';
 import { ContentProvider } from './../features/community/context/ContentContext';
@@ -9,11 +10,13 @@ import { ContentProvider } from './../features/community/context/ContentContext'
 export function AppProviders({ children }) {
   return (
     <AuthProvider>
-      <CommunityProvider>
-        <ContentProvider>
-          {children}
-        </ContentProvider>
-      </CommunityProvider>
+      <ProfileProvider>
+        <CommunityProvider>
+          <ContentProvider>
+            {children}
+          </ContentProvider>
+        </CommunityProvider>
+      </ProfileProvider>
     </AuthProvider>
   );
 }
