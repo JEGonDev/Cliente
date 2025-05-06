@@ -43,7 +43,7 @@ export const HomeComunity = () => {
       {/* Barra de búsqueda */}
       <SearchBar />
       {/* Contenido principal */}
-      <div className="max-w-xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+      <div className="max-w-full mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
         {posts.map((post) => (
           <div key={post.id} className="border-b border-gray-200 p-4">
             {post.hasImage && post.imageType === "header" && (

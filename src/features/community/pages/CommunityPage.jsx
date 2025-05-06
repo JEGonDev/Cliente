@@ -1,5 +1,6 @@
 import React from "react";
 import { HomeComunity } from "../layouts/HomeComunity";
+import { Forum } from "../layouts/Forum";
 import { Header } from "../../../ui/layouts/Header";
 
 import { useContent } from "../hooks/useContent";
@@ -13,6 +14,8 @@ export const CommunityPage = () => {
     switch (activeContent) {
       case "content1":
         return <HomeComunity />;
+      case "content2":
+        return <Forum />;
 
       default:
         return <HomeComunity />;
@@ -27,7 +30,7 @@ export const CommunityPage = () => {
         {/* Sección 2: Navegación */}
         <Navbar_layout />
         {/* Sección 3: Contenido principal */}
-        <div className="flex-1 p-4">{renderContent()}</div>
+        <div className="flex-1 p-1">{renderContent()}</div>
       </div>
     </>
   );
