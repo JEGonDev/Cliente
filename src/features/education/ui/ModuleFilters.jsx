@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 
 /**
  * Componente que muestra filtros para los módulos educativos.
- * Versión responsiva para pantallas pequeñas.
+ * Versión responsiva para pantallas pequeñas.git
  * 
  * @param {Object} props - Propiedades del componente
  * @param {Array} props.tags - Lista de etiquetas disponibles
@@ -15,7 +15,7 @@ export const ModuleFilters = ({
   onTagClick = () => {}
 }) => {
   return (
-    <div className="mb-6 lg:hidden">
+    <div className="mb-6">
       <h3 className="text-sm font-medium mb-2">Filtrar por:</h3>
       <div className="flex flex-wrap gap-2">
         {tags.map((tag) => (
