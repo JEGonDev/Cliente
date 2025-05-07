@@ -1,5 +1,5 @@
 import { API } from './../../../common/config/api'
-import jwtDecode from 'jwt-decode'
+import {jwtDecode} from 'jwt-decode'
 
 // Objeto con funciones de autenticacion
 export const authService = {
