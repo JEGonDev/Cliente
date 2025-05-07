@@ -1,4 +1,5 @@
 import { API } from './../../../common/config/api'
+import jwtDecode from 'jwt-decode'
 
 // Objeto con funciones de autenticacion
 export const authService = {
@@ -9,6 +10,12 @@ export const authService = {
       const { token } = response.data;
       // Almacenamos token
       localStorage.setItem('jwtToken', token);
+      // Decodificar y almacenar datos del usuario
+      const decodedToken = jwtDecode(token);
+      localStorage.setItem('user', JSON.stringify({
+        username: decodedToken.sub,
+        authorities: [decodedToken.role]
+      }));
       return { token };
     } catch (error) {
       console.error('Error durante el registro:', error);
@@ -47,7 +54,21 @@ export const authService = {
       const { token } = response.data;
       // Almacena el JWT en localStorage
       localStorage.setItem('jwtToken', token);
-      return { token };
+      
+      // Decodificar el token y almacenar información del usuario
+      const decodedToken = jwtDecode(token);
+      localStorage.setItem('user', JSON.stringify({
+        username: decodedToken.sub,
+        authorities: [decodedToken.role]
+      }));
+      
+      return { 
+        token,
+        user: {
+          username: decodedToken.sub,
+          authorities: [decodedToken.role]
+        }
+      };
     } catch (error) {
       console.error('Error durante el login:', error);
       throw error;
@@ -57,11 +78,30 @@ export const authService = {
   // Logout: borra el JWT y la sesión
   logout: () => {
     localStorage.removeItem('jwtToken');
+    localStorage.removeItem('user');
   },
 
   // Comprueba si hay sesión activa
   isAuthenticated: () => {
-    return !!localStorage.getItem('jwtToken');
+    const token = localStorage.getItem('jwtToken');
+    if (!token) return false;
+    
+    try {
+      // Verificar si el token ha expirado
+      const decodedToken = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+      
+      if (decodedToken.exp < currentTime) {
+        // Token expirado, limpiar almacenamiento
+        authService.logout();
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error al verificar token:', error);
+      return false;
+    }
   },
   
   // Obtiene el usuario actual
@@ -89,6 +129,21 @@ export const authService = {
     const user = authService.getCurrentUser();
     return user && user.authorities && 
           user.authorities.some(auth => auth === role);
+  },
+
+  // Obtener el JWT actual (útil para preparar la transición a cookies)
+  getToken: () => {
+    return localStorage.getItem('jwtToken');
+  },
+
+  // Analiza el token JWT sin validarlo
+  parseToken: (token) => {
+    try {
+      return jwtDecode(token);
+    } catch (error) {
+      console.error('Error al parsear token:', error);
+      return null;
+    }
   },
 
   // Solicitar recuperación de contraseña

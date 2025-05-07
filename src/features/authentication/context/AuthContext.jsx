@@ -11,7 +11,8 @@ export const AuthContext = createContext({
   login: async () => {},
   register: async () => {},
   registerAdmin: async () => {},
-  logout: () => {}
+  logout: () => {},
+  roles: [] // Nuevo: lista de roles del usuario
 });
 
 // Proveedor de contexto que encapsula la lógica de autenticación
@@ -24,14 +25,22 @@ export const AuthProvider = ({ children }) => {
   const [isAdmin, setIsAdmin] = useState(authService.isAdmin());
   // Estado de rol moderador como booleano
   const [isModerator, setIsModerator] = useState(authService.isModerator());
+  // Estado para almacenar la lista de roles
+  const [roles, setRoles] = useState([]);
 
   // Al montar, sincronizamos el estado si ya existía sesión
   useEffect(() => {
     if (authService.isAuthenticated()) {
-      setUser(authService.getCurrentUser());
+      const currentUser = authService.getCurrentUser();
+      setUser(currentUser);
       setIsAuthenticated(true);
       setIsAdmin(authService.isAdmin());
       setIsModerator(authService.isModerator());
+      
+      // Actualizar roles
+      if (currentUser && currentUser.authorities) {
+        setRoles(currentUser.authorities);
+      }
     }
   }, []);
 
@@ -43,20 +52,34 @@ export const AuthProvider = ({ children }) => {
 
   // Funciones que llamarán a authService y actualizarán el contexto
   const login = async (credentials) => {
-    const { user: loggedUser } = await authService.login(credentials);
+    const result = await authService.login(credentials);
+    const { user: loggedUser } = result;
     setUser(loggedUser);
     setIsAuthenticated(true);
     setIsAdmin(authService.isAdmin());
     setIsModerator(authService.isModerator());
+    
+    // Actualizar roles
+    if (loggedUser && loggedUser.authorities) {
+      setRoles(loggedUser.authorities);
+    }
+    
     return loggedUser;
   };
 
   const register = async (userData) => {
-    const { user: newUser } = await authService.register(userData);
+    const result = await authService.register(userData);
+    const { user: newUser } = result;
     setUser(newUser);
     setIsAuthenticated(true);
     setIsAdmin(authService.isAdmin());
     setIsModerator(authService.isModerator());
+    
+    // Actualizar roles
+    if (newUser && newUser.authorities) {
+      setRoles(newUser.authorities);
+    }
+    
     return newUser;
   };
 
@@ -72,6 +95,7 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
     setIsAdmin(false);
     setIsModerator(false);
+    setRoles([]);
   };
 
   // Lo que exponemos a componentes consumidores
@@ -83,6 +107,7 @@ export const AuthProvider = ({ children }) => {
         isAdmin,
         isModerator,
         hasRole,
+        roles, // Exponemos los roles
         login,
         register,
         registerAdmin,
