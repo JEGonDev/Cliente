@@ -1,3 +1,4 @@
+import { EducationProvider } from '../features/education/context/EducationContext';
 import { ProfileProvider } from '../features/profile/context/ProfileContext';
 import { AuthProvider } from './../features/authentication/context/AuthContext';
 import { CommunityProvider } from './../features/community/context/CommunityContext';
@@ -12,9 +13,11 @@ export function AppProviders({ children }) {
     <AuthProvider>
       <ProfileProvider>
         <CommunityProvider>
-          <ContentProvider>
-            {children}
-          </ContentProvider>
+          <EducationProvider>
+            <ContentProvider>
+              {children}
+            </ContentProvider>
+          </EducationProvider>
         </CommunityProvider>
       </ProfileProvider>
     </AuthProvider>
