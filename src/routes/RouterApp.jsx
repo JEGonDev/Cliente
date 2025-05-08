@@ -17,7 +17,6 @@ import { VideoManagementActions } from '../features/education/pages/VideoManagem
 import { DeleteModulePage } from '../features/education/pages/DeleteModulePage';
 import { EditModulePage } from '../features/education/pages/EditModulePage';
 import { CreateModulePage } from '../features/education/pages/CreateModulePage';
-import { ProfileEditPage } from '../features/profile/pages/ProfileEditPage';
 
 export const RouterApp = () => {
   return (
@@ -36,12 +35,8 @@ export const RouterApp = () => {
 
       {/* Rutas del modulo educativo */}
       <Route path="/education" element={<EducationPage />} />
-      <Route path="/education/module" element={<ModuleDetailPage />} />
-      <Route path="/education/moduleAdmin" element={<AdminModulesPage />} />
-      <Route path="/education/managementActions" element={<VideoManagementActions/>} />
-      <Route path="/education/adminDelete" element={<DeleteModulePage/>} />
-      <Route path="/education/adminEditPage" element={<EditModulePage/>} />
-      <Route path="/education/adminCreateModule" element={<CreateModulePage/>} />
+      <Route path="/education/module/:moduleId" element={<OpenModulePage />} />
+      <Route path="/education/module-form/:moduleId?" element={<ModuleFormPage />} />
 
       {/* Rutas del modulo de comunidad */}
       <Route path="/community" element={<CommunityPage />} />

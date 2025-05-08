@@ -1,6 +1,7 @@
 import { ArrowLeft } from 'lucide-react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
+import { Button } from '../../../ui/components/Button'; // Importamos nuestro nuevo componente Button
 
 /**
  * Layout para formularios de creación/edición de módulos
@@ -21,38 +22,39 @@ export const ModuleFormLayout = ({
 }) => {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <Link to="/education" className="flex items-center text-blue-600 hover:underline mb-4">
+      <Link to="/education" className="flex items-center text-primary hover:underline mb-4">
         <ArrowLeft className="w-4 h-4 mr-1" />
         <span>Volver a módulos</span>
       </Link>
       
       <div className="bg-white p-6 rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">{title}</h1>
+        <h1 className="text-2xl font-bold text-textFont mb-6">{title}</h1>
         
         <form onSubmit={onSubmit}>
           {children}
           
           <div className="mt-8 flex justify-end gap-4">
-            <button
-              type="button"
+            <Button
+              variant="white"
               onClick={onCancel}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              type="button"
             >
               Cancelar
-            </button>
+            </Button>
             
-            <button
+            <Button
+              variant="primary"
               type="submit"
-              className="px-4 py-2 bg-green-700 text-white rounded-md hover:bg-green-800"
             >
               {submitText}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
     </div>
   );
 };
+
 ModuleFormLayout.propTypes = {
   children: PropTypes.node.isRequired,
   title: PropTypes.string.isRequired,
