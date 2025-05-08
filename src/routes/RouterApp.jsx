@@ -12,11 +12,8 @@ import { CommunityPage } from "../features/community/pages/CommunityPage";
 // Importaciones de módulo educativo
 import { EducationPage } from '../pages/EducationPage';
 import { ModuleDetailPage } from '../features/education/pages/ModuleDetailPage';
-import { AdminModulesPage } from '../features/education/pages/AdminModulesPage'; 
 import { VideoManagementActions } from '../features/education/pages/VideoManagementActions';
-import { DeleteModulePage } from '../features/education/pages/DeleteModulePage';
 import { EditModulePage } from '../features/education/pages/EditModulePage';
-import { CreateModulePage } from '../features/education/pages/CreateModulePage';
 
 export const RouterApp = () => {
   return (
@@ -36,11 +33,8 @@ export const RouterApp = () => {
       {/* Rutas del modulo educativo */}
       <Route path="/education" element={<EducationPage />} />
       <Route path="/education/module" element={<ModuleDetailPage />} />
-      <Route path="/education/moduleAdmin" element={<AdminModulesPage />} />
       <Route path="/education/managementActions" element={<VideoManagementActions/>} />
-      <Route path="/education/adminDelete" element={<DeleteModulePage/>} />
       <Route path="/education/adminEditPage" element={<EditModulePage/>} />
-      <Route path="/education/adminCreateModule" element={<CreateModulePage/>} />
 
       {/* Rutas del modulo de comunidad */}
       <Route path="/community" element={<CommunityPage />} />
