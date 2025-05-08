@@ -7,6 +7,11 @@ export const DesktopNavigation = () => {
     <>
       <div className="hidden lg:flex lg:gap-x-12">
         <ItemsNavbar link="/" style="text-white" text="Inicio" />
+        <ItemsNavbar link="/profile/edit" style="text-white" text="profile" />
+        {/* Aquí puedes agregar más elementos de navegación según sea necesario */}
+      </div>
+      <div className="hidden lg:flex lg:gap-x-12">
+        
         {/* Aquí puedes agregar más elementos de navegación según sea necesario */}
       </div>
 

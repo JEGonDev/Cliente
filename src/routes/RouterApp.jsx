@@ -17,6 +17,7 @@ import { VideoManagementActions } from '../features/education/pages/VideoManagem
 import { DeleteModulePage } from '../features/education/pages/DeleteModulePage';
 import { EditModulePage } from '../features/education/pages/EditModulePage';
 import { CreateModulePage } from '../features/education/pages/CreateModulePage';
+import { ProfileEditPage } from '../features/profile/pages/ProfileEditPage';
 
 export const RouterApp = () => {
   return (
@@ -44,6 +45,11 @@ export const RouterApp = () => {
 
       {/* Rutas del modulo de comunidad */}
       <Route path="/community" element={<CommunityPage />} />
+
+      {/* Rutas del modulo de profile */}
+      <Route path="/profile/edit" element={<ProfileEditPage />} />
+
+     
 
       {/* Rutas protegidas: */}
       <Route element={<ProtectedRoutes />} >
