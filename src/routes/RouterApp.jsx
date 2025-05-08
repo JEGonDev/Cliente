@@ -11,12 +11,15 @@ import { ResetPasswordPage } from "../features/authentication/pages/ResetPasswor
 import { CommunityPage } from "../features/community/pages/CommunityPage";
 // Importaciones de módulo educativo
 import { EducationPage } from '../pages/EducationPage';
+import { OpenModulePage } from '../features/education/pages/OpenModulePage';
+import { ModuleFormPage } from '../features/education/pages/ModuleFormPage';
 import { ModuleDetailPage } from '../features/education/pages/ModuleDetailPage';
 import { AdminModulesPage } from '../features/education/pages/AdminModulesPage'; 
 import { VideoManagementActions } from '../features/education/pages/VideoManagementActions';
 import { DeleteModulePage } from '../features/education/pages/DeleteModulePage';
 import { EditModulePage } from '../features/education/pages/EditModulePage';
 import { CreateModulePage } from '../features/education/pages/CreateModulePage';
+import { ProfileEditPage } from '../features/profile/pages/ProfileEditPage';
 
 export const RouterApp = () => {
   return (
