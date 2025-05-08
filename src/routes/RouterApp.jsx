@@ -12,7 +12,9 @@ import { CommunityPage } from "../features/community/pages/CommunityPage";
 // Importaciones de módulo educativo
 import { EducationPage } from '../pages/EducationPage';
 import { OpenModulePage } from '../features/education/pages/OpenModulePage';
+
 import { ModuleFormPage } from '../features/education/pages/ModuleFormPage';
+import { ProfileEditPage } from '../features/profile/pages/ProfileEditPage';
 
 export const RouterApp = () => {
   return (
@@ -36,6 +38,11 @@ export const RouterApp = () => {
 
       {/* Rutas del modulo de comunidad */}
       <Route path="/community" element={<CommunityPage />} />
+
+      {/* Rutas del modulo de profile */}
+      <Route path="/profile/edit" element={<ProfileEditPage />} />
+
+     
 
       {/* Rutas protegidas: */}
       <Route element={<ProtectedRoutes />} >
