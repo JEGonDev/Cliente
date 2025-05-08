@@ -12,6 +12,7 @@ import { CommunityPage } from "../features/community/pages/CommunityPage";
 // Importaciones de módulo educativo
 import { EducationPage } from '../pages/EducationPage';
 import { OpenModulePage } from '../features/education/pages/OpenModulePage';
+import { ModuleFormPage } from '../features/education/pages/ModuleFormPage';
 
 export const RouterApp = () => {
   return (
@@ -31,6 +32,7 @@ export const RouterApp = () => {
       {/* Rutas del modulo educativo */}
       <Route path="/education" element={<EducationPage />} />
       <Route path="/education/module/:moduleId" element={<OpenModulePage />} />
+      <Route path="/education/module-form/:moduleId?" element={<ModuleFormPage />} />
 
       {/* Rutas del modulo de comunidad */}
       <Route path="/community" element={<CommunityPage />} />
