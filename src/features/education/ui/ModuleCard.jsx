@@ -1,29 +1,19 @@
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 
-/**
- * Componente que representa una tarjeta de módulo educativo.
- * Muestra información como título, etiquetas y contadores de contenido.
- * 
- * @param {Object} props - Propiedades del componente
- * @param {string} props.id - Identificador único del módulo
- * @param {string} propas.title - Título del módulo
- * @param {Array} props.tags - Etiquetas del módulo
- * @param {number} props.videosCount - Número de videos
- * @param {number} props.articlesCount - Número de artículos
- * @param {number} props.guidesCount - Número de guías
- */
 export const ModuleCard = ({ 
   id,
   title, 
-  tags,
-  videosCount,
-  articlesCount,
-  guidesCount
+  tags = [],
+  videosCount = 0,
+  articlesCount = 0,
+  guidesCount = 0,
+  isAdmin = false
 }) => {
   return (
     <Link to={`/education/module/${id}`} className="block">
-      <div className="bg-white p-4 rounded-sm shadow-md hover:shadow-lg transition-shadow">
+      <div className={`p-4 rounded-sm shadow-md hover:shadow-lg transition-shadow 
+        ${isAdmin ? 'bg-green-50 border border-green-100' : 'bg-white'}`}>
         {/* Título del módulo */}
         <h3 className="font-medium mb-2 text-base">{title}</h3>
         
@@ -56,5 +46,6 @@ ModuleCard.propTypes = {
   tags: PropTypes.arrayOf(PropTypes.string),
   videosCount: PropTypes.number,
   articlesCount: PropTypes.number,
-  guidesCount: PropTypes.number
+  guidesCount: PropTypes.number,
+  isAdmin: PropTypes.bool
 };

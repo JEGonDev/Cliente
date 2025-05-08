@@ -11,9 +11,7 @@ import { ResetPasswordPage } from "../features/authentication/pages/ResetPasswor
 import { CommunityPage } from "../features/community/pages/CommunityPage";
 // Importaciones de módulo educativo
 import { EducationPage } from '../pages/EducationPage';
-import { ModuleDetailPage } from '../features/education/pages/ModuleDetailPage';
-import { VideoManagementActions } from '../features/education/pages/VideoManagementActions';
-import { EditModulePage } from '../features/education/pages/EditModulePage';
+import { OpenModulePage } from '../features/education/pages/OpenModulePage';
 
 export const RouterApp = () => {
   return (
@@ -32,9 +30,7 @@ export const RouterApp = () => {
 
       {/* Rutas del modulo educativo */}
       <Route path="/education" element={<EducationPage />} />
-      <Route path="/education/module" element={<ModuleDetailPage />} />
-      <Route path="/education/managementActions" element={<VideoManagementActions/>} />
-      <Route path="/education/adminEditPage" element={<EditModulePage/>} />
+      <Route path="/education/module/:moduleId" element={<OpenModulePage />} />
 
       {/* Rutas del modulo de comunidad */}
       <Route path="/community" element={<CommunityPage />} />
