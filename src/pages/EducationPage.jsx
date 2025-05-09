@@ -4,7 +4,8 @@ import { ModulesList } from '../features/education/ui/ModulesList';
 import { ModuleFilters } from '../features/education/ui/ModuleFilters';
 import { AuthContext } from '../features/authentication/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '../ui/components/Button'; // Importar nuestro nuevo componente
+import { AdminControlPanel } from '../features/education/ui/AdminControlPanel'; 
+import { DeleteModeNotice } from '../features/education/ui/DeleteModeNotice';
 
 export const EducationPage = () => {
   // Obtener información de autenticación y roles
@@ -90,80 +91,48 @@ export const EducationPage = () => {
       searchValue={searchValue}
       onSearchChange={handleSearchChange}
     >
-      {/* Mensaje de instrucción para modo de eliminación */}
-      {isDeleteMode && (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-          <p className="text-yellow-700">
-            Seleccione los módulos que desea eliminar y oprima el botón "Eliminar seleccionados".
-          </p>
-        </div>
-      )}
-      
-      {/* Filtros (solo visibles fuera del modo de eliminación) */}
-      {!isDeleteMode && (
-        <ModuleFilters 
-          tags={tags}
-          activeTags={activeTags}
-          onTagClick={handleTagClick}
-        />
-      )}
-      
-      {/* Lista de módulos */}
-      <ModulesList 
-        modules={modules} 
-        isAdmin={isAdmin}
-        isSelectable={isDeleteMode}
-        selectedModules={selectedModules}
-        onSelectModule={handleSelectModule}
-      />
-      
-      {/* Botones de administración (modo normal) */}
-      {isAdmin && !isDeleteMode && (
-        <div className="flex flex-wrap gap-4 mt-8 justify-center">
-          <Button 
-            variant="primary"
-            size="lg"
-            onClick={handleCreateModule}
-          >
-            Crear módulo
-          </Button>
+      {/* Modo de eliminación */}
+      {isDeleteMode ? (
+        <>
+          <DeleteModeNotice 
+            onCancel={handleCancelDelete}
+            onConfirm={handleConfirmDelete}
+            hasSelected={selectedModules.length > 0}
+          />
           
-          <Button 
-            variant="primary"
-            size="lg"
-            onClick={handleEditModule}
-          >
-            Modificar módulo
-          </Button>
+          <ModulesList 
+            modules={modules} 
+            isAdmin={isAdmin}
+            isSelectable={true}
+            selectedModules={selectedModules}
+            onSelectModule={handleSelectModule}
+          />
+        </>
+      ) : (
+        <>
+          {/* Filtros (solo visibles fuera del modo de eliminación) */}
+          <ModuleFilters 
+            tags={tags}
+            activeTags={activeTags}
+            onTagClick={handleTagClick}
+          />
           
-          <Button 
-            variant="primary"
-            size="lg"
-            onClick={handleEnterDeleteMode}
-          >
-            Eliminar módulo
-          </Button>
-        </div>
-      )}
-      
-      {/* Botones para confirmar/cancelar eliminación (modo eliminación) */}
-      {isAdmin && isDeleteMode && (
-        <div className="flex flex-wrap gap-4 mt-8 justify-center">
-          <Button 
-            variant="white"
-            onClick={handleCancelDelete}
-          >
-            Cancelar
-          </Button>
+          {/* Lista de módulos */}
+          <ModulesList 
+            modules={modules} 
+            isAdmin={isAdmin}
+            isSelectable={false}
+          />
           
-          <Button 
-            variant="danger"
-            onClick={handleConfirmDelete}
-            disabled={selectedModules.length === 0}
-          >
-            Eliminar seleccionados
-          </Button>
-        </div>
+          {/* Botones de administración (modo normal) */}
+          {isAdmin && (
+            <AdminControlPanel 
+              onCreateClick={handleCreateModule}
+              onEditClick={handleEditModule}
+              onDeleteClick={handleEnterDeleteMode}
+            />
+          )}
+        </>
       )}
     </EducationLayout>
   );
