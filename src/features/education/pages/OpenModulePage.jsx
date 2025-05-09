@@ -1,14 +1,15 @@
 import { useContext } from 'react';
 import { useParams } from 'react-router-dom';
 import { ModuleDetailLayout } from '../layouts/ModuleDetailLayout';
-import { ModuleContentStats } from '../ui/ModuleContentStats';
 import { ArticlesLayout } from '../layouts/ArticlesLayout';
 import { GuidesLayout } from '../layouts/GuidesLayout';
 import { VideosLayout } from '../layouts/VideosLayout';
 import { Header } from '../../../ui/layouts/Header';
 import { SidebarLayout } from '../layouts/SidebarLayout ';
 import { AuthContext } from '../../authentication/context/AuthContext';
-import { Button } from '../../../ui/components/Button'; // Importamos el componente Button
+import { Button } from '../../../ui/components/Button';
+import { ModuleHeader } from '../ui/ModuleHeader';
+import { AdminActions } from '../ui/AdminActions';
 
 export const OpenModulePage = () => {
   // Obtener información de autenticación y roles
@@ -28,7 +29,6 @@ export const OpenModulePage = () => {
         author: 'María García',
         date: '10/04/2023'
       },
-      // Otros artículos...
     ],
     guides: [
       {
@@ -37,7 +37,6 @@ export const OpenModulePage = () => {
         description: 'Ya tuve problemas con acumulación de sales en las raíces. Recomiendo revisar los niveles cada dos semanas y monitorear la conductividad eléctrica (EC) para evitar sobre-fertilización.',
         imageUrl: '/api/placeholder/100/100'
       },
-      // Otras guías...
     ],
     videos: [
       {
@@ -46,7 +45,6 @@ export const OpenModulePage = () => {
         thumbnailUrl: '/api/placeholder/300/200',
         duration: '5:34'
       },
-      // Otros videos...
     ]
   };
 
@@ -55,12 +53,36 @@ export const OpenModulePage = () => {
     console.log('Añadir artículo');
   };
 
+  const handleDeleteArticle = () => {
+    console.log('Eliminar artículo');
+  };
+
+  const handleEditArticle = () => {
+    console.log('Editar artículo');
+  };
+
   const handleAddGuide = () => {
     console.log('Añadir guía');
   };
 
+  const handleDeleteGuide = () => {
+    console.log('Eliminar guía');
+  };
+
+  const handleEditGuide = () => {
+    console.log('Editar guía');
+  };
+
   const handleAddVideo = () => {
     console.log('Añadir video');
+  };
+
+  const handleDeleteVideo = () => {
+    console.log('Eliminar video');
+  };
+
+  const handleEditVideo = () => {
+    console.log('Editar video');
   };
 
   return (
@@ -70,7 +92,7 @@ export const OpenModulePage = () => {
         <SidebarLayout activeIcon="settings" onIconClick={(id) => console.log(id)} />
 
         <ModuleDetailLayout>
-          <ModuleContentStats
+          <ModuleHeader 
             videoCount={moduleData.videos.length}
             articleCount={moduleData.articles.length}
             guideCount={moduleData.guides.length}
@@ -81,31 +103,12 @@ export const OpenModulePage = () => {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Artículos que podrían interesarte</h2>
               {isAdmin && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={handleAddArticle}
-                >
-                  Agregar artículo
-                </Button>
-              )}
-              {isAdmin && (
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={handleAddArticle}
-                >
-                  Eliminar artículo
-                </Button>
-              )}
-              {isAdmin && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddArticle}
-                >
-                  Editar artículo
-                </Button>
+                <AdminActions
+                  onAddClick={handleAddArticle}
+                  onDeleteClick={handleDeleteArticle}
+                  onEditClick={handleEditArticle}
+                  resourceType="artículo"
+                />
               )}
             </div>
             <ArticlesLayout articles={moduleData.articles} />
@@ -116,31 +119,12 @@ export const OpenModulePage = () => {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Guías descargables</h2>
               {isAdmin && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={handleAddArticle}
-                >
-                  Agregar guia
-                </Button>
-              )}
-              {isAdmin && (
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={handleAddArticle}
-                >
-                  Eliminar guia
-                </Button>
-              )}
-              {isAdmin && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddArticle}
-                >
-                  Editar guia
-                </Button>
+                <AdminActions
+                  onAddClick={handleAddGuide}
+                  onDeleteClick={handleDeleteGuide}
+                  onEditClick={handleEditGuide}
+                  resourceType="guía"
+                />
               )}
             </div>
             <GuidesLayout guides={moduleData.guides} />
@@ -151,31 +135,12 @@ export const OpenModulePage = () => {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Videos</h2>
               {isAdmin && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={handleAddArticle}
-                >
-                  Agregar video
-                </Button>
-              )}
-              {isAdmin && (
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={handleAddArticle}
-                >
-                  Eliminar video
-                </Button>
-              )}
-              {isAdmin && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddArticle}
-                >
-                  Editar video
-                </Button>
+                <AdminActions
+                  onAddClick={handleAddVideo}
+                  onDeleteClick={handleDeleteVideo}
+                  onEditClick={handleEditVideo}
+                  resourceType="video"
+                />
               )}
             </div>
             <VideosLayout videos={moduleData.videos} />
