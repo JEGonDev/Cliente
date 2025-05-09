@@ -14,6 +14,8 @@ import { EducationPage } from '../pages/EducationPage';
 import { OpenModulePage } from '../features/education/pages/OpenModulePage';
 
 import { ModuleFormPage } from '../features/education/pages/ModuleFormPage';
+// Importaciones del modulo de perfil
+import { ProfileAdminPage } from '../features/profile/pages/ProfileAdminPage';
 import { ProfileEditPage } from '../features/profile/pages/ProfileEditPage';
 
 export const RouterApp = () => {
@@ -41,6 +43,7 @@ export const RouterApp = () => {
 
       {/* Rutas del modulo de profile */}
       <Route path="/profile/edit" element={<ProfileEditPage />} />
+      <Route path="/profile/admin" element={<ProfileAdminPage />} />
 
      
 
