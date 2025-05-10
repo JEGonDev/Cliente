@@ -12,7 +12,7 @@ import { FilterTag } from '../ui/FilterTag';
  * @param {boolean} props.isAdmin - Indica si el usuario es administrador
  */
 export const FilterSidebarLayout = ({
-  tags = ['Principiante', 'Tomate', 'Arracacha', 'Infraestructura', 'Avanzado'],
+  tags = [],
   activeTags = [],
   onTagClick = () => {},
   isAdmin = false
@@ -20,12 +20,12 @@ export const FilterSidebarLayout = ({
   return (
     <aside className="w-64 p-4 hidden lg:block">
       <div className="space-y-2">
-        {tags.map((tag) => (
+        {tags.map((tag, index) => (
           <FilterTag
-            key={tag}
+            key={`sidebar-tag-${index}-${tag}`}
             text={tag}
             active={activeTags.includes(tag)}
-            onClick={() => onTagClick(tag)}
+            onClick={onTagClick}
           />
         ))}
       </div>
@@ -47,12 +47,4 @@ export const FilterSidebarLayout = ({
       )}
     </aside>
   );
-};
-
-// Validación de propiedades
-FilterSidebarLayout.propTypes = {
-  tags: PropTypes.arrayOf(PropTypes.string),
-  activeTags: PropTypes.arrayOf(PropTypes.string),
-  onTagClick: PropTypes.func,
-  isAdmin: PropTypes.bool
 };
