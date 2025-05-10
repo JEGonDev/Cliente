@@ -20,8 +20,8 @@ export const ModuleCard = ({
         {/* Etiquetas */}
         <div className="flex flex-wrap gap-1 mb-2">
           {tags.map((tag, index) => (
-            <span key={index} className="text-xs bg-gray-100 text-gray-800 px-2 py-0.5 rounded">
-              #{tag}
+            <span key={tag.id || index} className="text-xs bg-gray-100 text-gray-800 px-2 py-0.5 rounded">
+              #{typeof tag === 'object' ? tag.name : tag}
             </span>
           ))}
         </div>

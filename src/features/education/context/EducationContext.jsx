@@ -9,113 +9,113 @@ export const EducationContext = createContext({
   module: null,
   loadingModules: false,
   moduleError: null,
-  
+
   // Estado de artículos
   articles: [],
   article: null,
   loadingArticles: false,
   articleError: null,
-  
+
   // Estado de guías
   guides: [],
   guide: null,
   loadingGuides: false,
   guideError: null,
-  
+
   // Estado de tags
   tags: [],
   tag: null,
   loadingTags: false,
   tagError: null,
-  
+
   // Estado de videos
   videos: [],
   video: null,
   loadingVideos: false,
   videoError: null,
-  
+
   // Funciones para módulos
-  fetchAllModules: async () => {},
-  fetchModuleById: async (id) => {},
-  createModule: async (moduleData) => {},
-  updateModule: async (id, updateData) => {},
-  deleteModule: async (id) => {},
-  filterModulesByTags: async (tagIds) => {},
-  
+  fetchAllModules: async () => { },
+  fetchModuleById: async (id) => { },
+  createModule: async (moduleData) => { },
+  updateModule: async (id, updateData) => { },
+  deleteModule: async (id) => { },
+  filterModulesByTags: async (tagIds) => { },
+
   // Funciones para artículos
-  fetchArticlesByModuleId: async (moduleId) => {},
-  fetchArticleById: async (id) => {},
-  createArticle: async (articleData) => {},
-  updateArticle: async (id, updateData) => {},
-  deleteArticle: async (id) => {},
-  
+  fetchArticlesByModuleId: async (moduleId) => { },
+  fetchArticleById: async (id) => { },
+  createArticle: async (articleData) => { },
+  updateArticle: async (id, updateData) => { },
+  deleteArticle: async (id) => { },
+
   // Funciones para guías
-  fetchAllGuides: async () => {},
-  fetchGuidesByModuleId: async (moduleId) => {},
-  fetchGuideById: async (id) => {},
-  createGuide: async (guideData) => {},
-  updateGuide: async (id, updateData) => {},
-  deleteGuide: async (id) => {},
-  
+  fetchAllGuides: async () => { },
+  fetchGuidesByModuleId: async (moduleId) => { },
+  fetchGuideById: async (id) => { },
+  createGuide: async (guideData) => { },
+  updateGuide: async (id, updateData) => { },
+  deleteGuide: async (id) => { },
+
   // Funciones para tags
-  fetchAllTags: async () => {},
-  fetchTagById: async (id) => {},
-  fetchTagByName: async (name) => {},
-  createTag: async (name) => {},
-  updateTag: async (tagData) => {},
-  deleteTag: async (id) => {},
-  getOrCreateTag: async (name) => {},
-  
+  fetchAllTags: async () => { },
+  fetchTagById: async (id) => { },
+  fetchTagByName: async (name) => { },
+  createTag: async (name) => { },
+  updateTag: async (tagData) => { },
+  deleteTag: async (id) => { },
+  getOrCreateTag: async (name) => { },
+
   // Funciones para videos
-  fetchVideosByModuleId: async (moduleId) => {},
-  fetchVideoById: async (id) => {},
-  createVideo: async (videoData) => {},
-  updateVideo: async (id, updateData) => {},
-  deleteVideo: async (id) => {},
-  
+  fetchVideosByModuleId: async (moduleId) => { },
+  fetchVideoById: async (id) => { },
+  createVideo: async (videoData) => { },
+  updateVideo: async (id, updateData) => { },
+  deleteVideo: async (id) => { },
+
   // Funciones de reseteo de estados
-  resetModuleState: () => {},
-  resetArticleState: () => {},
-  resetGuideState: () => {},
-  resetTagState: () => {},
-  resetVideoState: () => {}
+  resetModuleState: () => { },
+  resetArticleState: () => { },
+  resetGuideState: () => { },
+  resetTagState: () => { },
+  resetVideoState: () => { }
 });
 
 // Proveedor de contexto que encapsula la lógica de educación
 export const EducationProvider = ({ children }) => {
   // Accedemos al contexto de autenticación para verificar que el usuario esté autenticado
   const { isAuthenticated } = useContext(AuthContext);
-  
+
   // Estado para módulos
   const [modules, setModules] = useState([]);
   const [module, setModule] = useState(null);
   const [loadingModules, setLoadingModules] = useState(false);
   const [moduleError, setModuleError] = useState(null);
-  
+
   // Estado para artículos
   const [articles, setArticles] = useState([]);
   const [article, setArticle] = useState(null);
   const [loadingArticles, setLoadingArticles] = useState(false);
   const [articleError, setArticleError] = useState(null);
-  
+
   // Estado para guías
   const [guides, setGuides] = useState([]);
   const [guide, setGuide] = useState(null);
   const [loadingGuides, setLoadingGuides] = useState(false);
   const [guideError, setGuideError] = useState(null);
-  
+
   // Estado para tags
   const [tags, setTags] = useState([]);
   const [tag, setTag] = useState(null);
   const [loadingTags, setLoadingTags] = useState(false);
   const [tagError, setTagError] = useState(null);
-  
+
   // Estado para videos
   const [videos, setVideos] = useState([]);
   const [video, setVideo] = useState(null);
   const [loadingVideos, setLoadingVideos] = useState(false);
   const [videoError, setVideoError] = useState(null);
-  
+
   // Efecto para cargar datos iniciales al montar el componente
   useEffect(() => {
     if (isAuthenticated) {
@@ -123,9 +123,9 @@ export const EducationProvider = ({ children }) => {
       fetchAllTags();
     }
   }, [isAuthenticated]);
-  
+
   // ==================== Funciones para módulos especificos ====================
-  
+
   /**
    * Obtiene todos los módulos
    */
@@ -147,17 +147,17 @@ export const EducationProvider = ({ children }) => {
       setLoadingModules(false);
     }
   };
-  
+
   /**
    * Obtiene un módulo por su ID
    * @param {number} id - ID del módulo
    */
   const fetchModuleById = async (id) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingModules(true);
     setModuleError(null);
-    
+
     try {
       const response = await educationService.getModuleById(id);
       setModule(response.data);
@@ -170,17 +170,17 @@ export const EducationProvider = ({ children }) => {
       setLoadingModules(false);
     }
   };
-  
+
   /**
    * Crea un nuevo módulo
    * @param {Object} moduleData - Datos del módulo
    */
   const createModule = async (moduleData) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingModules(true);
     setModuleError(null);
-    
+
     try {
       const response = await educationService.createModule(moduleData);
       // Actualizamos la lista de módulos
@@ -194,7 +194,7 @@ export const EducationProvider = ({ children }) => {
       setLoadingModules(false);
     }
   };
-  
+
   /**
    * Actualiza un módulo existente
    * @param {number} id - ID del módulo
@@ -202,14 +202,14 @@ export const EducationProvider = ({ children }) => {
    */
   const updateModule = async (id, updateData) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingModules(true);
     setModuleError(null);
-    
+
     try {
       const response = await educationService.updateModule(id, updateData);
       // Actualizamos el módulo en la lista
-      setModules(prevModules => 
+      setModules(prevModules =>
         prevModules.map(m => m.id === id ? response.data : m)
       );
       // Si el módulo actual es el que se actualizó, actualizamos también el estado
@@ -225,17 +225,17 @@ export const EducationProvider = ({ children }) => {
       setLoadingModules(false);
     }
   };
-  
+
   /**
    * Elimina un módulo
    * @param {number} id - ID del módulo
    */
   const deleteModule = async (id) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingModules(true);
     setModuleError(null);
-    
+
     try {
       await educationService.deleteModule(id);
       // Eliminamos el módulo de la lista
@@ -253,17 +253,17 @@ export const EducationProvider = ({ children }) => {
       setLoadingModules(false);
     }
   };
-  
+
   /**
    * Filtra módulos por etiquetas
    * @param {Array} tagIds - Lista de IDs de etiquetas
    */
   const filterModulesByTags = async (tagIds) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingModules(true);
     setModuleError(null);
-    
+
     try {
       const response = await educationService.filterModulesByTags(tagIds);
       // No actualizamos el estado general de modules, solo devolvemos el resultado
@@ -276,19 +276,19 @@ export const EducationProvider = ({ children }) => {
       setLoadingModules(false);
     }
   };
-  
+
   // ==================== Funciones para artículos ====================
-  
+
   /**
    * Obtiene artículos por ID de módulo
    * @param {number} moduleId - ID del módulo
    */
   const fetchArticlesByModuleId = async (moduleId) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingArticles(true);
     setArticleError(null);
-    
+
     try {
       const response = await educationService.getArticlesByModuleId(moduleId);
       setArticles(response.data);
@@ -301,17 +301,17 @@ export const EducationProvider = ({ children }) => {
       setLoadingArticles(false);
     }
   };
-  
+
   /**
    * Obtiene un artículo por su ID
    * @param {number} id - ID del artículo
    */
   const fetchArticleById = async (id) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingArticles(true);
     setArticleError(null);
-    
+
     try {
       const response = await educationService.getArticleById(id);
       setArticle(response.data);
@@ -324,17 +324,17 @@ export const EducationProvider = ({ children }) => {
       setLoadingArticles(false);
     }
   };
-  
+
   /**
    * Crea un nuevo artículo
    * @param {Object} articleData - Datos del artículo
    */
   const createArticle = async (articleData) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingArticles(true);
     setArticleError(null);
-    
+
     try {
       const response = await educationService.createArticle(articleData);
       // Actualizamos la lista de artículos
@@ -348,7 +348,7 @@ export const EducationProvider = ({ children }) => {
       setLoadingArticles(false);
     }
   };
-  
+
   /**
    * Actualiza un artículo existente
    * @param {number} id - ID del artículo
@@ -356,14 +356,14 @@ export const EducationProvider = ({ children }) => {
    */
   const updateArticle = async (id, updateData) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingArticles(true);
     setArticleError(null);
-    
+
     try {
       const response = await educationService.updateArticle(id, updateData);
       // Actualizamos el artículo en la lista
-      setArticles(prevArticles => 
+      setArticles(prevArticles =>
         prevArticles.map(a => a.id === id ? response.data : a)
       );
       // Si el artículo actual es el que se actualizó, actualizamos también el estado
@@ -379,17 +379,17 @@ export const EducationProvider = ({ children }) => {
       setLoadingArticles(false);
     }
   };
-  
+
   /**
    * Elimina un artículo
    * @param {number} id - ID del artículo
    */
   const deleteArticle = async (id) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingArticles(true);
     setArticleError(null);
-    
+
     try {
       await educationService.deleteArticle(id);
       // Eliminamos el artículo de la lista
@@ -407,18 +407,18 @@ export const EducationProvider = ({ children }) => {
       setLoadingArticles(false);
     }
   };
-  
+
   // ==================== Funciones para guías ====================
-  
+
   /**
    * Obtiene todas las guías
    */
   const fetchAllGuides = async () => {
     if (!isAuthenticated) return;
-    
+
     setLoadingGuides(true);
     setGuideError(null);
-    
+
     try {
       const response = await educationService.getAllGuides();
       setGuides(response.data);
@@ -431,17 +431,17 @@ export const EducationProvider = ({ children }) => {
       setLoadingGuides(false);
     }
   };
-  
+
   /**
    * Obtiene guías por ID de módulo
    * @param {number} moduleId - ID del módulo
    */
   const fetchGuidesByModuleId = async (moduleId) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingGuides(true);
     setGuideError(null);
-    
+
     try {
       const response = await educationService.getGuidesByModuleId(moduleId);
       setGuides(response.data);
@@ -454,17 +454,17 @@ export const EducationProvider = ({ children }) => {
       setLoadingGuides(false);
     }
   };
-  
+
   /**
    * Obtiene una guía por su ID
    * @param {number} id - ID de la guía
    */
   const fetchGuideById = async (id) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingGuides(true);
     setGuideError(null);
-    
+
     try {
       const response = await educationService.getGuideById(id);
       setGuide(response.data);
@@ -477,17 +477,17 @@ export const EducationProvider = ({ children }) => {
       setLoadingGuides(false);
     }
   };
-  
+
   /**
    * Crea una nueva guía
    * @param {Object} guideData - Datos de la guía (incluido el archivo PDF)
    */
   const createGuide = async (guideData) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingGuides(true);
     setGuideError(null);
-    
+
     try {
       const response = await educationService.createGuide(guideData);
       // Actualizamos la lista de guías
@@ -501,7 +501,7 @@ export const EducationProvider = ({ children }) => {
       setLoadingGuides(false);
     }
   };
-  
+
   /**
    * Actualiza una guía existente
    * @param {number} id - ID de la guía
@@ -509,14 +509,14 @@ export const EducationProvider = ({ children }) => {
    */
   const updateGuide = async (id, updateData) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingGuides(true);
     setGuideError(null);
-    
+
     try {
       const response = await educationService.updateGuide(id, updateData);
       // Actualizamos la guía en la lista
-      setGuides(prevGuides => 
+      setGuides(prevGuides =>
         prevGuides.map(g => g.id === id ? response.data : g)
       );
       // Si la guía actual es la que se actualizó, actualizamos también el estado
@@ -532,17 +532,17 @@ export const EducationProvider = ({ children }) => {
       setLoadingGuides(false);
     }
   };
-  
+
   /**
    * Elimina una guía
    * @param {number} id - ID de la guía
    */
   const deleteGuide = async (id) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingGuides(true);
     setGuideError(null);
-    
+
     try {
       await educationService.deleteGuide(id);
       // Eliminamos la guía de la lista
@@ -560,18 +560,18 @@ export const EducationProvider = ({ children }) => {
       setLoadingGuides(false);
     }
   };
-  
+
   // ==================== Funciones para tags ====================
-  
+
   /**
    * Obtiene todas las etiquetas
    */
   const fetchAllTags = async () => {
     if (!isAuthenticated) return;
-    
+
     setLoadingTags(true);
     setTagError(null);
-    
+
     try {
       const response = await educationService.getAllTags();
       setTags(response.data);
@@ -584,17 +584,17 @@ export const EducationProvider = ({ children }) => {
       setLoadingTags(false);
     }
   };
-  
+
   /**
    * Obtiene una etiqueta por su ID
    * @param {number} id - ID de la etiqueta
    */
   const fetchTagById = async (id) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingTags(true);
     setTagError(null);
-    
+
     try {
       const response = await educationService.getTagById(id);
       setTag(response.data);
@@ -607,17 +607,17 @@ export const EducationProvider = ({ children }) => {
       setLoadingTags(false);
     }
   };
-  
+
   /**
    * Obtiene una etiqueta por su nombre
    * @param {string} name - Nombre de la etiqueta
    */
   const fetchTagByName = async (name) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingTags(true);
     setTagError(null);
-    
+
     try {
       const response = await educationService.getTagByName(name);
       setTag(response.data);
@@ -630,17 +630,17 @@ export const EducationProvider = ({ children }) => {
       setLoadingTags(false);
     }
   };
-  
+
   /**
    * Crea una nueva etiqueta
    * @param {string} name - Nombre de la etiqueta
    */
   const createTag = async (name) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingTags(true);
     setTagError(null);
-    
+
     try {
       const response = await educationService.createTag(name);
       // Actualizamos la lista de etiquetas
@@ -654,21 +654,21 @@ export const EducationProvider = ({ children }) => {
       setLoadingTags(false);
     }
   };
-  
+
   /**
    * Actualiza una etiqueta
    * @param {Object} tagData - Datos de la etiqueta (id, name)
    */
   const updateTag = async (tagData) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingTags(true);
     setTagError(null);
-    
+
     try {
       const response = await educationService.updateTag(tagData);
       // Actualizamos la etiqueta en la lista
-      setTags(prevTags => 
+      setTags(prevTags =>
         prevTags.map(t => t.id === tagData.id ? response.data : t)
       );
       // Si la etiqueta actual es la que se actualizó, actualizamos también el estado
@@ -684,17 +684,17 @@ export const EducationProvider = ({ children }) => {
       setLoadingTags(false);
     }
   };
-  
+
   /**
    * Elimina una etiqueta
    * @param {number} id - ID de la etiqueta
    */
   const deleteTag = async (id) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingTags(true);
     setTagError(null);
-    
+
     try {
       await educationService.deleteTag(id);
       // Eliminamos la etiqueta de la lista
@@ -712,17 +712,17 @@ export const EducationProvider = ({ children }) => {
       setLoadingTags(false);
     }
   };
-  
+
   /**
    * Obtiene o crea una etiqueta
    * @param {string} name - Nombre de la etiqueta
    */
   const getOrCreateTag = async (name) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingTags(true);
     setTagError(null);
-    
+
     try {
       const response = await educationService.getOrCreateTag(name);
       // Si la etiqueta no existía en nuestra lista, la agregamos
@@ -739,19 +739,19 @@ export const EducationProvider = ({ children }) => {
       setLoadingTags(false);
     }
   };
-  
+
   // ==================== Funciones para videos ====================
-  
+
   /**
    * Obtiene videos por ID de módulo
    * @param {number} moduleId - ID del módulo
    */
   const fetchVideosByModuleId = async (moduleId) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingVideos(true);
     setVideoError(null);
-    
+
     try {
       const response = await educationService.getVideosByModuleId(moduleId);
       setVideos(response.data);
@@ -764,17 +764,17 @@ export const EducationProvider = ({ children }) => {
       setLoadingVideos(false);
     }
   };
-  
+
   /**
    * Obtiene un video por su ID
    * @param {number} id - ID del video
    */
   const fetchVideoById = async (id) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingVideos(true);
     setVideoError(null);
-    
+
     try {
       const response = await educationService.getVideoById(id);
       setVideo(response.data);
@@ -787,17 +787,17 @@ export const EducationProvider = ({ children }) => {
       setLoadingVideos(false);
     }
   };
-  
+
   /**
    * Crea un nuevo video
    * @param {Object} videoData - Datos del video
    */
   const createVideo = async (videoData) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingVideos(true);
     setVideoError(null);
-    
+
     try {
       const response = await educationService.createVideo(videoData);
       // Actualizamos la lista de videos
@@ -811,7 +811,7 @@ export const EducationProvider = ({ children }) => {
       setLoadingVideos(false);
     }
   };
-  
+
   /**
    * Actualiza un video existente
    * @param {number} id - ID del video
@@ -819,14 +819,14 @@ export const EducationProvider = ({ children }) => {
    */
   const updateVideo = async (id, updateData) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingVideos(true);
     setVideoError(null);
-    
+
     try {
       const response = await educationService.updateVideo(id, updateData);
       // Actualizamos el video en la lista
-      setVideos(prevVideos => 
+      setVideos(prevVideos =>
         prevVideos.map(v => v.id === id ? response.data : v)
       );
       // Si el video actual es el que se actualizó, actualizamos también el estado
@@ -842,17 +842,17 @@ export const EducationProvider = ({ children }) => {
       setLoadingVideos(false);
     }
   };
-  
+
   /**
    * Elimina un video
    * @param {number} id - ID del video
    */
   const deleteVideo = async (id) => {
     if (!isAuthenticated) return;
-    
+
     setLoadingVideos(true);
     setVideoError(null);
-    
+
     try {
       await educationService.deleteVideo(id);
       // Eliminamos el video de la lista
@@ -870,9 +870,9 @@ export const EducationProvider = ({ children }) => {
       setLoadingVideos(false);
     }
   };
-  
+
   // ==================== Funciones de reseteo de estados ====================
-  
+
   /**
    * Resetea el estado de módulos
    */
@@ -880,7 +880,7 @@ export const EducationProvider = ({ children }) => {
     setModule(null);
     setModuleError(null);
   };
-  
+
   /**
    * Resetea el estado de artículos
    */
@@ -888,7 +888,7 @@ export const EducationProvider = ({ children }) => {
     setArticle(null);
     setArticleError(null);
   };
-  
+
   /**
    * Resetea el estado de guías
    */
@@ -896,7 +896,7 @@ export const EducationProvider = ({ children }) => {
     setGuide(null);
     setGuideError(null);
   };
-  
+
   /**
    * Resetea el estado de etiquetas
    */
@@ -904,7 +904,7 @@ export const EducationProvider = ({ children }) => {
     setTag(null);
     setTagError(null);
   };
-  
+
   /**
    * Resetea el estado de videos
    */
@@ -912,7 +912,7 @@ export const EducationProvider = ({ children }) => {
     setVideo(null);
     setVideoError(null);
   };
-  
+
   // Valor del contexto que exponemos a componentes consumidores
   const value = {
     // Estado de módulos
@@ -920,31 +920,31 @@ export const EducationProvider = ({ children }) => {
     module,
     loadingModules,
     moduleError,
-    
+
     // Estado de artículos
     articles,
     article,
     loadingArticles,
     articleError,
-    
+
     // Estado de guías
     guides,
     guide,
     loadingGuides,
     guideError,
-    
+
     // Estado de tags
     tags,
     tag,
     loadingTags,
     tagError,
-    
+
     // Estado de videos
     videos,
     video,
     loadingVideos,
     videoError,
-    
+
     // Funciones para módulos
     fetchAllModules,
     fetchModuleById,
@@ -952,14 +952,14 @@ export const EducationProvider = ({ children }) => {
     updateModule,
     deleteModule,
     filterModulesByTags,
-    
+
     // Funciones para artículos
     fetchArticlesByModuleId,
     fetchArticleById,
     createArticle,
     updateArticle,
     deleteArticle,
-    
+
     // Funciones para guías
     fetchAllGuides,
     fetchGuidesByModuleId,
@@ -967,7 +967,7 @@ export const EducationProvider = ({ children }) => {
     createGuide,
     updateGuide,
     deleteGuide,
-    
+
     // Funciones para tags
     fetchAllTags,
     fetchTagById,
@@ -976,14 +976,14 @@ export const EducationProvider = ({ children }) => {
     updateTag,
     deleteTag,
     getOrCreateTag,
-    
+
     // Funciones para videos
     fetchVideosByModuleId,
     fetchVideoById,
     createVideo,
     updateVideo,
     deleteVideo,
-    
+
     // Funciones de reseteo de estados
     resetModuleState,
     resetArticleState,
@@ -991,7 +991,7 @@ export const EducationProvider = ({ children }) => {
     resetTagState,
     resetVideoState
   };
-  
+
   return (
     <EducationContext.Provider value={value}>
       {children}
