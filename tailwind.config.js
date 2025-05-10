@@ -17,6 +17,7 @@ export default {
       colors: {
         primary: "#23582a",
         secondary: "#82bd69",
+        header: "#76CE10",
         textFont: "#021603",
         neutral: {
           light: "#F5F5F5",
