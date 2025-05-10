@@ -10,28 +10,20 @@ export const API = axios.create({
   headers: {
     'Content-Type': 'application/json',  // Enviamos siempre JSON
     'Accept': 'application/json'         // Esperamos recibir JSON
-  }
+  },
+  withCredentials: true
 });
-console.log(`[API] baseURL: ${import.meta.env.VITE_API_URL}`);
-
 
 // Interceptor de petición: se ejecuta ANTES de cada llamada.
-// Aquí añadimos el token JWT al header Authorization si existe.
+// Las cookies se envían automáticamente con cada petición
 API.interceptors.request.use(
   config => {
-    // Recuperamos el token de donde lo guardes (localStorage, Redux, Context…)
-    const token = localStorage.getItem('jwtToken');
-    if (token) {
-      // Inyectamos el header Authorization: “Bearer <token>”
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
-    return config;
+    return config
   },
   error => {
-    // Error al configurar la petición
-    return Promise.reject(error);
+    return Promise.reject(error)
   }
-);
+)
 
 // Interceptor de respuesta: logging centralizado de errores.
 // Atrapa cualquier status ≠ 2xx y lo imprime en consola.
