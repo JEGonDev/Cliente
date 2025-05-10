@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ModuleDetailLayout } from '../layouts/ModuleDetailLayout';
 import { ArticlesLayout } from '../layouts/ArticlesLayout';
@@ -7,83 +7,113 @@ import { VideosLayout } from '../layouts/VideosLayout';
 import { Header } from '../../../ui/layouts/Header';
 import { SidebarLayout } from '../layouts/SidebarLayout ';
 import { AuthContext } from '../../authentication/context/AuthContext';
-import { Button } from '../../../ui/components/Button';
 import { ModuleHeader } from '../ui/ModuleHeader';
 import { AdminActions } from '../ui/AdminActions';
+import { useModules } from '../hooks/useModules';
+import { useArticles } from '../hooks/useArticles';
+import { useGuides } from '../hooks/useGuides';
+import { useVideos } from '../hooks/useVideos';
 
 export const OpenModulePage = () => {
   // Obtener información de autenticación y roles
   const { isAdmin } = useContext(AuthContext);
   const { moduleId } = useParams();
 
-  // Datos del módulo (simulados para maquetación)
-  const moduleData = {
-    id: 1,
-    title: 'Introducción al módulo',
-    description: 'Lorem ipsum dolor sit et for Figma, created to help designers design the landing page quickly without having to spend much time. It is crafted with a vision to support and web project and thereby creating a block system that helps with all the use cases.',
-    tags: ['Principiantes', 'PrimerosPasos', 'General'],
-    articles: [
-      {
-        id: 1,
-        title: 'Artículo básico para principiantes',
-        author: 'María García',
-        date: '10/04/2023'
-      },
-    ],
-    guides: [
-      {
-        id: 1,
-        title: 'Guía paso 1',
-        description: 'Ya tuve problemas con acumulación de sales en las raíces. Recomiendo revisar los niveles cada dos semanas y monitorear la conductividad eléctrica (EC) para evitar sobre-fertilización.',
-        imageUrl: '/api/placeholder/100/100'
-      },
-    ],
-    videos: [
-      {
-        id: 1,
-        title: 'Introducción a la hidroponía',
-        thumbnailUrl: '/api/placeholder/300/200',
-        duration: '5:34'
-      },
-    ]
-  };
+  // Hooks personalizados para cada tipo de contenido
+  const { 
+    module, 
+    loading: loadingModule, 
+    error: moduleError, 
+    fetchModuleById 
+  } = useModules();
+  
+  const { 
+    articles, 
+    loading: loadingArticles, 
+    error: articleError,
+    fetchArticlesByModuleId,
+    handleCreateArticle,
+    handleUpdateArticle,
+    handleDeleteArticle 
+  } = useArticles();
+  
+  const { 
+    guides, 
+    loading: loadingGuides, 
+    error: guideError,
+    fetchGuidesByModuleId,
+    handleCreateGuide,
+    handleUpdateGuide,
+    handleDeleteGuide 
+  } = useGuides();
+  
+  const { 
+    videos, 
+    loading: loadingVideos, 
+    error: videoError,
+    fetchVideosByModuleId,
+    handleCreateVideo,
+    handleUpdateVideo,
+    handleDeleteVideo 
+  } = useVideos();
 
-  // Funciones de administración
+  // Estado para la sección que se está editando (si hay)
+  const [editingSection, setEditingSection] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+
+  // Cargar datos al iniciar
+  useEffect(() => {
+    if (moduleId) {
+      fetchModuleById(moduleId);
+      fetchArticlesByModuleId(moduleId);
+      fetchGuidesByModuleId(moduleId);
+      fetchVideosByModuleId(moduleId);
+    }
+  }, [moduleId]);
+
+  // Manejadores para artículos
   const handleAddArticle = () => {
+    setEditingSection('article');
+    setEditingId(null);
+    // Aquí podrías navegar a un formulario o mostrar un modal
     console.log('Añadir artículo');
   };
 
-  const handleDeleteArticle = () => {
-    console.log('Eliminar artículo');
+  const handleEditArticle = (articleId) => {
+    setEditingSection('article');
+    setEditingId(articleId);
+    console.log('Editar artículo', articleId);
   };
 
-  const handleEditArticle = () => {
-    console.log('Editar artículo');
-  };
-
+  // Manejadores para guías
   const handleAddGuide = () => {
+    setEditingSection('guide');
+    setEditingId(null);
     console.log('Añadir guía');
   };
 
-  const handleDeleteGuide = () => {
-    console.log('Eliminar guía');
+  const handleEditGuide = (guideId) => {
+    setEditingSection('guide');
+    setEditingId(guideId);
+    console.log('Editar guía', guideId);
   };
 
-  const handleEditGuide = () => {
-    console.log('Editar guía');
-  };
-
+  // Manejadores para videos
   const handleAddVideo = () => {
+    setEditingSection('video');
+    setEditingId(null);
     console.log('Añadir video');
   };
 
-  const handleDeleteVideo = () => {
-    console.log('Eliminar video');
+  const handleEditVideo = (videoId) => {
+    setEditingSection('video');
+    setEditingId(videoId);
+    console.log('Editar video', videoId);
   };
-
-  const handleEditVideo = () => {
-    console.log('Editar video');
-  };
+  
+  // Estado de carga general
+  const isLoading = loadingModule || loadingArticles || loadingGuides || loadingVideos;
+  const hasError = moduleError || articleError || guideError || videoError;
 
   return (
     <>
@@ -92,59 +122,79 @@ export const OpenModulePage = () => {
         <SidebarLayout activeIcon="settings" onIconClick={(id) => console.log(id)} />
 
         <ModuleDetailLayout>
-          <ModuleHeader 
-            videoCount={moduleData.videos.length}
-            articleCount={moduleData.articles.length}
-            guideCount={moduleData.guides.length}
-          />
-
-          {/* Sección de artículos con controles de administrador */}
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Artículos que podrían interesarte</h2>
-              {isAdmin && (
-                <AdminActions
-                  onAddClick={handleAddArticle}
-                  onDeleteClick={handleDeleteArticle}
-                  onEditClick={handleEditArticle}
-                  resourceType="artículo"
-                />
-              )}
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <p className="text-gray-500">Cargando contenido educativo...</p>
             </div>
-            <ArticlesLayout articles={moduleData.articles} />
-          </div>
-
-          {/* Sección de guías con controles de administrador */}
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Guías descargables</h2>
-              {isAdmin && (
-                <AdminActions
-                  onAddClick={handleAddGuide}
-                  onDeleteClick={handleDeleteGuide}
-                  onEditClick={handleEditGuide}
-                  resourceType="guía"
-                />
-              )}
+          ) : hasError ? (
+            <div className="bg-red-100 text-red-800 p-4 rounded">
+              <p>Ha ocurrido un error al cargar el contenido.</p>
+              {moduleError && <p>{moduleError}</p>}
             </div>
-            <GuidesLayout guides={moduleData.guides} />
-          </div>
-
-          {/* Sección de videos con controles de administrador */}
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Videos</h2>
-              {isAdmin && (
-                <AdminActions
-                  onAddClick={handleAddVideo}
-                  onDeleteClick={handleDeleteVideo}
-                  onEditClick={handleEditVideo}
-                  resourceType="video"
-                />
-              )}
+          ) : !module ? (
+            <div className="bg-yellow-100 text-yellow-800 p-4 rounded">
+              <p>No se encontró el módulo solicitado.</p>
             </div>
-            <VideosLayout videos={moduleData.videos} />
-          </div>
+          ) : (
+            <>
+              <ModuleHeader 
+                videoCount={videos?.length || 0}
+                articleCount={articles?.length || 0}
+                guideCount={guides?.length || 0}
+                title={module.title}
+                description={module.description}
+                tags={module.tags || []}
+              />
+
+              {/* Sección de artículos con controles de administrador */}
+              <div className="mb-8">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">Artículos que podrían interesarte</h2>
+                  {isAdmin && (
+                    <AdminActions
+                      onAddClick={handleAddArticle}
+                      onDeleteClick={() => handleDeleteArticle(editingId)}
+                      onEditClick={() => handleEditArticle(editingId)}
+                      resourceType="artículo"
+                    />
+                  )}
+                </div>
+                <ArticlesLayout articles={articles || []} />
+              </div>
+
+              {/* Sección de guías con controles de administrador */}
+              <div className="mb-8">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">Guías descargables</h2>
+                  {isAdmin && (
+                    <AdminActions
+                      onAddClick={handleAddGuide}
+                      onDeleteClick={() => handleDeleteGuide(editingId)}
+                      onEditClick={() => handleEditGuide(editingId)}
+                      resourceType="guía"
+                    />
+                  )}
+                </div>
+                <GuidesLayout guides={guides || []} />
+              </div>
+
+              {/* Sección de videos con controles de administrador */}
+              <div className="mb-8">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">Videos</h2>
+                  {isAdmin && (
+                    <AdminActions
+                      onAddClick={handleAddVideo}
+                      onDeleteClick={() => handleDeleteVideo(editingId)}
+                      onEditClick={() => handleEditVideo(editingId)}
+                      resourceType="video"
+                    />
+                  )}
+                </div>
+                <VideosLayout videos={videos || []} />
+              </div>
+            </>
+          )}
         </ModuleDetailLayout>
       </div>
     </>
