@@ -1,4 +1,4 @@
-import { FileText, FileSpreadsheet } from 'lucide-react';
+import { FileText, FileSpreadsheet, FilePdf } from 'lucide-react';
 
 /**
  * Sección para exportar informes en diferentes formatos
@@ -42,7 +42,7 @@ export const ExportSection = () => {
         <div className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition">
           <div className="flex items-center">
             <div className="bg-red-100 rounded-lg p-3 mr-4">
-             
+              <FilePdf className="text-red-600" size={24} />
             </div>
             <div>
               <h3 className="font-medium">Exportar como PDF</h3>
