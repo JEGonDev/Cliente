@@ -8,46 +8,38 @@ export const ModulesList = ({
   selectedModules = [],
   onSelectModule = () => {}
 }) => {
-  // Si no hay módulos, mostrar datos de ejemplo
-  if (modules.length === 0) {
-    modules = [
-      {
-        id: '1',
-        title: 'Primeros pasos para comenzar con tu cultivo hidroponía',
-        tags: ['Principiantes', 'PrimerosPasos', 'General'],
-        videosCount: 10,
-        articlesCount: 10,
-        guidesCount: 25
-      },
-      // ... otros módulos de ejemplo
-    ];
-  }
-
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 auto-rows-auto gap-6">
-      {modules.map((module) => (
-        <div key={module.id} className="relative">
-          {isSelectable && (
-            <div className="absolute top-2 right-2 z-10">
-              <input 
-                type="checkbox" 
-                checked={selectedModules.includes(module.id)}
-                onChange={() => onSelectModule(module.id)}
-                className="h-5 w-5 text-green-600 focus:ring-green-500"
-              />
-            </div>
-          )}
-          <ModuleCard
-            id={module.id}
-            title={module.title}
-            tags={module.tags}
-            videosCount={module.videosCount}
-            articlesCount={module.articlesCount}
-            guidesCount={module.guidesCount}
-            isAdmin={isAdmin}
-          />
+      {modules.length === 0 ? (
+        <div className="col-span-3 text-center py-8">
+          <p className="text-gray-500">No hay módulos disponibles</p>
         </div>
-      ))}
+      ) : (
+        modules.map((module) => (
+          <div key={module.id} className="relative">
+            {/* Interfaz de selección para modo de eliminación */}
+            {isSelectable && (
+              <div className="absolute top-2 right-2 z-10">
+                <input 
+                  type="checkbox" 
+                  checked={selectedModules.includes(module.id)}
+                  onChange={() => onSelectModule(module.id)}
+                  className="h-5 w-5 text-green-600 focus:ring-green-500"
+                />
+              </div>
+            )}
+            <ModuleCard
+              id={module.id}
+              title={module.title}
+              tags={module.tags || []}
+              videosCount={module.videosCount || 0}
+              articlesCount={module.articlesCount || 0}
+              guidesCount={module.guidesCount || 0}
+              isAdmin={isAdmin}
+            />
+          </div>
+        ))
+      )}
     </div>
   );
 };
