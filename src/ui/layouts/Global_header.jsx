@@ -1,4 +1,3 @@
-
 import imgLogo from "../../assets/header/logo2.png"; // Importa la imagen del logo
 import { MobileMenuButton } from "../components/MobileMenuButton"; // Botón para abrir el menú móvil
 import { MobileNavigation } from "../components/MobileNavigation"; // Componente para la navegación en dispositivos móviles
@@ -6,7 +5,7 @@ import { useState } from "react"; // Hook de React para manejar el estado
 import { Header_logo } from "../components/Header_logo"; // Componente para mostrar el logo en el header
 import { DesktopNavigation } from "../components/DesktopNavigation"; // Componente para la navegación en dispositivos de escritorio
 
-export const Header = () => {
+export const Global_header = () => {
   // Estado para controlar si el menú móvil está abierto o cerrado
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 

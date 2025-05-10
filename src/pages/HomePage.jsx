@@ -14,7 +14,7 @@ export const HomePage = () => {
       {/* Header Section */}
       <Header />
       {/* Hero Section */}
-      <div className="w-full bg-white py-12 px-32 flex flex-col md:flex-row items-center justify-between border-b border-gray-200">
+      <div className="w-full bg-white py-12  px-12 flex flex-col md:flex-row items-center justify-between border-b border-gray-200">
         <div className="md:w-1/2 space-y-4 pr-4">
           <h1 className="text-3xl font-bold text-gray-900">
             Domina la Hidroponía con la Mejor Plataforma Educativa y de Monitoreo
@@ -31,12 +31,12 @@ export const HomePage = () => {
           <img
             src={cultivador}
             alt="Ilustración de cultivador con estantería hidropónica"
-            className="h-64"
+            className="h-64 w-64"
           />
         </div>
       </div>
 
-      <div className="w-full bg-primary text-white py-12 px-32 flex flex-col md:flex-row items-center justify-between border-b border-gray-200">
+      <div id='nosotros' className=" w-full bg-primary text-white py-12   px-12 flex flex-col md:flex-row items-center justify-between border-b border-gray-200">
         <div className="md:w-1/2 space-y-4 pr-4">
           <h2 className=" text-2xl font-bold mb-4 text-center">
             ¡Cultiva Conocimiento, Cosecha Comunidad!
@@ -49,7 +49,8 @@ export const HomePage = () => {
                 La hidroponía facilita tener grandes cantidades de hojas de lechuga. Aquí podrás aprender, monitorear tus planos y compartir tus logros de forma sencilla y ordenada.
               </p>
             </div>
-            <div className="md:w-1/3 flex justify-center items-center">
+            {/* <div className="md:w-1/2 flex justify-center items-center"> */}
+            <div className="md:w-1/2 flex justify-end mt-6 md:mt-0">
               <img
                 src={cultivo}
                 alt="Plantas hidropónicas"
@@ -60,7 +61,7 @@ export const HomePage = () => {
       </div>      
 
       {/* Features Section */}
-      <div className="py-8 px-6">
+      <div id='servicios' className="py-8 px-6">
         <h2 className="text-2xl font-bold text-center mb-8">
           EXPLORA TODO LO QUE GERMOGLI TIENE PARA TI
         </h2>

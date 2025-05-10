@@ -28,7 +28,8 @@ export const Button = ({
     secondary: 'bg-secondary hover:bg-green-500 text-white border border-secondary',
     outline: 'bg-transparent hover:bg-gray-100 text-primary border border-primary',
     danger: 'bg-accent hover:bg-red-700 text-white border border-accent',
-    white: 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300'
+    white: 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300',
+    header: 'bg-header hover:bg-gray-50 text-white border border-gray-300'
   };
   
   // Mapeo de tamaños a clases de Tailwind
@@ -62,7 +63,7 @@ export const Button = ({
 
 // Validación de propiedades
 Button.propTypes = {
-  variant: PropTypes.oneOf(['primary', 'secondary', 'outline', 'danger', 'white']),
+  variant: PropTypes.oneOf(['primary', 'secondary', 'outline', 'danger', 'white', 'header']),
   size: PropTypes.oneOf(['sm', 'md', 'lg']),
   type: PropTypes.oneOf(['button', 'submit', 'reset']),
   disabled: PropTypes.bool,
