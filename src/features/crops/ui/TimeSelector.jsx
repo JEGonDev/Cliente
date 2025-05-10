@@ -25,7 +25,7 @@ export const TimeSelector = ({
           type="button"
           className={`px-4 py-1 text-sm font-medium 
             ${range.id === activeRange 
-              ? 'bg-green-700 text-white' 
+              ? 'bg-primary text-white' 
               : 'bg-white text-gray-700 hover:bg-gray-50'}
             ${range.id === '1H' ? 'rounded-l-md' : ''}
             ${range.id === '24H' ? 'rounded-r-md' : ''}
