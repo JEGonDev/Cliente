@@ -26,7 +26,7 @@ export const ModuleCard = ({
           ))}
         </div>
         
-        {/* Contadores */}
+        {/* Contadores de contenido reales */}
         <div className="text-xs text-gray-600 flex gap-1">
           <span>{videosCount} Videos</span>
           <span>-</span>
@@ -37,15 +37,4 @@ export const ModuleCard = ({
       </div>
     </Link>
   );
-};
-
-// Validación de propiedades
-ModuleCard.propTypes = {
-  id: PropTypes.string,
-  title: PropTypes.string,
-  tags: PropTypes.arrayOf(PropTypes.string),
-  videosCount: PropTypes.number,
-  articlesCount: PropTypes.number,
-  guidesCount: PropTypes.number,
-  isAdmin: PropTypes.bool
 };
