@@ -34,7 +34,11 @@ export const EducationPage = () => {
   // Estados para la interfaz
   const [activeIcon, setActiveIcon] = useState('none');
   const [searchValue, setSearchValue] = useState('');
+  
+  // Estado para etiquetas activas (nombres para UI)
   const [activeTags, setActiveTags] = useState([]);
+  // Estado para IDs de etiquetas activas (para backend)
+  const [activeTagIds, setActiveTagIds] = useState([]);
   
   // Estado para modo de eliminación
   const [isDeleteMode, setIsDeleteMode] = useState(false);
@@ -46,14 +50,14 @@ export const EducationPage = () => {
     fetchAllTags();
   }, []);
   
-  // Filtrar módulos cuando cambian las etiquetas activas
+  // Filtrar módulos cuando cambian los IDs de etiquetas activas
   useEffect(() => {
-    if (activeTags.length > 0) {
-      filterModulesByTags(activeTags);
+    if (activeTagIds.length > 0) {
+      filterModulesByTags(activeTagIds);
     } else {
       fetchAllModules();
     }
-  }, [activeTags]);
+  }, [activeTagIds]);
   
   // Manejadores de eventos
   const handleIconClick = (iconId) => {
@@ -64,13 +68,35 @@ export const EducationPage = () => {
     setSearchValue(e.target.value);
   };
 
-  const handleTagClick = (tag) => {
-    setActiveTags(prev => 
-      prev.includes(tag) 
-        ? prev.filter(t => t !== tag) 
-        : [...prev, tag]
+  // Modificado para manejar tanto nombres como IDs
+const handleTagClick = (tagName, tagId) => {
+  // Si no se proporciona tagId, intenta encontrarlo
+  if (tagId === null && tags) {
+    const tagObj = tags.find(t => t.name === tagName);
+    if (tagObj) {
+      tagId = tagObj.id;
+    } else {
+      console.warn(`No se encontró el ID para la etiqueta: ${tagName}`);
+      return; // No continuar si no hay ID
+    }
+  }
+  
+  // Actualizar nombres para la UI
+  setActiveTags(prev => 
+    prev.includes(tagName) 
+      ? prev.filter(name => name !== tagName) 
+      : [...prev, tagName]
+  );
+  
+  // Solo actualizar IDs si tenemos un ID válido
+  if (tagId !== null) {
+    setActiveTagIds(prev => 
+      prev.includes(tagId) 
+        ? prev.filter(id => id !== tagId) 
+        : [...prev, tagId]
     );
-  };
+  }
+};
   
   // Manejadores de acciones de administrador
   const handleCreateModule = () => {
@@ -123,7 +149,8 @@ export const EducationPage = () => {
     <EducationLayout
       activeIcon={activeIcon}
       onIconClick={handleIconClick}
-      tags={tags?.map(tag => tag.name) || []}
+      // Modificar esto:
+      tags={tags ? tags.map(tag => tag.name) : []} 
       activeTags={activeTags}
       onTagClick={handleTagClick}
       isAdmin={isAdmin}
@@ -158,9 +185,14 @@ export const EducationPage = () => {
         <>
           {/* Filtros (solo visibles fuera del modo de eliminación) */}
           <ModuleFilters 
-            tags={tags?.map(tag => tag.name) || []}
-            activeTags={activeTags}
-            onTagClick={handleTagClick}
+            tags={tags ? tags.map(tag => tag.name) : []} // Solo pasar nombres de etiquetas para UI
+            activeTags={activeTags} 
+            onTagClick={(tagName) => {
+              // Encuentra el ID correspondiente al nombre
+              const tagObj = tags.find(t => t.name === tagName);
+              const tagId = tagObj ? tagObj.id : null;
+              handleTagClick(tagName, tagId);
+            }}
           />
           
           {/* Lista de módulos */}
