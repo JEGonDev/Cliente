@@ -30,5 +30,3 @@ export const Storage = {
     },
   };
   
-  export default Storage;
-  

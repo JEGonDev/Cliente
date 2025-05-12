@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { AuthContext } from '../../features/authentication/context/AuthContext';
+import { Storage } from '../../storage/Storage';
 
 export const ProtectedRoutes = ({ requiredRoles = [] }) => {
   const { user, isAuthenticated, hasRole, loading, refreshAuth } = useContext(AuthContext);
@@ -10,14 +11,18 @@ export const ProtectedRoutes = ({ requiredRoles = [] }) => {
   // Efecto para verificar la autenticación al montar el componente
   useEffect(() => {
     const verifyAuth = async () => {
-      if (!isAuthenticated) {
-        await refreshAuth();
-      }
+      console.log("Verificando autenticación en ProtectedRoutes:", location.pathname);
+      console.log("Estado actual - isAuthenticated:", isAuthenticated);
+      
+      // Intentar verificar la sesión si no está autenticado o para re-confirmar
+      const result = await refreshAuth();
+      console.log("Resultado de refreshAuth:", result);
+      
       setIsVerifying(false);
     };
     
     verifyAuth();
-  }, [isAuthenticated, refreshAuth]);
+  }, [location.pathname]); // Verificar al cambiar de ruta
 
   // Mientras se verifica la autenticación o se está cargando
   if (loading || isVerifying) {
@@ -30,6 +35,7 @@ export const ProtectedRoutes = ({ requiredRoles = [] }) => {
 
   // Si no está autenticado, redirigir al login
   if (!isAuthenticated) {
+    console.log("No autenticado, redirigiendo a login");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

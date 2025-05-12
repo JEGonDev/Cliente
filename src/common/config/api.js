@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Storage } from '../../storage/Storage';
 
 // Creamos una instancia base de Axios para toda la app.
 //    - baseURL: punto de entrada de tu backend (configurable vía .env)
@@ -32,6 +33,13 @@ export const setAuthRedirectCallback = (callback) => {
 API.interceptors.request.use(
   config => {
     // Las cookies se envían automáticamente con withCredentials: true
+    
+    // Si hay un token almacenado, incluirlo en los headers
+    const authToken = Storage.get('authToken');
+    if (authToken) {
+      config.headers['Authorization'] = `Bearer ${authToken}`;
+    }
+    
     return config;
   },
   error => {

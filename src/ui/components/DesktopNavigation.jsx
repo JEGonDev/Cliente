@@ -4,7 +4,7 @@ import { ItemsNavbar } from "../components/ItemsNavbar";
 import { DivButton_header } from "../components/DivButton_header";
 import { AuthContext } from "../../features/authentication/context/AuthContext";
 import { AuthNav } from "./AuthNav";
-import Storage from "../../storage/Storage";
+import { Storage } from '../../storage/Storage';
 
 export const DesktopNavigation = () => {
   // Utilizamos el contexto de autenticación

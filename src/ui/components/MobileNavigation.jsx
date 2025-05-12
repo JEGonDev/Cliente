@@ -7,7 +7,8 @@ import { Header_logo } from '../components/Header_logo';
 import { MobileMenuButton } from './MobileMenuButton';
 import { DivButton_header } from '../components/DivButton_header';
 import { AuthContext } from '../../features/authentication/context/AuthContext';
-import Storage from '../../storage/Storage';
+import { Storage } from '../../storage/Storage';
+
 
 export const MobileNavigation = ({ isOpen, onClose, logoProps }) => {
   // Utilizamos el contexto de autenticación
