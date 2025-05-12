@@ -2,43 +2,51 @@ import { API } from './../../../common/config/api'
 
 // Objeto con funciones de autenticacion
 export const authService = {
-  // Registro: envía {username, password, …}
+  
+  /**
+   * Inicia sesión enviando credenciales al servidor.
+   * El backend establece una cookie HTTP-only con el JWT.
+   * 
+   * @param {Object} credentials - Credenciales {username, password}
+   * @returns {Promise<Object>} - Datos del usuario autenticado
+   */
+  login: async (credentials) => {
+    try {
+      const response = await API.post('/auth/login', credentials);
+      // Se almacenan los datos del usuario en memoria
+      return response.data;
+    } catch (error) {
+      console.error('Error durante el login:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Registra un nuevo usuario y establece la sesión.
+   * 
+   * @param {Object} userData - Datos del usuario para registro
+   * @returns {Promise<Object>} - Datos del usuario registrado
+   */
   register: async (userData) => {
     try {
       const response = await API.post('/auth/register', userData);
-      const { token } = response.data;
-      // Almacenamos token
-      localStorage.setItem('jwtToken', token);
-      // Decodificar y almacenar datos del usuario
-      const decodedToken = jwtDecode(token);
-      localStorage.setItem('user', JSON.stringify({
-        username: decodedToken.sub,
-        authorities: [decodedToken.role]
-      }));
-      return { token };
+      // Se almacenan los datos del usuario en memoria
+      return response.data;
     } catch (error) {
       console.error('Error durante el registro:', error);
       throw error;
     }
   },
 
-  // Registro usuario administrador (requiere autenticación previa como administrador)
+  /**
+   * Registra un nuevo administrador (requiere autenticación previa como admin).
+   * 
+   * @param {Object} userData - Datos del usuario administrador
+   * @returns {Promise<Object>} - Respuesta del servidor
+   */
   registerAdmin: async (userData) => {
     try {
-      // Obtener el token para la autorización
-      const token = localStorage.getItem('jwtToken');
-      if (!token) {
-        throw new Error('No hay sesión activa o no tienes permisos suficientes');
-      }
-      
-      // Configurar la cabecera de autorización
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      };
-      
-      const response = await API.post('/auth/admin/register', userData, config);
+      const response = await API.post('/auth/admin/register', userData);
       return response.data;
     } catch (error) {
       console.error('Error durante el registro de admin:', error);
@@ -46,106 +54,60 @@ export const authService = {
     }
   },
 
-  // Login: envía {username, password}, recibe {token, user}
-  login: async (credentials) => {
+  /**
+   * Cierra la sesión del usuario.
+   * El backend invalidará la cookie JWT.
+   * 
+   * @returns {Promise<void>}
+   */
+  logout: async () => {
     try {
-      const response = await API.post('/auth/login', credentials);
-      const { token } = response.data;
-      // Almacena el JWT en localStorage
-      localStorage.setItem('jwtToken', token);
-      
-      // Decodificar el token y almacenar información del usuario
-      const decodedToken = jwtDecode(token);
-      localStorage.setItem('user', JSON.stringify({
-        username: decodedToken.sub,
-        authorities: [decodedToken.role]
-      }));
-      
-      return { 
-        token,
-        user: {
-          username: decodedToken.sub,
-          authorities: [decodedToken.role]
-        }
-      };
+      await API.post('/auth/logout');
+      // La cookie ha sido invalidada por el backend
     } catch (error) {
-      console.error('Error durante el login:', error);
+      console.error('Error durante el logout:', error);
       throw error;
     }
   },
 
-  // Logout: borra el JWT y la sesión
-  logout: () => {
-    localStorage.removeItem('jwtToken');
-    localStorage.removeItem('user');
-  },
-
-  // Comprueba si hay sesión activa
-  isAuthenticated: () => {
-    const token = localStorage.getItem('jwtToken');
-    if (!token) return false;
-    
-    try {
-      // Verificar si el token ha expirado
-      const decodedToken = jwtDecode(token);
-      const currentTime = Date.now() / 1000;
-      
-      if (decodedToken.exp < currentTime) {
-        // Token expirado, limpiar almacenamiento
-        authService.logout();
-        return false;
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Error al verificar token:', error);
-      return false;
-    }
+  /**
+   * Comprueba si el usuario tiene un rol específico.
+   * 
+   * @param {string} role - Rol a verificar
+   * @param {Object} user - Datos del usuario (opcional)
+   * @returns {boolean} - true si tiene el rol
+   */
+  hasRole: (role, user) => {
+    if (!user || !user.authorities) return false;
+    return user.authorities.includes(role);
   },
   
-  // Obtiene el usuario actual
-  getCurrentUser: () => {
-    const userStr = localStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
+  /**
+   * Comprueba si el usuario es administrador.
+   * 
+   * @param {Object} user - Datos del usuario (opcional)
+   * @returns {boolean} - true si es administrador
+   */
+  isAdmin: (user) => {
+    return authService.hasRole('ADMINISTRADOR', user);
   },
   
-  // Comprueba si el usuario actual tiene rol de administrador
-  isAdmin: () => {
-    const user = authService.getCurrentUser();
-    return user && user.authorities && 
-          user.authorities.some(auth => auth === 'ADMINISTRADOR');
-  },
-  
-  // Comprueba si el usuario actual tiene rol de moderador
-  isModerator: () => {
-    const user = authService.getCurrentUser();
-    return user && user.authorities && 
-          user.authorities.some(auth => auth === 'MODERADOR');
-  },
-  
-  // Comprueba si el usuario actual tiene un rol específico
-  hasRole: (role) => {
-    const user = authService.getCurrentUser();
-    return user && user.authorities && 
-          user.authorities.some(auth => auth === role);
+  /**
+   * Comprueba si el usuario es moderador.
+   * 
+   * @param {Object} user - Datos del usuario (opcional)
+   * @returns {boolean} - true si es moderador
+   */
+  isModerator: (user) => {
+    return authService.hasRole('MODERADOR', user);
   },
 
-  // Obtener el JWT actual (útil para preparar la transición a cookies)
-  getToken: () => {
-    return localStorage.getItem('jwtToken');
-  },
-
-  // Analiza el token JWT sin validarlo
-  parseToken: (token) => {
-    try {
-      return jwtDecode(token);
-    } catch (error) {
-      console.error('Error al parsear token:', error);
-      return null;
-    }
-  },
-
-  // Solicitar recuperación de contraseña
+  /**
+   * Solicita recuperación de contraseña.
+   * 
+   * @param {string} email - Email del usuario
+   * @returns {Promise<Object>} - Respuesta del servidor
+   */
   forgotPassword: async (email) => {
     try {
       const response = await API.post('/auth/forgot-password', null, {
@@ -158,7 +120,12 @@ export const authService = {
     }
   },
 
-  // Reiniciar contraseña con token
+  /**
+   * Reinicia contraseña con token.
+   * 
+   * @param {Object} passwordResetData - Datos para reinicio de contraseña
+   * @returns {Promise<Object>} - Respuesta del servidor
+   */
   resetPassword: async (passwordResetData) => {
     try {
       const response = await API.post('/auth/reset-password', passwordResetData);
@@ -167,5 +134,5 @@ export const authService = {
       console.error('Error al reiniciar la contraseña:', error);
       throw error;
     }
-  },
+  }
 };
