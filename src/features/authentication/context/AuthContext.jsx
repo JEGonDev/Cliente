@@ -13,8 +13,7 @@ export const AuthContext = createContext({
   registerAdmin: async () => {},
   logout: async () => {},
   loading: false,
-  error: null,
-  roles: []
+  error: null
 });
 
 // Proveedor de contexto que encapsula la lógica de autenticación
@@ -24,60 +23,38 @@ export const AuthProvider = ({ children }) => {
   // Estado de autenticación
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   // Estado de carga
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   // Estado de error
   const [error, setError] = useState(null);
-  // Estado para almacenar la lista de roles
-  const [roles, setRoles] = useState([]);
 
-  // Verificar autenticación al montar el componente
-  const verifyAuthentication = useCallback(async () => {
+  // Verificar autenticación con una petición de prueba
+  const checkSession = useCallback(async () => {
     setLoading(true);
     try {
-      // Verificar si está autenticado (valida la cookie en el backend)
-      const isAuth = await authService.verifyAuth();
+      // Solo verificamos si hay sesión activa, sin obtener datos nuevos
+      const isAuth = await authService.checkSession();
+      setIsAuthenticated(isAuth);
       
-      if (isAuth) {
-        // Obtener datos del usuario actual
-        const userData = await authService.getCurrentUser();
-        setUser(userData);
-        setIsAuthenticated(true);
-        
-        // Actualizar roles
-        if (userData && userData.authorities) {
-          setRoles(userData.authorities);
-        }
-      } else {
-        // No está autenticado
+      // Si no está autenticado, limpiamos el usuario
+      if (!isAuth) {
         setUser(null);
-        setIsAuthenticated(false);
-        setRoles([]);
       }
     } catch (err) {
-      console.error('Error verificando autenticación:', err);
+      console.error('Error verificando sesión:', err);
       setError(err);
-      setUser(null);
-      setIsAuthenticated(false);
-      setRoles([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Verificar autenticación al montar el componente
-  useEffect(() => {
-    verifyAuthentication();
-  }, [verifyAuthentication]);
-
   // Función para verificar si el usuario tiene un rol específico
-  const hasRole = (role) => {
-    if (!user || !user.authorities) return false;
-    return user.authorities.includes(role);
-  };
+  const hasRole = useCallback((role) => {
+    return user ? authService.hasRole(role, user) : false;
+  }, [user]);
 
-  // Funciones para determinar si el usuario es admin o moderador
-  const isAdmin = user && hasRole('ADMINISTRADOR');
-  const isModerator = user && hasRole('MODERADOR');
+  // Propiedades derivadas del usuario
+  const isAdmin = user ? authService.isAdmin(user) : false;
+  const isModerator = user ? authService.isModerator(user) : false;
 
   // Funciones que llamarán a authService y actualizarán el contexto
   const login = async (credentials) => {
@@ -88,12 +65,6 @@ export const AuthProvider = ({ children }) => {
       const userData = await authService.login(credentials);
       setUser(userData);
       setIsAuthenticated(true);
-      
-      // Actualizar roles
-      if (userData && userData.authorities) {
-        setRoles(userData.authorities);
-      }
-      
       return userData;
     } catch (err) {
       console.error('Error en login:', err);
@@ -112,12 +83,6 @@ export const AuthProvider = ({ children }) => {
       const newUser = await authService.register(userData);
       setUser(newUser);
       setIsAuthenticated(true);
-      
-      // Actualizar roles
-      if (newUser && newUser.authorities) {
-        setRoles(newUser.authorities);
-      }
-      
       return newUser;
     } catch (err) {
       console.error('Error en registro:', err);
@@ -150,10 +115,12 @@ export const AuthProvider = ({ children }) => {
       await authService.logout();
       setUser(null);
       setIsAuthenticated(false);
-      setRoles([]);
     } catch (err) {
       console.error('Error en logout:', err);
       setError(err);
+      // Incluso si falla el logout en el servidor, limpiamos la sesión local
+      setUser(null);
+      setIsAuthenticated(false);
     } finally {
       setLoading(false);
     }
@@ -168,14 +135,13 @@ export const AuthProvider = ({ children }) => {
         isAdmin,
         isModerator,
         hasRole,
-        roles,
         login,
         register,
         registerAdmin,
         logout,
         loading,
         error,
-        refreshAuth: verifyAuthentication
+        checkSession
       }}
     >
       {children}
