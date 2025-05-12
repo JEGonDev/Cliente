@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from 'react';
+import { createContext, useState, useEffect, useCallback } from 'react';
 import { authService } from '../services/authService';
 
 // Creamos el contexto para la autenticación
@@ -11,38 +11,63 @@ export const AuthContext = createContext({
   login: async () => {},
   register: async () => {},
   registerAdmin: async () => {},
-  logout: () => {},
-  roles: [] // Nuevo: lista de roles del usuario
+  logout: async () => {},
+  loading: false,
+  error: null,
+  roles: []
 });
 
 // Proveedor de contexto que encapsula la lógica de autenticación
 export const AuthProvider = ({ children }) => {
   // Estado del usuario autenticado
-  const [user, setUser] = useState(() => authService.getCurrentUser());
-  // Estado de autenticación (si hay token)
-  const [isAuthenticated, setIsAuthenticated] = useState(authService.isAuthenticated());
-  // Estado de rol administrador como booleano
-  const [isAdmin, setIsAdmin] = useState(authService.isAdmin());
-  // Estado de rol moderador como booleano
-  const [isModerator, setIsModerator] = useState(authService.isModerator());
+  const [user, setUser] = useState(null);
+  // Estado de autenticación
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // Estado de carga
+  const [loading, setLoading] = useState(true);
+  // Estado de error
+  const [error, setError] = useState(null);
   // Estado para almacenar la lista de roles
   const [roles, setRoles] = useState([]);
 
-  // Al montar, sincronizamos el estado si ya existía sesión
-  useEffect(() => {
-    if (authService.isAuthenticated()) {
-      const currentUser = authService.getCurrentUser();
-      setUser(currentUser);
-      setIsAuthenticated(true);
-      setIsAdmin(authService.isAdmin());
-      setIsModerator(authService.isModerator());
+  // Verificar autenticación al montar el componente
+  const verifyAuthentication = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Verificar si está autenticado (valida la cookie en el backend)
+      const isAuth = await authService.verifyAuth();
       
-      // Actualizar roles
-      if (currentUser && currentUser.authorities) {
-        setRoles(currentUser.authorities);
+      if (isAuth) {
+        // Obtener datos del usuario actual
+        const userData = await authService.getCurrentUser();
+        setUser(userData);
+        setIsAuthenticated(true);
+        
+        // Actualizar roles
+        if (userData && userData.authorities) {
+          setRoles(userData.authorities);
+        }
+      } else {
+        // No está autenticado
+        setUser(null);
+        setIsAuthenticated(false);
+        setRoles([]);
       }
+    } catch (err) {
+      console.error('Error verificando autenticación:', err);
+      setError(err);
+      setUser(null);
+      setIsAuthenticated(false);
+      setRoles([]);
+    } finally {
+      setLoading(false);
     }
   }, []);
+
+  // Verificar autenticación al montar el componente
+  useEffect(() => {
+    verifyAuthentication();
+  }, [verifyAuthentication]);
 
   // Función para verificar si el usuario tiene un rol específico
   const hasRole = (role) => {
@@ -50,52 +75,88 @@ export const AuthProvider = ({ children }) => {
     return user.authorities.includes(role);
   };
 
+  // Funciones para determinar si el usuario es admin o moderador
+  const isAdmin = user && hasRole('ADMINISTRADOR');
+  const isModerator = user && hasRole('MODERADOR');
+
   // Funciones que llamarán a authService y actualizarán el contexto
   const login = async (credentials) => {
-    const result = await authService.login(credentials);
-    const { user: loggedUser } = result;
-    setUser(loggedUser);
-    setIsAuthenticated(true);
-    setIsAdmin(authService.isAdmin());
-    setIsModerator(authService.isModerator());
+    setLoading(true);
+    setError(null);
     
-    // Actualizar roles
-    if (loggedUser && loggedUser.authorities) {
-      setRoles(loggedUser.authorities);
+    try {
+      const userData = await authService.login(credentials);
+      setUser(userData);
+      setIsAuthenticated(true);
+      
+      // Actualizar roles
+      if (userData && userData.authorities) {
+        setRoles(userData.authorities);
+      }
+      
+      return userData;
+    } catch (err) {
+      console.error('Error en login:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
     }
-    
-    return loggedUser;
   };
 
   const register = async (userData) => {
-    const result = await authService.register(userData);
-    const { user: newUser } = result;
-    setUser(newUser);
-    setIsAuthenticated(true);
-    setIsAdmin(authService.isAdmin());
-    setIsModerator(authService.isModerator());
+    setLoading(true);
+    setError(null);
     
-    // Actualizar roles
-    if (newUser && newUser.authorities) {
-      setRoles(newUser.authorities);
+    try {
+      const newUser = await authService.register(userData);
+      setUser(newUser);
+      setIsAuthenticated(true);
+      
+      // Actualizar roles
+      if (newUser && newUser.authorities) {
+        setRoles(newUser.authorities);
+      }
+      
+      return newUser;
+    } catch (err) {
+      console.error('Error en registro:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
     }
-    
-    return newUser;
   };
 
   const registerAdmin = async (userData) => {
-    // Requiere que ya exista sesión y sea admin
-    const result = await authService.registerAdmin(userData);
-    return result;
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Requiere que ya exista sesión y sea admin
+      return await authService.registerAdmin(userData);
+    } catch (err) {
+      console.error('Error en registro de admin:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const logout = () => {
-    authService.logout();
-    setUser(null);
-    setIsAuthenticated(false);
-    setIsAdmin(false);
-    setIsModerator(false);
-    setRoles([]);
+  const logout = async () => {
+    setLoading(true);
+    try {
+      await authService.logout();
+      setUser(null);
+      setIsAuthenticated(false);
+      setRoles([]);
+    } catch (err) {
+      console.error('Error en logout:', err);
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Lo que exponemos a componentes consumidores
@@ -107,11 +168,14 @@ export const AuthProvider = ({ children }) => {
         isAdmin,
         isModerator,
         hasRole,
-        roles, // Exponemos los roles
+        roles,
         login,
         register,
         registerAdmin,
-        logout
+        logout,
+        loading,
+        error,
+        refreshAuth: verifyAuthentication
       }}
     >
       {children}

@@ -2,7 +2,6 @@ import { API } from './../../../common/config/api'
 
 // Objeto con funciones de autenticacion
 export const authService = {
-  
   /**
    * Inicia sesión enviando credenciales al servidor.
    * El backend establece una cookie HTTP-only con el JWT.
@@ -13,7 +12,7 @@ export const authService = {
   login: async (credentials) => {
     try {
       const response = await API.post('/auth/login', credentials);
-      // Se almacenan los datos del usuario en memoria
+      // Se guardan los datos del usuario en memoria
       return response.data;
     } catch (error) {
       console.error('Error durante el login:', error);
@@ -30,7 +29,7 @@ export const authService = {
   register: async (userData) => {
     try {
       const response = await API.post('/auth/register', userData);
-      // Se almacenan los datos del usuario en memoria
+      // Se guardan los datos del usuario en memoria
       return response.data;
     } catch (error) {
       console.error('Error durante el registro:', error);
@@ -66,7 +65,27 @@ export const authService = {
       // La cookie ha sido invalidada por el backend
     } catch (error) {
       console.error('Error durante el logout:', error);
-      throw error;
+      // Incluso si hay error, consideramos el logout como exitoso del lado del cliente
+    }
+  },
+
+  /**
+   * Realiza una petición de prueba para verificar si el usuario está autenticado
+   * mediante el manejo de errores 401.
+   * No requiere un endpoint específico.
+   * 
+   * @returns {Promise<boolean>} - true si está autenticado
+   */
+  checkSession: async () => {
+    try {
+      await API.get('/auth/check');
+      return true; // Si no hay error 401/403, está autenticado
+    } catch (error) {
+      if (error.response && error.response.status === 401 || error.response.status === 403) {
+        return false; // Error 401/403 = No autenticado
+      }
+      // Para otros errores, asumimos que sigue autenticado (puede ser un error de red)
+      return true;
     }
   },
 
@@ -74,18 +93,18 @@ export const authService = {
    * Comprueba si el usuario tiene un rol específico.
    * 
    * @param {string} role - Rol a verificar
-   * @param {Object} user - Datos del usuario (opcional)
+   * @param {Object} user - Datos del usuario
    * @returns {boolean} - true si tiene el rol
    */
   hasRole: (role, user) => {
-    if (!user || !user.authorities) return false;
-    return user.authorities.includes(role);
+    if (!user || !user.role) return false;
+    return user.role === role;
   },
   
   /**
    * Comprueba si el usuario es administrador.
    * 
-   * @param {Object} user - Datos del usuario (opcional)
+   * @param {Object} user - Datos del usuario
    * @returns {boolean} - true si es administrador
    */
   isAdmin: (user) => {
@@ -95,7 +114,7 @@ export const authService = {
   /**
    * Comprueba si el usuario es moderador.
    * 
-   * @param {Object} user - Datos del usuario (opcional)
+   * @param {Object} user - Datos del usuario
    * @returns {boolean} - true si es moderador
    */
   isModerator: (user) => {
