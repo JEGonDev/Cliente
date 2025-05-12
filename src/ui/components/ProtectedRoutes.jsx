@@ -11,22 +11,15 @@ import { AuthContext } from '../../features/authentication/context/AuthContext';
  * @param {Array<string>} props.requiredRoles - Roles requeridos para acceder (opcional)
  * @param {string} props.redirectTo - Ruta a la que redireccionar si no está autenticado
  */
-export const ProtectedRoute = ({ 
+export const ProtectedRoutes = ({ 
   children, 
   requiredRoles = [], 
   redirectTo = '/login' 
 }) => {
-  const { isAuthenticated, hasRole, loading, refreshAuth } = useContext(AuthContext);
+  const { user, isAuthenticated, hasRole, loading, refreshAuth } = useContext(AuthContext);
   const location = useLocation();
 
-  // Verificar autenticación al entrar a la ruta
-  useEffect(() => {
-    if (!loading) {
-      refreshAuth();
-    }
-  }, [refreshAuth, loading, location.pathname]);
-
-  // Mostrar indicador de carga mientras verifica autenticación
+  // Si estamos cargando, muestra un indicador
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -41,11 +34,11 @@ export const ProtectedRoute = ({
   }
 
   // Si se especifican roles requeridos, verificar que el usuario tenga al menos uno
-  if (requiredRoles.length > 0) {
+  if (requiredRoles.length > 0 && user) {
     const hasRequiredRole = requiredRoles.some(role => hasRole(role));
     if (!hasRequiredRole) {
       // No tiene el rol necesario, redirigir a una página de acceso denegado
-      return <Navigate to="*" replace />;
+      return <Navigate to="/access-denied" replace />;
     }
   }
 
