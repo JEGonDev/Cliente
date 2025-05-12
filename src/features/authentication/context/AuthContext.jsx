@@ -11,91 +11,191 @@ export const AuthContext = createContext({
   login: async () => {},
   register: async () => {},
   registerAdmin: async () => {},
-  logout: () => {},
-  roles: [] // Nuevo: lista de roles del usuario
+  logout: async () => {},
+  loading: false,
+  error: null,
+  refreshAuth: () => {}
 });
 
 // Proveedor de contexto que encapsula la lógica de autenticación
 export const AuthProvider = ({ children }) => {
-  // Estado del usuario autenticado
-  const [user, setUser] = useState(() => authService.getCurrentUser());
-  // Estado de autenticación (si hay token)
-  const [isAuthenticated, setIsAuthenticated] = useState(authService.isAuthenticated());
-  // Estado de rol administrador como booleano
-  const [isAdmin, setIsAdmin] = useState(authService.isAdmin());
-  // Estado de rol moderador como booleano
-  const [isModerator, setIsModerator] = useState(authService.isModerator());
-  // Estado para almacenar la lista de roles
-  const [roles, setRoles] = useState([]);
-
-  // Al montar, sincronizamos el estado si ya existía sesión
-  useEffect(() => {
-    if (authService.isAuthenticated()) {
-      const currentUser = authService.getCurrentUser();
-      setUser(currentUser);
-      setIsAuthenticated(true);
-      setIsAdmin(authService.isAdmin());
-      setIsModerator(authService.isModerator());
-      
-      // Actualizar roles
-      if (currentUser && currentUser.authorities) {
-        setRoles(currentUser.authorities);
-      }
+  // Función para recuperar el usuario desde sessionStorage
+  const getSavedUser = () => {
+    try {
+      const savedUser = sessionStorage.getItem('auth_user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch (e) {
+      console.error("Error reading from sessionStorage:", e);
+      return null;
     }
-  }, []);
+  };
+
+  // Estado del usuario autenticado (inicializado desde sessionStorage si existe)
+  const [user, setUser] = useState(getSavedUser());
+  
+  // Estado de autenticación (basado en la existencia del usuario)
+  const [isAuthenticated, setIsAuthenticated] = useState(!!getSavedUser());
+  
+  // Estado de carga
+  const [loading, setLoading] = useState(false);
+  
+  // Estado de error
+  const [error, setError] = useState(null);
+
+  // Función para guardar el usuario en sessionStorage
+  const saveUser = (userData) => {
+    if (userData) {
+      try {
+        sessionStorage.setItem('auth_user', JSON.stringify(userData));
+      } catch (e) {
+        console.error("Error saving to sessionStorage:", e);
+      }
+    } else {
+      sessionStorage.removeItem('auth_user');
+    }
+  };
+
+  // Efecto para guardar el usuario en sessionStorage cuando cambia
+  useEffect(() => {
+    if (user) {
+      saveUser(user);
+    }
+  }, [user]);
 
   // Función para verificar si el usuario tiene un rol específico
   const hasRole = (role) => {
-    if (!user || !user.authorities) return false;
-    return user.authorities.includes(role);
+    if (!user) return false;
+    
+    // Verifica si el rol está en user.role (formato string)
+    if (user.role) {
+      return user.role === role;
+    }
+    
+    // O en user.authorities (formato array)
+    if (user.authorities && Array.isArray(user.authorities)) {
+      return user.authorities.includes(role);
+    }
+    
+    return false;
+  };
+
+  // Propiedades derivadas del usuario
+  const isAdmin = user ? hasRole('ADMINISTRADOR') : false;
+  const isModerator = user ? hasRole('MODERADOR') : false;
+
+  // Verifica la sesión con una solicitud al backend
+  const refreshAuth = async () => {
+    // Si no hay usuario, no hay nada que verificar
+    if (!user) return false;
+
+    setLoading(true);
+    try {
+      // Intenta acceder a un recurso protegido
+      // Si tiene éxito, la sesión sigue activa
+      await authService.checkSession();
+      return true;
+    } catch (err) {
+      console.error('Error verificando autenticación:', err);
+      
+      // Si hay error 401 (no autenticado), limpia el estado
+      if (err.response && err.response.status === 401) {
+        setUser(null);
+        setIsAuthenticated(false);
+        saveUser(null);
+        return false;
+      }
+      
+      // Para otros errores, mantén el estado actual
+      return isAuthenticated;
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Funciones que llamarán a authService y actualizarán el contexto
   const login = async (credentials) => {
-    const result = await authService.login(credentials);
-    const { user: loggedUser } = result;
-    setUser(loggedUser);
-    setIsAuthenticated(true);
-    setIsAdmin(authService.isAdmin());
-    setIsModerator(authService.isModerator());
+    setLoading(true);
+    setError(null);
     
-    // Actualizar roles
-    if (loggedUser && loggedUser.authorities) {
-      setRoles(loggedUser.authorities);
+    try {
+      const response = await authService.login(credentials);
+      // Extrae los datos del usuario de la respuesta
+      const userData = response; // O response.data dependiendo de tu API
+      
+      setUser(userData);
+      setIsAuthenticated(true);
+      saveUser(userData);
+      
+      return userData;
+    } catch (err) {
+      console.error('Error en login:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
     }
-    
-    return loggedUser;
   };
 
   const register = async (userData) => {
-    const result = await authService.register(userData);
-    const { user: newUser } = result;
-    setUser(newUser);
-    setIsAuthenticated(true);
-    setIsAdmin(authService.isAdmin());
-    setIsModerator(authService.isModerator());
+    setLoading(true);
+    setError(null);
     
-    // Actualizar roles
-    if (newUser && newUser.authorities) {
-      setRoles(newUser.authorities);
+    try {
+      const response = await authService.register(userData);
+      // Extrae los datos del usuario de la respuesta
+      const newUser = response; // O response.data dependiendo de tu API
+      
+      setUser(newUser);
+      setIsAuthenticated(true);
+      saveUser(newUser);
+      
+      return newUser;
+    } catch (err) {
+      console.error('Error en registro:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
     }
-    
-    return newUser;
   };
 
   const registerAdmin = async (userData) => {
-    // Requiere que ya exista sesión y sea admin
-    const result = await authService.registerAdmin(userData);
-    return result;
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Requiere que ya exista sesión y sea admin
+      const response = await authService.registerAdmin(userData);
+      return response;
+    } catch (err) {
+      console.error('Error en registro de admin:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const logout = () => {
-    authService.logout();
-    setUser(null);
-    setIsAuthenticated(false);
-    setIsAdmin(false);
-    setIsModerator(false);
-    setRoles([]);
+  const logout = async () => {
+    setLoading(true);
+    try {
+      await authService.logout();
+      
+      // Limpiamos el estado local independientemente del resultado
+      setUser(null);
+      setIsAuthenticated(false);
+      saveUser(null);
+    } catch (err) {
+      console.error('Error en logout:', err);
+      setError(err);
+      
+      // Incluso con error, limpiamos el estado local
+      setUser(null);
+      setIsAuthenticated(false);
+      saveUser(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Lo que exponemos a componentes consumidores
@@ -107,11 +207,13 @@ export const AuthProvider = ({ children }) => {
         isAdmin,
         isModerator,
         hasRole,
-        roles, // Exponemos los roles
         login,
         register,
         registerAdmin,
-        logout
+        logout,
+        loading,
+        error,
+        refreshAuth // Función para verificar autenticación bajo demanda
       }}
     >
       {children}

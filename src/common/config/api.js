@@ -8,28 +8,61 @@ export const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   timeout: 8000,
   headers: {
-    'Content-Type': 'application/json',  // Enviamos siempre JSON
-    'Accept': 'application/json'         // Esperamos recibir JSON
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
   },
-  withCredentials: true
+  withCredentials: true // Importante para enviar cookies en peticiones cross-origin
 });
 
+// Estado global para controlar redirecciones de sesión expirada
+let isRefreshing = false;
+let authRedirectCallback = null;
+
+/**
+ * Establece una función callback para manejar redirecciones por sesión expirada.
+ * Esta función debe ser llamada desde el componente principal que pueda navegar.
+ * 
+ * @param {Function} callback - Función que redirecciona a la página de login
+ */
+export const setAuthRedirectCallback = (callback) => {
+  authRedirectCallback = callback;
+};
+
 // Interceptor de petición: se ejecuta ANTES de cada llamada.
-// Las cookies se envían automáticamente con cada petición
 API.interceptors.request.use(
   config => {
-    return config
+    // Las cookies se envían automáticamente con withCredentials: true
+    return config;
   },
   error => {
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
-)
+);
 
-// Interceptor de respuesta: logging centralizado de errores.
-// Atrapa cualquier status ≠ 2xx y lo imprime en consola.
+// Interceptor de respuesta: maneja errores de autenticación y otros.
 API.interceptors.response.use(
-  response => response,  // Todo OK ─ paso directamente la respuesta
+  response => response, // Todo OK - paso directamente la respuesta
   error => {
+    // Manejar errores específicos de autenticación
+    if (error.response && error.response.status === 401) {
+      // Sesión expirada o usuario no autenticado
+      console.warn('Sesión expirada o usuario no autenticado');
+      
+      // Evitar múltiples redirecciones
+      if (!isRefreshing && authRedirectCallback) {
+        isRefreshing = true;
+        
+        // Redirigir al login
+        authRedirectCallback();
+        
+        // Resetear el flag después de un tiempo
+        setTimeout(() => {
+          isRefreshing = false;
+        }, 1000);
+      }
+    }
+    
+    // Logging centralizado de errores
     if (error.response) {
       // El servidor respondió con un código de error
       console.error(
@@ -43,6 +76,7 @@ API.interceptors.response.use(
       // Error al configurar la petición
       console.error('[API Error] Configuración fallida:', error.message);
     }
+    
     return Promise.reject(error);
   }
 );
