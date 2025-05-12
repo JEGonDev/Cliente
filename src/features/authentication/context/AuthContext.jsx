@@ -19,30 +19,19 @@ export const AuthContext = createContext({
 
 // Proveedor de contexto que encapsula la lógica de autenticación
 export const AuthProvider = ({ children }) => {
-  // Función para recuperar el usuario desde sessionStorage
-  const getSavedUser = () => {
-    try {
-      const savedUser = sessionStorage.getItem('auth_user');
-      return savedUser ? JSON.parse(savedUser) : null;
-    } catch (e) {
-      console.error("Error reading from sessionStorage:", e);
-      return null;
-    }
-  };
-
-  // Estado del usuario autenticado (inicializado desde sessionStorage si existe)
-  const [user, setUser] = useState(getSavedUser());
+  // Estado del usuario autenticado (inicializado como null)
+  const [user, setUser] = useState(null);
   
-  // Estado de autenticación (basado en la existencia del usuario)
-  const [isAuthenticated, setIsAuthenticated] = useState(!!getSavedUser());
+  // Estado de autenticación (inicializado como false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   
   // Estado de carga
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   
   // Estado de error
   const [error, setError] = useState(null);
 
-  // Función para guardar el usuario en sessionStorage
+  // Función para guardar el usuario en sessionStorage (como respaldo local)
   const saveUser = (userData) => {
     if (userData) {
       try {
@@ -55,12 +44,26 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Efecto para guardar el usuario en sessionStorage cuando cambia
+  // Efecto para verificar la autenticación al iniciar la aplicación
   useEffect(() => {
-    if (user) {
-      saveUser(user);
-    }
-  }, [user]);
+    const checkAuthStatus = async () => {
+      try {
+        const isSessionValid = await refreshAuth();
+        if (!isSessionValid && !isAuthenticated) {
+          // Limpiar el estado y sessionStorage si no hay sesión válida
+          setUser(null);
+          setIsAuthenticated(false);
+          saveUser(null);
+        }
+      } catch (err) {
+        console.error("Error checking authentication status:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuthStatus();
+  }, []);
 
   // Función para verificar si el usuario tiene un rol específico
   const hasRole = (role) => {
@@ -85,15 +88,19 @@ export const AuthProvider = ({ children }) => {
 
   // Verifica la sesión con una solicitud al backend
   const refreshAuth = async () => {
-    // Si no hay usuario, no hay nada que verificar
-    if (!user) return false;
-
-    setLoading(true);
     try {
-      // Intenta acceder a un recurso protegido
-      // Si tiene éxito, la sesión sigue activa
-      await authService.checkSession();
-      return true;
+      // No requiere usuario previo, verifica directamente con el backend
+      const response = await authService.checkSession();
+      
+      // Si la verificación fue exitosa y hay datos de usuario
+      if (response && response.data) {
+        setUser(response.data);
+        setIsAuthenticated(true);
+        saveUser(response.data);
+        return true;
+      }
+      
+      return false;
     } catch (err) {
       console.error('Error verificando autenticación:', err);
       
@@ -107,8 +114,6 @@ export const AuthProvider = ({ children }) => {
       
       // Para otros errores, mantén el estado actual
       return isAuthenticated;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -119,8 +124,8 @@ export const AuthProvider = ({ children }) => {
     
     try {
       const response = await authService.login(credentials);
-      // Extrae los datos del usuario de la respuesta
-      const userData = response; // O response.data dependiendo de tu API
+      // Después del login exitoso, obtener los datos del usuario
+      const userData = response;
       
       setUser(userData);
       setIsAuthenticated(true);
@@ -143,7 +148,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authService.register(userData);
       // Extrae los datos del usuario de la respuesta
-      const newUser = response; // O response.data dependiendo de tu API
+      const newUser = response;
       
       setUser(newUser);
       setIsAuthenticated(true);
@@ -181,7 +186,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await authService.logout();
       
-      // Limpiamos el estado local independientemente del resultado
+      // Limpiamos el estado local
       setUser(null);
       setIsAuthenticated(false);
       saveUser(null);
@@ -213,7 +218,7 @@ export const AuthProvider = ({ children }) => {
         logout,
         loading,
         error,
-        refreshAuth // Función para verificar autenticación bajo demanda
+        refreshAuth
       }}
     >
       {children}
