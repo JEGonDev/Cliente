@@ -14,30 +14,8 @@ export const GuidesSection = ({
   isAdmin = false
 }) => {
   // Descripción general de las guías
-  const description = "Landify is a landing page UI kit for Figma, created to help designers design the landing page quickly without having to spend much time. It is crafted with a vision to support any web project and thereby creating a block system that helps with all the use cases. The kit contains 170+ blocks and 50D+ components. It's fully customizable, well-organized layers, text, color and effect styles.";
+  const description = "Explora nuestras guías sobre hidroponía y cultivos sostenibles.";
   
-  // Datos quemados directamente si no hay guías
-  const demoGuides = guides.length > 0 ? guides : [
-    { 
-      id: 1, 
-      title: 'Guía paso 1', 
-      description: 'Landify is a landing page UI kit for Figma, created to help designers design the landing page quickly without having to spend much time. It is crafted with a vision to support any web project and thereby creating a block system that helps with all the use cases. The kit contains 170+ blocks and 50D+ components. It\'s fully customizable, well-organized layers, text, color and effect styles.',
-      imageUrl: 'https://redagricola.com/wp-content/uploads/2023/05/dsc_0022-scaled.jpg'
-    },
-    { 
-      id: 2, 
-      title: 'Guía paso 2', 
-      description: 'Landify is a landing page UI kit for Figma, created to help designers design the landing page quickly without having to spend much time. It is crafted with a vision to support any web project and thereby creating a block system that helps with all the use cases. The kit contains 170+ blocks and 50D+ components. It\'s fully customizable, well-organized layers, text, color and effect styles.',
-      imageUrl: 'https://media.istockphoto.com/id/626603008/es/foto/verduras-hidrop%C3%B3nica.jpg?s=612x612&w=0&k=20&c=G_pmg0FcRHsTPL6etJN4xs7LnD-72YmfJq2eyDtc4Gs='
-    },
-    { 
-      id: 3, 
-      title: 'Guía paso 3', 
-      description: 'Landify is a landing page UI kit for Figma, created to help designers design the landing page quickly without having to spend much time. It is crafted with a vision to support any web project and thereby creating a block system that helps with all the use cases. The kit contains 170+ blocks and 50D+ components. It\'s fully customizable, well-organized layers, text, color and effect styles.',
-      imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_u7M8OrUQLVIKJVDHthoDmunaBrJQFZtfRfI-NEBJbdOemzsDIfZM0f9KioskZwXHGbs&usqp=CAU'
-    }
-  ];
-
   return (
     <section>
       <p className="text-sm text-gray-700 mb-6">
@@ -46,16 +24,19 @@ export const GuidesSection = ({
       
       {/* Lista de guías */}
       <div>
-        {demoGuides.map((guide) => (
-          <div key={guide.id} className="mb-6">
-            {/* Título y descripción arriba */}
-            <GuideCard 
-              title={guide.title}
-              description={guide.description}
-              imageUrl={guide.imageUrl}
-            />
-          </div>
-        ))}
+        {guides.length > 0 ? (
+          guides.map((guide) => (
+            <div key={guide.id} className="mb-6">
+              <GuideCard 
+                title={guide.title}
+                description={guide.description}
+                imageUrl={guide.imageUrl}
+              />
+            </div>
+          ))
+        ) : (
+          <p className="text-gray-500 italic">No hay guías disponibles.</p>
+        )}
       </div>
       
       {/* Botones de acción (solo para administradores) */}
