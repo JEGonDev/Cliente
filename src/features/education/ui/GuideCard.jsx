@@ -9,9 +9,9 @@ import PropTypes from 'prop-types';
  * @param {string} props.imageUrl - URL de la imagen
  */
 export const GuideCard = ({ 
-  title = 'Guía paso 1', 
-  description = 'Accede a nuestras guías detalladas y fáciles de seguir sobre hidroponía. Estas guías están diseñadas para proporcionarte toda la información que necesitas para comenzar y optimizar tu cultivo hidropónico. Descarga nuestras guías prácticas sobre sistemas de cultivo, control de nutrientes, y mejores prácticas, y lleva tu experiencia de cultivo al siguiente nivel.',
-  imageUrl = '/path/to/image.jpg'
+  title = '',
+  description = '',
+  imageUrl = ''
 }) => {
   return (
     <div className="mb-8 border-b border-gray-200 pb-6">

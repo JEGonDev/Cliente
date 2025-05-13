@@ -13,9 +13,9 @@ import { Book, Video, FileText } from 'lucide-react';
  * @param {number} props.guideCount - Número de guías
  */
 export const ModuleContentStats = ({
-  title = 'Introducción al módulo',
-  description = 'Bienvenido a Germogli, tu espacio educativo para descubrir el fascinante mundo de la hidroponía. En este módulo introductorio aprenderás cómo cultivar plantas sin necesidad de suelo, utilizando soluciones nutritivas y sistemas sostenibles que puedes implementar tanto en casa como a mayor escala. Exploraremos juntos los conceptos clave como el control del pH, la oxigenación del agua, los tipos de sistemas hidropónicos y los beneficios ambientales de esta técnica. A través de videos, artículos y guías, te acompañaremos paso a paso para que adquieras los conocimientos necesarios y puedas iniciar tu propio huerto hidropónico con confianza y entusiasmo.',
-  tags = ['Principiantes', 'PrimerosPasos', 'General'],
+  title = '',
+  description = '',
+  tags = [],
   videoCount = 0,
   articleCount = 0,
   guideCount = 0
@@ -24,18 +24,20 @@ export const ModuleContentStats = ({
     <div className="mb-8">
       <h1 className="text-2xl font-bold mb-4">{title}</h1>
 
-      <div className="flex flex-wrap gap-2 mb-4">
-        {tags.map((tag, idx) => (
-          <span 
-            key={idx} 
-            className="text-sm bg-gray-100 text-gray-800 px-2 py-1 rounded-full"
-          >
-            #{tag}
-          </span>
-        ))}
-      </div>
+      {tags.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {tags.map((tag, idx) => (
+            <span 
+              key={idx} 
+              className="text-sm bg-gray-100 text-gray-800 px-2 py-1 rounded-full"
+            >
+              #{tag}
+            </span>
+          ))}
+        </div>
+      )}
 
-      <p className="text-gray-700 mb-6">{description}</p>
+      {description && <p className="text-gray-700 mb-6">{description}</p>}
 
       <div className="flex flex-wrap gap-6 text-sm text-gray-600">
         <div className="flex items-center gap-1">

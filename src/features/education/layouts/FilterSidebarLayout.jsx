@@ -1,5 +1,3 @@
-
-import PropTypes from 'prop-types';
 import { FilterTag } from '../ui/FilterTag';
 
 /**
@@ -20,14 +18,18 @@ export const FilterSidebarLayout = ({
   return (
     <aside className="w-64 p-4 hidden lg:block">
       <div className="space-y-2">
-        {tags.map((tag, index) => (
-          <FilterTag
-            key={`sidebar-tag-${index}-${tag}`}
-            text={tag}
-            active={activeTags.includes(tag)}
-            onClick={onTagClick}
-          />
-        ))}
+        {tags.length > 0 ? (
+          tags.map((tag, index) => (
+            <FilterTag
+              key={`sidebar-tag-${index}-${tag}`}
+              text={tag}
+              active={activeTags.includes(tag)}
+              onClick={onTagClick}
+            />
+          ))
+        ) : (
+          <p className="text-sm text-gray-500 italic">No hay etiquetas disponibles</p>
+        )}
       </div>
       
       {isAdmin && (
