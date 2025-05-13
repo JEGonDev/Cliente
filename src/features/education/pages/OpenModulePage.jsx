@@ -15,6 +15,8 @@ import { useGuides } from '../hooks/useGuides';
 import { useVideos } from '../hooks/useVideos';
 
 export const OpenModulePage = () => {
+  console.log("Renderizando OpenModulePage");
+  
   // Obtener información de autenticación y roles
   const { isAdmin } = useContext(AuthContext);
   const { moduleId } = useParams();
@@ -61,14 +63,52 @@ export const OpenModulePage = () => {
   const [editingSection, setEditingSection] = useState(null);
   const [editingId, setEditingId] = useState(null);
 
+  // Estado para controlar si se ha intentado cargar los datos
+  const [loadAttempted, setLoadAttempted] = useState(false);
+
   // Cargar datos al iniciar
   useEffect(() => {
-    if (moduleId) {
-      fetchModuleById(moduleId);
-      fetchArticlesByModuleId(moduleId);
-      fetchGuidesByModuleId(moduleId);
-      fetchVideosByModuleId(moduleId);
-    }
+    console.log("Ejecutando useEffect en OpenModulePage");
+    
+    const loadModuleData = async () => {
+      console.log("Cargando datos del módulo", moduleId);
+      
+      if (moduleId) {
+        try {
+          // Primero intentamos cargar el módulo principal
+          const moduleData = await fetchModuleById(moduleId);
+          console.log("Módulo cargado:", moduleData);
+          
+          // Luego cargamos todos los contenidos relacionados, capturando errores individualmente
+          try {
+            const articlesData = await fetchArticlesByModuleId(moduleId);
+            console.log("Artículos cargados:", articlesData);
+          } catch (error) {
+            console.error("Error cargando artículos:", error);
+          }
+          
+          try {
+            const guidesData = await fetchGuidesByModuleId(moduleId);
+            console.log("Guías cargadas:", guidesData);
+          } catch (error) {
+            console.error("Error cargando guías:", error);
+          }
+          
+          try {
+            const videosData = await fetchVideosByModuleId(moduleId);
+            console.log("Videos cargados:", videosData);
+          } catch (error) {
+            console.error("Error cargando videos:", error);
+          }
+        } catch (error) {
+          console.error("Error cargando el módulo:", error);
+        } finally {
+          setLoadAttempted(true);
+        }
+      }
+    };
+
+    loadModuleData();
   }, [moduleId]);
 
   // Manejadores para artículos
@@ -112,8 +152,31 @@ export const OpenModulePage = () => {
   };
   
   // Estado de carga general
-  const isLoading = loadingModule || loadingArticles || loadingGuides || loadingVideos;
-  const hasError = moduleError || articleError || guideError || videoError;
+  const isLoading = loadingModule && !loadAttempted;
+
+  // Procesamos los tags para asegurarnos de que nunca enviemos algo incorrecto
+  const getModuleTags = () => {
+    if (!module || !module.tags) return [];
+    
+    // Si los tags son strings, los usamos directamente
+    if (Array.isArray(module.tags) && module.tags.length > 0) {
+      if (typeof module.tags[0] === 'string') {
+        return module.tags;
+      }
+      
+      // Si son objetos, extraemos la propiedad name
+      if (typeof module.tags[0] === 'object' && module.tags[0] !== null) {
+        return module.tags;
+      }
+    }
+    
+    return [];
+  };
+
+  console.log("Module data:", module);
+  console.log("Articles:", articles);
+  console.log("Guides:", guides);
+  console.log("Videos:", videos);
 
   return (
     <>
@@ -126,10 +189,10 @@ export const OpenModulePage = () => {
             <div className="flex justify-center items-center h-64">
               <p className="text-gray-500">Cargando contenido educativo...</p>
             </div>
-          ) : hasError ? (
+          ) : moduleError ? (
             <div className="bg-red-100 text-red-800 p-4 rounded">
-              <p>Ha ocurrido un error al cargar el contenido.</p>
-              {moduleError && <p>{moduleError}</p>}
+              <p>Ha ocurrido un error al cargar el módulo.</p>
+              <p className="text-sm">{moduleError}</p>
             </div>
           ) : !module ? (
             <div className="bg-yellow-100 text-yellow-800 p-4 rounded">
@@ -137,19 +200,20 @@ export const OpenModulePage = () => {
             </div>
           ) : (
             <>
+              {/* Siempre mostramos el encabezado del módulo si existe */}
               <ModuleHeader 
                 videoCount={videos?.length || 0}
                 articleCount={articles?.length || 0}
                 guideCount={guides?.length || 0}
-                title={module.title}
-                description={module.description}
-                tags={module.tags || []}
+                title={module.title || ''}
+                description={module.description || ''}
+                tags={getModuleTags()}
               />
 
-              {/* Sección de artículos con controles de administrador */}
+              {/* Sección de artículos - Se muestra incluso si hay error, solo verificamos si está cargando */}
               <div className="mb-8">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">Artículos que podrían interesarte</h2>
+                  <h2 className="text-xl font-semibold">Artículos</h2>
                   {isAdmin && (
                     <AdminActions
                       onAddClick={handleAddArticle}
@@ -159,10 +223,25 @@ export const OpenModulePage = () => {
                     />
                   )}
                 </div>
-                <ArticlesLayout articles={articles || []} />
+                
+                {loadingArticles ? (
+                  <p className="text-gray-500">Cargando artículos...</p>
+                ) : articleError ? (
+                  <div className="bg-orange-50 text-orange-800 p-3 rounded mb-4">
+                    <p className="text-sm">No se pudieron cargar los artículos. Intente más tarde.</p>
+                  </div>
+                ) : (
+                  <ArticlesLayout 
+                    articles={articles || []} 
+                    isAdmin={isAdmin} 
+                    onAddArticle={handleAddArticle}
+                    onEditArticle={handleEditArticle}
+                    onDeleteArticle={() => handleDeleteArticle(editingId)}
+                  />
+                )}
               </div>
 
-              {/* Sección de guías con controles de administrador */}
+              {/* Sección de guías */}
               <div className="mb-8">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-semibold">Guías descargables</h2>
@@ -175,10 +254,25 @@ export const OpenModulePage = () => {
                     />
                   )}
                 </div>
-                <GuidesLayout guides={guides || []} />
+                
+                {loadingGuides ? (
+                  <p className="text-gray-500">Cargando guías...</p>
+                ) : guideError ? (
+                  <div className="bg-orange-50 text-orange-800 p-3 rounded mb-4">
+                    <p className="text-sm">No se pudieron cargar las guías. Intente más tarde.</p>
+                  </div>
+                ) : (
+                  <GuidesLayout 
+                    guides={guides || []} 
+                    isAdmin={isAdmin}
+                    onAddGuide={handleAddGuide}
+                    onEditGuide={handleEditGuide}
+                    onDeleteGuide={() => handleDeleteGuide(editingId)}
+                  />
+                )}
               </div>
 
-              {/* Sección de videos con controles de administrador */}
+              {/* Sección de videos */}
               <div className="mb-8">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-semibold">Videos</h2>
@@ -191,7 +285,22 @@ export const OpenModulePage = () => {
                     />
                   )}
                 </div>
-                <VideosLayout videos={videos || []} />
+                
+                {loadingVideos ? (
+                  <p className="text-gray-500">Cargando videos...</p>
+                ) : videoError ? (
+                  <div className="bg-orange-50 text-orange-800 p-3 rounded mb-4">
+                    <p className="text-sm">No se pudieron cargar los videos. Intente más tarde.</p>
+                  </div>
+                ) : (
+                  <VideosLayout 
+                    videos={videos || []} 
+                    isAdmin={isAdmin}
+                    onAddVideo={handleAddVideo}
+                    onEditVideo={handleEditVideo}
+                    onDeleteVideo={() => handleDeleteVideo(editingId)}
+                  />
+                )}
               </div>
             </>
           )}
