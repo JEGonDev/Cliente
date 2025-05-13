@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
-import { AlertItem } from '../ui/AlertItem';
 import { ThresholdConfig } from '../ui/ThresholdConfig';
+import { AlertItem } from '../ui/AlertItem';
 
 /**
  * Layout para la sección de alertas y configuración

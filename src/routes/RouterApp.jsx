@@ -36,6 +36,12 @@ export const RouterApp = () => {
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="*" element={<NotFoundPage />} />
 
+        {/* Rutas del modulo de monitoreo */}
+        <Route path="/monitoring" element={<MonitoringPage />} />
+        <Route path="/monitoring/history" element={<DataHistoryPage />} />
+        <Route path="/monitoring/alerts" element={<AlertsPage />} />
+        <Route path="/monitoring/real-time" element={<RealTimeMonitoringPage />} />
+
       {/* Rutas protegidas: */}
       <Route element={<ProtectedRoutes />} >
         
@@ -51,11 +57,7 @@ export const RouterApp = () => {
         <Route path="/profile/edit" element={<ProfileEditPage />} />
         <Route path="/profile/admin" element={<ProfileAdminPage />} />
 
-        {/* Rutas del modulo de monitoreo */}
-        <Route path="/monitoring" element={<MonitoringPage />} />
-        <Route path="/monitoring/history" element={<DataHistoryPage />} />
-        <Route path="/monitoring/alerts" element={<AlertsPage />} />
-        <Route path="/monitoring/real-time" element={<RealTimeMonitoringPage />} />
+      
         
       </Route>
   </Routes>

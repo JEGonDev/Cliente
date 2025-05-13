@@ -21,8 +21,7 @@ export const AlertItem = ({
   value = '',
   threshold = '',
   time = ''
-}) => {
-  // Configuración según el tipo de alerta
+}) => {// Configuración según el tipo de alerta
   const alertConfig = {
     error: {
       icon: <AlertCircle size={20} />,

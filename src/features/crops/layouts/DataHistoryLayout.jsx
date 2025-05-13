@@ -1,21 +1,23 @@
-import {LineChart,Line,XAxis,YAxis,CartesianGrid,Tooltip,Legend,ResponsiveContainer} from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { DateRangeFilter } from '../ui/DateRangeFilter';
 import { StatCard } from '../ui/StatCard';
 import { ExportSection } from '../ui/ExportSection';
 
 export const DataHistoryLayout = () => {
   const data = [
-    { fecha: '2025-05-01', temperatura: 18.2 },
-    { fecha: '2025-05-02', temperatura: 20.1 },
-    { fecha: '2025-05-03', temperatura: 21.5 },
-    { fecha: '2025-05-04', temperatura: 19.8 },
-    { fecha: '2025-05-05', temperatura: 22.3 },
-    { fecha: '2025-05-06', temperatura: 23.1 },
-    { fecha: '2025-05-07', temperatura: 20.7 },
+    { fecha: '2025-05-01', temperatura: 18.2, humedad: 60, ec: 1.1 },
+    { fecha: '2025-05-02', temperatura: 20.1, humedad: 62, ec: 1.2 },
+    { fecha: '2025-05-03', temperatura: 21.5, humedad: 65, ec: 1.3 },
+    { fecha: '2025-05-04', temperatura: 19.8, humedad: 63, ec: 1.2 },
+    { fecha: '2025-05-05', temperatura: 22.3, humedad: 64, ec: 1.4 },
+    { fecha: '2025-05-06', temperatura: 23.1, humedad: 67, ec: 1.5 },
+    { fecha: '2025-05-07', temperatura: 20.7, humedad: 66, ec: 1.3 },
   ];
 
-  // Extraer temperaturas
+  // Extraer temperaturas, humedad y conductividad
   const temps = data.map(d => d.temperatura);
+  const humidity = data.map(d => d.humedad);
+  const conductivity = data.map(d => d.ec);
 
   // Calcular estadísticas
   const min = Math.min(...temps).toFixed(1);
@@ -35,7 +37,7 @@ export const DataHistoryLayout = () => {
       
       <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-medium">Historial de Temperatura</h2>
+          <h2 className="text-lg font-medium">Historial de Datos</h2>
           <div className="flex gap-2">
             <button className="px-3 py-1 text-sm rounded-full bg-gray-200 text-gray-800">Día</button>
             <button className="px-3 py-1 text-sm rounded-full bg-primary text-white">Semana</button>
@@ -46,10 +48,15 @@ export const DataHistoryLayout = () => {
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="fecha" />
-            <YAxis unit="°C" />
+            <YAxis />
             <Tooltip />
             <Legend />
+            {/* Línea de temperatura */}
             <Line type="monotone" dataKey="temperatura" stroke="#10b981" strokeWidth={2} />
+            {/* Línea de humedad */}
+            <Line type="monotone" dataKey="humedad" stroke="#3b82f6" strokeWidth={2} />
+            {/* Línea de conductividad */}
+            <Line type="monotone" dataKey="ec" stroke="#f97316" strokeWidth={2} />
           </LineChart>
         </ResponsiveContainer>
       </div>
