@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route } from "react-router-dom";
 import { ProtectedRoutes } from "../ui/components/ProtectedRoutes";
 import { NotFoundPage } from "../pages/NotFoundPage";
 // Importaciones del modulo de inicio y autenticacion
@@ -10,22 +10,21 @@ import { ResetPasswordPage } from "../features/authentication/pages/ResetPasswor
 // Importaciones del modulo de comunidad
 import { CommunityPage } from "../features/community/pages/CommunityPage";
 // Importaciones de modulo educativo
-import { EducationPage } from '../pages/EducationPage';
-import { OpenModulePage } from '../features/education/pages/OpenModulePage';
-import { ModuleFormPage } from '../features/education/pages/ModuleFormPage';
+import { EducationPage } from "../pages/EducationPage";
+import { OpenModulePage } from "../features/education/pages/OpenModulePage";
+import { ModuleFormPage } from "../features/education/pages/ModuleFormPage";
 // Importaciones del modulo de perfil
-import { ProfileAdminPage } from '../features/profile/pages/ProfileAdminPage';
-import { ProfileEditPage } from '../features/profile/pages/ProfileEditPage';
+import { ProfileAdminPage } from "../features/profile/pages/ProfileAdminPage";
+import { ProfileEditPage } from "../features/profile/pages/ProfileEditPage";
 // Importaciones del modulo de Monitoreo
-import { MonitoringPage } from '../pages/MonitoringPage';
-import { RealTimeMonitoringPage } from '../features/crops/pages/RealTimeMonitoringPage';
-import { AlertsPage } from '../features/crops/pages/AlertsPage';
-import { DataHistoryPage } from '../features/crops/pages/DataHistoryPage';
-
+import { MonitoringPage } from "../pages/MonitoringPage";
+import { RealTimeMonitoringPage } from "../features/crops/pages/RealTimeMonitoringPage";
+import { AlertsPage } from "../features/crops/pages/AlertsPage";
+import { DataHistoryPage } from "../features/crops/pages/DataHistoryPage";
+import { CropsPage } from "../features/crops/pages/CropsPage";
 
 export const RouterApp = () => {
   return (
-
     // Rutas existentes de la aplicacion:
     <Routes>
       {/* Rutas publicas: */}
@@ -37,12 +36,17 @@ export const RouterApp = () => {
       <Route path="*" element={<NotFoundPage />} />
 
       {/* Rutas protegidas: */}
-      <Route element={<ProtectedRoutes />} >
-        
+      <Route element={<ProtectedRoutes />}>
         {/* Rutas del modulo educativo */}
         <Route path="/education" element={<EducationPage />} />
-        <Route path="/education/module/:moduleId" element={<OpenModulePage />} />
-        <Route path="/education/module-form/:moduleId?" element={<ModuleFormPage />} />
+        <Route
+          path="/education/module/:moduleId"
+          element={<OpenModulePage />}
+        />
+        <Route
+          path="/education/module-form/:moduleId?"
+          element={<ModuleFormPage />}
+        />
 
         {/* Rutas del modulo de comunidad */}
         <Route path="/community" element={<CommunityPage />} />
@@ -55,9 +59,9 @@ export const RouterApp = () => {
         <Route path="/monitoring" element={<MonitoringPage />} />
         <Route path="/monitoring/history" element={<DataHistoryPage />} />
         <Route path="/monitoring/alerts" element={<AlertsPage />} />
-        <Route path="/monitoring/real-time" element={<RealTimeMonitoringPage />} />
-        
+        <Route path ="/monitoring/real-time"element={<RealTimeMonitoringPage />} />
+        <Route path="/monitoring/crops" element={<CropsPage />} />
       </Route>
-  </Routes>
-  )
-}
+    </Routes>
+  );
+};

@@ -33,5 +33,4 @@ export const MonitoringLayout = ({
 
 MonitoringLayout.propTypes = {
   children: PropTypes.node.isRequired,
-  activeSection: PropTypes.string
-};
+  activeSection: PropTypes.string}

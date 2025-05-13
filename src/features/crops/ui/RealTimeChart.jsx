@@ -17,19 +17,37 @@ const sampleData = [
   { time: '22:00', temp: 22, hum: 75, cond: 1.5 }
 ];
 
+// Funciones para formatear etiquetas y tooltips
+const formatTemperature = (value) => `${value} °C`;
+const formatHumidity = (value) => `${value} %`;
+const formatConductivity = (value) => `${value} dS/m`;
+
 export const RealTimeChart = () => {
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-6">
       {/* Gráfica de Temperatura */}
       <div className="h-80 bg-white rounded-lg p-4 shadow">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={sampleData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="time" />
-            <YAxis domain={[15, 35]} />
-            <Tooltip />
-            <Legend />
-            <Line type="monotone" dataKey="temp" name="Temperatura (°C)" stroke="#ef4444" />
+            <XAxis dataKey="time" stroke="#4b5563" tick={{ fontSize: 12 }} />
+            <YAxis
+              domain={[15, 35]}
+              tickFormatter={formatTemperature}
+              stroke="#4b5563"
+              tick={{ fontSize: 12 }}
+            />
+            <Tooltip formatter={(value) => formatTemperature(value)} />
+            <Legend verticalAlign="top" height={36} />
+            <Line
+              type="monotone"
+              dataKey="temp"
+              name="Temperatura (°C)"
+              stroke="#ef4444"
+              strokeWidth={2}
+              dot={{ r: 3 }}
+              activeDot={{ r: 5 }}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -39,11 +57,24 @@ export const RealTimeChart = () => {
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={sampleData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="time" />
-            <YAxis domain={[0, 100]} />
-            <Tooltip />
-            <Legend />
-            <Line type="monotone" dataKey="hum" name="Humedad (%)" stroke="#3b82f6" />
+            <XAxis dataKey="time" stroke="#4b5563" tick={{ fontSize: 12 }} />
+            <YAxis
+              domain={[0, 100]}
+              tickFormatter={formatHumidity}
+              stroke="#4b5563"
+              tick={{ fontSize: 12 }}
+            />
+            <Tooltip formatter={(value) => formatHumidity(value)} />
+            <Legend verticalAlign="top" height={36} />
+            <Line
+              type="monotone"
+              dataKey="hum"
+              name="Humedad relativa (%)"
+              stroke="#3b82f6"
+              strokeWidth={2}
+              dot={{ r: 3 }}
+              activeDot={{ r: 5 }}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -53,11 +84,24 @@ export const RealTimeChart = () => {
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={sampleData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="time" />
-            <YAxis domain={[0, 2]} />
-            <Tooltip />
-            <Legend />
-            <Line type="monotone" dataKey="cond" name="Conductividad (dS/m)" stroke="#10b981" />
+            <XAxis dataKey="time" stroke="#4b5563" tick={{ fontSize: 12 }} />
+            <YAxis
+              domain={[0, 2]}
+              tickFormatter={formatConductivity}
+              stroke="#4b5563"
+              tick={{ fontSize: 12 }}
+            />
+            <Tooltip formatter={(value) => formatConductivity(value)} />
+            <Legend verticalAlign="top" height={36} />
+            <Line
+              type="monotone"
+              dataKey="cond"
+              name="Conductividad (dS/m)"
+              stroke="#10b981"
+              strokeWidth={2}
+              dot={{ r: 3 }}
+              activeDot={{ r: 5 }}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>

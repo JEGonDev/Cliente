@@ -3,6 +3,7 @@ import { MonitoringLayout } from '../features/crops/layouts/MonitoringLayout';
 import { DataHistoryLayout } from '../features/crops/layouts/DataHistoryLayout';
 import { AlertsLayout } from '../features/crops/layouts/AlertsLayout';
 import { RealTimeLayout } from '../features/crops/layouts/RealTimeLayout';
+import { CropsLayout } from '../features/crops/layouts/CropsLayout';
 
 /**
  * Página principal del módulo de monitoreo
@@ -20,8 +21,10 @@ export const MonitoringPage = () => {
       case 'tiempo-real':
         return <RealTimeLayout />;
       case 'historial':
-      default:
         return <DataHistoryLayout />;
+      case 'cultivos':  // Agregar la sección de cultivos
+        return <CropsLayout />;
+    
     }
   };
   
