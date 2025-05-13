@@ -4,53 +4,48 @@ import { ModulesList } from '../features/education/ui/ModulesList';
 import { ModuleFilters } from '../features/education/ui/ModuleFilters';
 import { AuthContext } from '../features/authentication/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { AdminControlPanel } from '../features/education/ui/AdminControlPanel'; 
+import { AdminControlPanel } from '../features/education/ui/AdminControlPanel';
 import { DeleteModeNotice } from '../features/education/ui/DeleteModeNotice';
 import { useModules } from '../features/education/hooks/useModules';
 import { useTags } from '../features/education/hooks/useTags';
+import { Button } from '../ui/components/Button';
 
 export const EducationPage = () => {
-  // Obtener información de autenticación y roles
   const { isAdmin } = useContext(AuthContext);
   const navigate = useNavigate();
-  
-  // Usar hooks personalizados para módulos y etiquetas
-  const { 
-    modules, 
-    loading: loadingModules, 
+
+  const {
+    modules,
+    loading: loadingModules,
     error: modulesError,
     fetchAllModules,
     handleDeleteModule,
     filterModulesByTags
   } = useModules();
-  
+
   const {
     tags,
     loading: loadingTags,
     error: tagsError,
     fetchAllTags
   } = useTags();
-  
-  // Estados para la interfaz
+
   const [activeIcon, setActiveIcon] = useState('none');
   const [searchValue, setSearchValue] = useState('');
-  
-  // Estado para etiquetas activas (nombres para UI)
   const [activeTags, setActiveTags] = useState([]);
-  // Estado para IDs de etiquetas activas (para backend)
   const [activeTagIds, setActiveTagIds] = useState([]);
-  
-  // Estado para modo de eliminación
+
   const [isDeleteMode, setIsDeleteMode] = useState(false);
   const [selectedModules, setSelectedModules] = useState([]);
-  
-  // Cargar módulos y etiquetas al montar el componente
+
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedModuleToEdit, setSelectedModuleToEdit] = useState(null);
+
   useEffect(() => {
     fetchAllModules();
     fetchAllTags();
   }, []);
-  
-  // Filtrar módulos cuando cambian los IDs de etiquetas activas
+
   useEffect(() => {
     if (activeTagIds.length > 0) {
       filterModulesByTags(activeTagIds);
@@ -58,86 +53,76 @@ export const EducationPage = () => {
       fetchAllModules();
     }
   }, [activeTagIds]);
-  
-  // Manejadores de eventos
-  const handleIconClick = (iconId) => {
-    setActiveIcon(iconId);
-  };
 
-  const handleSearchChange = (e) => {
-    setSearchValue(e.target.value);
-  };
+  const handleIconClick = (iconId) => setActiveIcon(iconId);
+  const handleSearchChange = e => setSearchValue(e.target.value);
 
-  // Modificado para manejar tanto nombres como IDs
-const handleTagClick = (tagName, tagId) => {
-  // Si no se proporciona tagId, intenta encontrarlo
-  if (tagId === null && tags) {
-    const tagObj = tags.find(t => t.name === tagName);
-    if (tagObj) {
+  const handleTagClick = (tagName, tagId) => {
+    if (tagId == null && tags) {
+      const tagObj = tags.find(t => t.name === tagName);
+      if (!tagObj) return;
       tagId = tagObj.id;
-    } else {
-      console.warn(`No se encontró el ID para la etiqueta: ${tagName}`);
-      return; // No continuar si no hay ID
     }
-  }
-  
-  // Actualizar nombres para la UI
-  setActiveTags(prev => 
-    prev.includes(tagName) 
-      ? prev.filter(name => name !== tagName) 
-      : [...prev, tagName]
-  );
-  
-  // Solo actualizar IDs si tenemos un ID válido
-  if (tagId !== null) {
-    setActiveTagIds(prev => 
-      prev.includes(tagId) 
-        ? prev.filter(id => id !== tagId) 
-        : [...prev, tagId]
+    setActiveTags(prev =>
+      prev.includes(tagName)
+        ? prev.filter(name => name !== tagName)
+        : [...prev, tagName]
     );
-  }
-};
-  
-  // Manejadores de acciones de administrador
-  const handleCreateModule = () => {
-    navigate('/education/module-form');
+    if (tagId != null) {
+      setActiveTagIds(prev =>
+        prev.includes(tagId)
+          ? prev.filter(id => id !== tagId)
+          : [...prev, tagId]
+      );
+    }
+  };
+
+  const handleCreateModule = () => navigate('/education/module-form');
+
+  const handleEnterEditMode = () => {
+    setIsEditMode(true);
+    setSelectedModuleToEdit(null);
+    setIsDeleteMode(false);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+    setSelectedModuleToEdit(null);
   };
   
-  const handleEditModule = () => {
-    navigate('/education/module-form');
+  const handleSelectModuleForEdit = (moduleId) => {
+    setSelectedModuleToEdit(prev => prev === moduleId ? null : moduleId);
   };
-  
-  // Manejadores para modo de eliminación
+  const handleEditModule = () => handleEnterEditMode();
+
+  const handleConfirmEdit = () => {
+    if (!selectedModuleToEdit) return;
+    navigate(`/education/module-form/${selectedModuleToEdit}`);
+    setIsEditMode(false);
+    setSelectedModuleToEdit(null);
+  };
+
   const handleEnterDeleteMode = () => {
     setIsDeleteMode(true);
     setSelectedModules([]);
+    setIsEditMode(false);
   };
-  
   const handleCancelDelete = () => {
     setIsDeleteMode(false);
     setSelectedModules([]);
   };
-  
   const handleSelectModule = (moduleId) => {
-    setSelectedModules(prev => 
+    setSelectedModules(prev =>
       prev.includes(moduleId)
         ? prev.filter(id => id !== moduleId)
         : [...prev, moduleId]
     );
   };
-  
   const handleConfirmDelete = async () => {
-    if (selectedModules.length === 0) return;
-    
+    if (!selectedModules.length) return;
     try {
-      // Usar la función de eliminación del hook para cada módulo seleccionado
-      const deletePromises = selectedModules.map(id => handleDeleteModule(id));
-      await Promise.all(deletePromises);
-      
-      // Actualizar la lista de módulos
+      await Promise.all(selectedModules.map(id => handleDeleteModule(id)));
       fetchAllModules();
-      
-      // Salir del modo de eliminación
       setIsDeleteMode(false);
       setSelectedModules([]);
     } catch (error) {
@@ -149,8 +134,7 @@ const handleTagClick = (tagName, tagId) => {
     <EducationLayout
       activeIcon={activeIcon}
       onIconClick={handleIconClick}
-      // Modificar esto:
-      tags={tags ? tags.map(tag => tag.name) : []} 
+      tags={tags ? tags.map(t => t.name) : []}
       activeTags={activeTags}
       onTagClick={handleTagClick}
       isAdmin={isAdmin}
@@ -165,46 +149,70 @@ const handleTagClick = (tagName, tagId) => {
         <div className="bg-red-100 text-red-800 p-4 rounded">
           <p>{modulesError || tagsError}</p>
         </div>
+      ) : isEditMode ? (
+        <>
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+            <p className="text-yellow-700">
+              Seleccione el módulo que desea modificar y oprima el botón "Editar seleccionado".
+            </p>
+          </div>
+
+          <ModulesList
+            modules={modules}
+            isAdmin={isAdmin}
+            isSelectable
+            selectedModules={selectedModuleToEdit ? [selectedModuleToEdit] : []}
+            onSelectModule={handleSelectModuleForEdit}
+          />
+
+          <div className="flex flex-wrap gap-4 mt-8 justify-center">
+            <Button variant="white" onClick={handleCancelEdit}>
+              Cancelar
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleConfirmEdit}
+              disabled={!selectedModuleToEdit}
+            >
+              Editar seleccionado
+            </Button>
+          </div>
+        </>
       ) : isDeleteMode ? (
         <>
-          <DeleteModeNotice 
+          <DeleteModeNotice
             onCancel={handleCancelDelete}
             onConfirm={handleConfirmDelete}
             hasSelected={selectedModules.length > 0}
           />
-          
-          <ModulesList 
-            modules={modules} 
+
+          <ModulesList
+            modules={modules}
             isAdmin={isAdmin}
-            isSelectable={true}
+            isSelectable
             selectedModules={selectedModules}
             onSelectModule={handleSelectModule}
           />
         </>
       ) : (
         <>
-          {/* Filtros (solo visibles fuera del modo de eliminación) */}
-          <ModuleFilters 
-            tags={tags ? tags.map(tag => tag.name) : []} // Solo pasar nombres de etiquetas para UI
-            activeTags={activeTags} 
+          <ModuleFilters
+            tags={tags ? tags.map(t => t.name) : []}
+            activeTags={activeTags}
             onTagClick={(tagName) => {
-              // Encuentra el ID correspondiente al nombre
               const tagObj = tags.find(t => t.name === tagName);
-              const tagId = tagObj ? tagObj.id : null;
-              handleTagClick(tagName, tagId);
+              handleTagClick(tagName, tagObj ? tagObj.id : null);
             }}
           />
-          
-          {/* Lista de módulos */}
-          <ModulesList 
-            modules={modules} 
+
+          <ModulesList
+            modules={modules}
             isAdmin={isAdmin}
             isSelectable={false}
           />
-          
-          {/* Botones de administración (modo normal) */}
+
           {isAdmin && (
-            <AdminControlPanel 
+            <AdminControlPanel
               onCreateClick={handleCreateModule}
               onEditClick={handleEditModule}
               onDeleteClick={handleEnterDeleteMode}

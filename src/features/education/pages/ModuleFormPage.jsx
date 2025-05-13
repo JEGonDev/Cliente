@@ -50,12 +50,15 @@ export const ModuleFormPage = () => {
       if (isEditing) {
         const success = await handleUpdateModule(moduleId, e);
         if (success) {
-          navigate('/education');
+          navigate(`/education/module/${moduleId}`);
         }
       } else {
         const success = await handleCreateModule(e);
-        if (success) {
-          navigate('/education');
+        if (success.id || success.moduleId) {
+          const newModuleId = success.id || success.moduleId;
+          navigate(`/education/module/${moduleId}`);
+        } else {
+          navigate('/education')
         }
       }
     } catch (error) {
