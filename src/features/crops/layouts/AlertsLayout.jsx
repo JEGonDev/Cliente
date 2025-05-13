@@ -70,7 +70,7 @@ export const AlertsLayout = ({ alerts = [] }) => {
               <option>Temperatura</option>
               <option>Humedad</option>
               <option>EC</option>
-              <option>pH</option>
+             
             </select>
           </div>
           

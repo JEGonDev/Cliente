@@ -21,6 +21,8 @@ import { MonitoringPage } from '../pages/MonitoringPage';
 import { RealTimeMonitoringPage } from '../features/crops/pages/RealTimeMonitoringPage';
 import { AlertsPage } from '../features/crops/pages/AlertsPage';
 import { DataHistoryPage } from '../features/crops/pages/DataHistoryPage';
+import { CropsPage } from '../features/crops/pages/CropsPage';
+
 
 
 export const RouterApp = () => {
@@ -41,7 +43,7 @@ export const RouterApp = () => {
         <Route path="/monitoring/history" element={<DataHistoryPage />} />
         <Route path="/monitoring/alerts" element={<AlertsPage />} />
         <Route path="/monitoring/real-time" element={<RealTimeMonitoringPage />} />
-
+        <Route path="/monitoring/crops" element={<CropsPage />} />
       {/* Rutas protegidas: */}
       <Route element={<ProtectedRoutes />} >
         
