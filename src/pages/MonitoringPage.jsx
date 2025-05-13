@@ -4,7 +4,7 @@ import { DataHistoryLayout } from '../features/crops/layouts/DataHistoryLayout';
 import { AlertsLayout } from '../features/crops/layouts/AlertsLayout';
 import { RealTimeLayout } from '../features/crops/layouts/RealTimeLayout';
 import { CropsLayout } from '../features/crops/layouts/CropsLayout';
-CropsLayout
+
 /**
  * Página principal del módulo de monitoreo
  * Actúa como un contenedor para las distintas secciones
@@ -24,8 +24,7 @@ export const MonitoringPage = () => {
         return <DataHistoryLayout />;
       case 'cultivos':  // Agregar la sección de cultivos
         return <CropsLayout />;
-      default:
-        return <DataHistoryLayout />;
+    
     }
   };
   

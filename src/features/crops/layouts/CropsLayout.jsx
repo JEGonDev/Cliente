@@ -2,8 +2,6 @@ import { useState } from 'react';
 
 import { CropDetailModal } from '../ui/CropDetailModal';
 import { CropCard } from '../ui/CropCard';
-import { Header } from '../../../ui/layouts/Header';
-import { MonitoringSidebar } from './MonitoringSidebar';
 
 // Simulación de cultivos
 const mockCrops = [
@@ -36,6 +34,66 @@ const mockCrops = [
       temperature: 20
     },
     alerts: []
+  },
+  {
+    id: 3,
+    name: 'Espinaca Verde',
+    location: 'Invernadero 2',
+    startDate: '2024-04-10',
+    plantType: 'Espinaca',
+    status: 'alert',
+    sensors: {
+      humidity: 45,
+      conductivity: 1.2,
+      temperature: 29
+    },
+    alerts: [
+      { id: 'a2', type: 'error', message: 'Humedad baja', timestamp: Date.now() - 500000 }
+    ]
+  },
+  {
+    id: 4,
+    name: 'Pimientos Rojos',
+    location: 'Zona Sur',
+    startDate: '2024-02-20',
+    plantType: 'Pimiento',
+    status: 'completed',
+    sensors: {
+      humidity: 55,
+      conductivity: 2.0,
+      temperature: 22
+    },
+    alerts: []
+  },
+  {
+    id: 5,
+    name: 'Zanahorias',
+    location: 'Campo Abierto',
+    startDate: '2024-01-10',
+    plantType: 'Zanahoria',
+    status: 'active',
+    sensors: {
+      humidity: 68,
+      conductivity: 1.9,
+      temperature: 23
+    },
+    alerts: [
+      { id: 'a3', type: 'warning', message: 'Conductividad alta', timestamp: Date.now() - 700000 }
+    ]
+  },
+  {
+    id: 6,
+    name: 'Albahaca',
+    location: 'Huerto Urbano',
+    startDate: '2024-05-01',
+    plantType: 'Albahaca',
+    status: 'paused',
+    sensors: {
+      humidity: 75,
+      conductivity: 1.5,
+      temperature: 21
+    },
+    alerts: []
   }
 ];
 
@@ -54,26 +112,16 @@ export const CropsLayout = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Encabezado */}
-      <Header />
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6">Cultivos</h1>
 
-      <div className="flex flex-1">
-        {/* Barra lateral de navegación */}
-        <MonitoringSidebar activeSection="cultivos" />
-        
-        {/* Contenido principal de cultivos */}
-        <main className="flex-1 p-6">
-          <h1 className="text-2xl font-bold mb-6">Cultivos</h1>
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-            {mockCrops.map((crop) => (
-              <CropCard key={crop.id} crop={crop} onClick={handleCardClick} />
-            ))}
-          </div>
-
-          <CropDetailModal isOpen={modalOpen} crop={selectedCrop} onClose={closeModal} />
-        </main>
+      <div className="flex flex-col gap-4 w-full">
+        {mockCrops.map((crop) => (
+          <CropCard key={crop.id} crop={crop} onClick={handleCardClick} />
+        ))}
       </div>
+
+      <CropDetailModal isOpen={modalOpen} crop={selectedCrop} onClose={closeModal} />
     </div>
   );
 };

@@ -1,12 +1,14 @@
 import { CropsLayout } from '../layouts/CropsLayout';  
+import { MonitoringLayout } from '../layouts/MonitoringLayout';
+
 
 export const CropsPage = () => {
   return (
   <div>
      {/* Contenido principal de cultivos */}
-     <main className="flex-1 p-6">
-          <CropsLayout />
-        </main>
+<MonitoringLayout activeSection="cultivos">
+      <CropsLayout />
+    </MonitoringLayout>
   </div>      
        
 
