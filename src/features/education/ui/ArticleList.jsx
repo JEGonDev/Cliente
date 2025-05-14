@@ -24,7 +24,7 @@ export const ArticlesList = ({
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
       {articles.map(article => (
         <div 
-          key={article.id} 
+          key={article.articleId} 
           className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200"
         >
           <div className="bg-gradient-to-r from-primary to-green-700 h-4"></div>
@@ -45,14 +45,14 @@ export const ArticlesList = ({
               {isAdmin && (
                 <div className="flex space-x-2">
                   <button 
-                    onClick={() => onEdit(article.id)}
+                    onClick={() => onEdit(article.articleId)}
                     className="text-gray-500 hover:text-primary transition-colors"
                     title="Editar artículo"
                   >
                     <PencilIcon className="w-4 h-4" />
                   </button>
                   <button 
-                    onClick={() => onDelete(article.id)}
+                    onClick={() => onDelete(article.articleId)}
                     className="text-gray-500 hover:text-red-500 transition-colors"
                     title="Eliminar artículo"
                   >

@@ -24,7 +24,7 @@ export const GuidesList = ({
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
       {guides.map((guide, index) => (
         <div 
-          key={guide.id}
+          key={guide.guideId}
           className={`p-4 flex flex-col sm:flex-row gap-4 ${
             index < guides.length - 1 ? 'border-b border-gray-200' : ''
           }`}
@@ -36,14 +36,14 @@ export const GuidesList = ({
               {isAdmin && (
                 <div className="flex space-x-2">
                   <button 
-                    onClick={() => onEdit(guide.id)}
+                    onClick={() => onEdit(guide.guideId)}
                     className="text-gray-500 hover:text-primary transition-colors"
                     title="Editar guía"
                   >
                     <PencilIcon className="w-4 h-4" />
                   </button>
                   <button 
-                    onClick={() => onDelete(guide.id)}
+                    onClick={() => onDelete(guide.guideId)}
                     className="text-gray-500 hover:text-red-500 transition-colors"
                     title="Eliminar guía"
                   >

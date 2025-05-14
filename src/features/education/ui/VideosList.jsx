@@ -22,25 +22,33 @@ export const VideosList = ({
 
   // Función para obtener URL de miniatura o generar una predeterminada
   const getThumbnailUrl = (video) => {
-    if (video.thumbnailUrl) return video.thumbnailUrl;
-    
-    // Intentar extraer miniatura de YouTube
-    if (video.videoUrl && video.videoUrl.includes('youtube.com')) {
+    // Si ya hay una URL de miniatura personalizada, usarla
+    if (video.thumbnailUrl) {
+      return video.thumbnailUrl;
+    }
+
+    // Verificar si la URL es de YouTube (youtube.com o youtu.be)
+    if (video.videoUrl && (video.videoUrl.includes('youtube.com') || video.videoUrl.includes('youtu.be'))) {
+      console.log('Procesando videoUrl:', video.videoUrl); // Depuración
+      
+      // Expresión regular para extraer el ID del video de diferentes formatos de URL
       const match = video.videoUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+      
       if (match && match[1]) {
+        // Devolver la URL de la miniatura de YouTube usando el ID extraído
         return `https://img.youtube.com/vi/${match[1]}/mqdefault.jpg`;
       }
     }
-    
-    // URL por defecto
-    return 'https://via.placeholder.com/320x180?text=Video';
+
+    // Placeholder alternativo en caso de que no se pueda obtener la miniatura
+    return 'https://placehold.co/320x180?text=Video';
   };
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {videos.map((video) => (
         <div 
-          key={video.id}
+          key={video.videoId}
           className="group border rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200"
         >
           {/* Miniatura con overlay de reproducción */}
@@ -78,14 +86,14 @@ export const VideosList = ({
               {isAdmin && (
                 <div className="flex space-x-2">
                   <button 
-                    onClick={() => onEdit(video.id)}
+                    onClick={() => onEdit(video.videoId)}
                     className="text-gray-500 hover:text-primary transition-colors"
                     title="Editar video"
                   >
                     <PencilIcon className="w-4 h-4" />
                   </button>
                   <button 
-                    onClick={() => onDelete(video.id)}
+                    onClick={() => onDelete(video.videoId)}
                     className="text-gray-500 hover:text-red-500 transition-colors"
                     title="Eliminar video"
                   >
