@@ -2,7 +2,8 @@ import PropTypes from 'prop-types';
 import { PencilIcon, TrashIcon, DocumentArrowDownIcon } from '@heroicons/react/24/outline';
 
 /**
- * Componente para mostrar una lista de guías descargables
+ * Componente para mostrar una lista de guías educativas descargables
+ * Incluye opciones de administración si el usuario es administrador
  * 
  * @param {Object} props - Propiedades del componente
  * @param {Array} props.guides - Lista de guías a mostrar
@@ -24,7 +25,7 @@ export const GuidesList = ({
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
       {guides.map((guide, index) => (
         <div 
-          key={guide.guideId}
+          key={guide.guideId || guide.id}
           className={`p-4 flex flex-col sm:flex-row gap-4 ${
             index < guides.length - 1 ? 'border-b border-gray-200' : ''
           }`}
@@ -36,14 +37,14 @@ export const GuidesList = ({
               {isAdmin && (
                 <div className="flex space-x-2">
                   <button 
-                    onClick={() => onEdit(guide.guideId)}
+                    onClick={() => onEdit(guide.guideId || guide.id)}
                     className="text-gray-500 hover:text-primary transition-colors"
                     title="Editar guía"
                   >
                     <PencilIcon className="w-4 h-4" />
                   </button>
                   <button 
-                    onClick={() => onDelete(guide.guideId)}
+                    onClick={() => onDelete(guide.guideId || guide.id)}
                     className="text-gray-500 hover:text-red-500 transition-colors"
                     title="Eliminar guía"
                   >
@@ -74,6 +75,10 @@ export const GuidesList = ({
                 src={guide.imageUrl}
                 alt={guide.title}
                 className="w-24 h-24 object-cover rounded-lg"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'https://placehold.co/100x100?text=Guía';
+                }}
               />
             </div>
           )}
@@ -86,7 +91,8 @@ export const GuidesList = ({
 GuidesList.propTypes = {
   guides: PropTypes.arrayOf(
     PropTypes.shape({
-      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+      guideId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
       title: PropTypes.string.isRequired,
       description: PropTypes.string,
       pdfUrl: PropTypes.string,

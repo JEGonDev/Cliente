@@ -2,7 +2,8 @@ import PropTypes from 'prop-types';
 import { PencilIcon, TrashIcon, PlayIcon } from '@heroicons/react/24/outline';
 
 /**
- * Componente para mostrar una cuadrícula de videos con opciones de edición y eliminación
+ * Componente para mostrar una lista de videos educativos en formato de cuadrícula
+ * Incluye opciones de administración si el usuario es administrador
  * 
  * @param {Object} props - Propiedades del componente
  * @param {Array} props.videos - Lista de videos a mostrar
@@ -20,7 +21,11 @@ export const VideosList = ({
     return null;
   }
 
-  // Función para obtener URL de miniatura o generar una predeterminada
+  /**
+   * Obtiene URL de miniatura a partir de la URL del video o genera una predeterminada
+   * @param {Object} video - Objeto con datos del video
+   * @returns {string} URL de la miniatura
+   */
   const getThumbnailUrl = (video) => {
     // Si ya hay una URL de miniatura personalizada, usarla
     if (video.thumbnailUrl) {
@@ -29,8 +34,6 @@ export const VideosList = ({
 
     // Verificar si la URL es de YouTube (youtube.com o youtu.be)
     if (video.videoUrl && (video.videoUrl.includes('youtube.com') || video.videoUrl.includes('youtu.be'))) {
-      console.log('Procesando videoUrl:', video.videoUrl); // Depuración
-      
       // Expresión regular para extraer el ID del video de diferentes formatos de URL
       const match = video.videoUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
       
@@ -48,7 +51,7 @@ export const VideosList = ({
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {videos.map((video) => (
         <div 
-          key={video.videoId}
+          key={video.videoId || video.id}
           className="group border rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200"
         >
           {/* Miniatura con overlay de reproducción */}
@@ -57,6 +60,10 @@ export const VideosList = ({
               src={getThumbnailUrl(video)}
               alt={video.title}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'https://placehold.co/320x180?text=Video';
+              }}
             />
             
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -86,14 +93,14 @@ export const VideosList = ({
               {isAdmin && (
                 <div className="flex space-x-2">
                   <button 
-                    onClick={() => onEdit(video.videoId)}
+                    onClick={() => onEdit(video.videoId || video.id)}
                     className="text-gray-500 hover:text-primary transition-colors"
                     title="Editar video"
                   >
                     <PencilIcon className="w-4 h-4" />
                   </button>
                   <button 
-                    onClick={() => onDelete(video.videoId)}
+                    onClick={() => onDelete(video.videoId || video.id)}
                     className="text-gray-500 hover:text-red-500 transition-colors"
                     title="Eliminar video"
                   >
@@ -112,7 +119,8 @@ export const VideosList = ({
 VideosList.propTypes = {
   videos: PropTypes.arrayOf(
     PropTypes.shape({
-      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+      videoId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
       title: PropTypes.string.isRequired,
       videoUrl: PropTypes.string,
       thumbnailUrl: PropTypes.string,
