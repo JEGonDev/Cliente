@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext , useCallback } from 'react';
 import { EducationContext } from '../context/EducationContext';
 import { AuthContext } from '../../authentication/context/AuthContext';
 
@@ -114,7 +114,7 @@ export const useVideos = () => {
    * Carga datos de un video existente en el formulario
    * @param {number} id - ID del video
    */
-  const loadVideoForEdit = async (id) => {
+  const loadVideoForEdit = useCallback(async (id) => {
     try {
       const videoData = await fetchVideoById(id);
       
@@ -131,7 +131,7 @@ export const useVideos = () => {
       console.error(`Error cargando video ${id} para editar:`, error);
       return null;
     }
-  };
+  }, [fetchVideoById]);
   
   /**
    * Crea un nuevo video

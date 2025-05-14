@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useContext } from 'react';
+import { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { educationService } from '../services/educationService';
 import { AuthContext } from '../../authentication/context/AuthContext';
 
@@ -306,7 +306,7 @@ export const EducationProvider = ({ children }) => {
    * Obtiene un artículo por su ID
    * @param {number} id - ID del artículo
    */
-  const fetchArticleById = async (id) => {
+  const fetchArticleById = useCallback(async (id) => {
     if (!isAuthenticated) return;
 
     setLoadingArticles(true);
@@ -314,8 +314,13 @@ export const EducationProvider = ({ children }) => {
 
     try {
       const response = await educationService.getArticleById(id);
-      setArticle(response.data);
-      return response.data;
+      
+      // Solo actualizar article si la respuesta es válida
+      if (response && response.data) {
+        setArticle(response.data);
+        return response.data;
+      }
+      return null;
     } catch (error) {
       console.error(`Error obteniendo artículo ${id}:`, error);
       setArticleError(error.message || `Error al cargar el artículo ${id}`);
@@ -323,7 +328,7 @@ export const EducationProvider = ({ children }) => {
     } finally {
       setLoadingArticles(false);
     }
-  };
+  }, [isAuthenticated, educationService]);
 
   /**
    * Crea un nuevo artículo
@@ -459,7 +464,7 @@ export const EducationProvider = ({ children }) => {
    * Obtiene una guía por su ID
    * @param {number} id - ID de la guía
    */
-  const fetchGuideById = async (id) => {
+  const fetchGuideById = useCallback(async (id) => {
     if (!isAuthenticated) return;
 
     setLoadingGuides(true);
@@ -467,8 +472,11 @@ export const EducationProvider = ({ children }) => {
 
     try {
       const response = await educationService.getGuideById(id);
-      setGuide(response.data);
-      return response.data;
+      if (response && response.data) {
+        setGuide(response.data);
+        return response.data;
+      }
+      return null;
     } catch (error) {
       console.error(`Error obteniendo guía ${id}:`, error);
       setGuideError(error.message || `Error al cargar la guía ${id}`);
@@ -476,7 +484,7 @@ export const EducationProvider = ({ children }) => {
     } finally {
       setLoadingGuides(false);
     }
-  };
+  }, [isAuthenticated]);
 
   /**
    * Crea una nueva guía
@@ -769,7 +777,7 @@ export const EducationProvider = ({ children }) => {
    * Obtiene un video por su ID
    * @param {number} id - ID del video
    */
-  const fetchVideoById = async (id) => {
+  const fetchVideoById = useCallback(async (id) => {
     if (!isAuthenticated) return;
 
     setLoadingVideos(true);
@@ -777,8 +785,11 @@ export const EducationProvider = ({ children }) => {
 
     try {
       const response = await educationService.getVideoById(id);
-      setVideo(response.data);
-      return response.data;
+      if (response && response.data) {
+        setVideo(response.data);
+        return response.data;
+      }
+      return null;
     } catch (error) {
       console.error(`Error obteniendo video ${id}:`, error);
       setVideoError(error.message || `Error al cargar el video ${id}`);
@@ -786,7 +797,7 @@ export const EducationProvider = ({ children }) => {
     } finally {
       setLoadingVideos(false);
     }
-  };
+  }, [isAuthenticated]);
 
   /**
    * Crea un nuevo video

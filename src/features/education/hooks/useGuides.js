@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useCallback } from 'react';
 import { EducationContext } from '../context/EducationContext';
 import { AuthContext } from '../../authentication/context/AuthContext';
 
@@ -109,7 +109,7 @@ export const useGuides = () => {
    * Carga datos de una guía existente en el formulario
    * @param {number} id - ID de la guía
    */
-  const loadGuideForEdit = async (id) => {
+  const loadGuideForEdit = useCallback(async (id) => {
     try {
       const guideData = await fetchGuideById(id);
       
@@ -128,7 +128,7 @@ export const useGuides = () => {
       console.error(`Error cargando guía ${id} para editar:`, error);
       return null;
     }
-  };
+  }, [fetchGuideById]);
   
   /**
    * Crea una nueva guía

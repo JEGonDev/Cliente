@@ -34,9 +34,26 @@ export const GuideFormModal = ({
   
   // Cargar datos de la guía para edición
   useEffect(() => {
+    let isMounted = true;
+    
     if (isOpen && isEditing && guideId) {
-      loadGuideForEdit(guideId);
+      loadGuideForEdit(guideId)
+        .then(data => {
+          // Solo actualizar si el componente sigue montado
+          if (!isMounted) return;
+          // Cualquier otro código necesario post-carga
+        })
+        .catch(error => {
+          if (isMounted) {
+            console.error(`Error al cargar la guía para editar:`, error);
+          }
+        });
     }
+    
+    // Función de limpieza
+    return () => {
+      isMounted = false;
+    };
   }, [isOpen, isEditing, guideId, loadGuideForEdit]);
   
   const handleSubmit = async (e) => {

@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useCallback } from 'react';
 import { EducationContext } from '../context/EducationContext';
 import { AuthContext } from '../../authentication/context/AuthContext';
 
@@ -114,7 +114,7 @@ export const useArticles = () => {
    * Carga datos de un artículo existente en el formulario
    * @param {number} id - ID del artículo
    */
-  const loadArticleForEdit = async (id) => {
+  const loadArticleForEdit = useCallback(async (id) => {
     try {
       const articleData = await fetchArticleById(id);
       
@@ -131,7 +131,7 @@ export const useArticles = () => {
       console.error(`Error cargando artículo ${id} para editar:`, error);
       return null;
     }
-  };
+  }, [fetchArticleById]);
   
   /**
    * Crea un nuevo artículo

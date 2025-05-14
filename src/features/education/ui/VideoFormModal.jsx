@@ -34,24 +34,38 @@ export const VideoFormModal = ({
   
   // Cargar datos del video para edición
   useEffect(() => {
+    let isMounted = true;
+    
     if (isOpen && isEditing && videoId) {
-      loadVideoForEdit(videoId).then(video => {
-        if (video && video.videoUrl) {
-          // Intentar generar una vista previa para vídeos de YouTube o Vimeo
-          setPreviewUrl(getEmbedUrl(video.videoUrl));
-        }
-      });
+      loadVideoForEdit(videoId)
+        .then(video => {
+          // Solo actualizar si el componente sigue montado
+          if (!isMounted) return;
+          
+          // Generar vista previa para la URL del video si existe
+          if (video && video.videoUrl) {
+            setPreviewUrl(getEmbedUrl(video.videoUrl));
+          }
+        })
+        .catch(error => {
+          if (isMounted) {
+            console.error(`Error al cargar el video para editar:`, error);
+          }
+        });
     } else {
       setPreviewUrl('');
     }
+    
+    // Función de limpieza
+    return () => {
+      isMounted = false;
+    };
   }, [isOpen, isEditing, videoId, loadVideoForEdit]);
   
   // Cuando cambia la URL del video, actualizar la vista previa
   useEffect(() => {
     if (formData.videoUrl) {
       setPreviewUrl(getEmbedUrl(formData.videoUrl));
-    } else {
-      setPreviewUrl('');
     }
   }, [formData.videoUrl]);
   

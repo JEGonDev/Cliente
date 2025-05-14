@@ -33,9 +33,22 @@ export const ArticleFormModal = ({
   
   // Cargar datos del artículo para edición
   useEffect(() => {
+    let isMounted = true;
+    
     if (isOpen && isEditing && articleId) {
-      loadArticleForEdit(articleId);
+      // Bandera para prevenir actualización de estado si el componente se desmonta
+      loadArticleForEdit(articleId)
+        .then(data => {
+          if (isMounted && data) {
+            // Cualquier actualización adicional que sea necesaria
+          }
+        });
     }
+    
+    // Función de limpieza
+    return () => {
+      isMounted = false;
+    };
   }, [isOpen, isEditing, articleId, loadArticleForEdit]);
   
   const handleSubmit = async (e) => {
