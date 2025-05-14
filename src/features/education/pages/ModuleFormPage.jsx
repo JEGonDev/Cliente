@@ -54,9 +54,9 @@ export const ModuleFormPage = () => {
         }
       } else {
         const success = await handleCreateModule(e);
-        if (success.id || success.moduleId) {
-          const newModuleId = success.id || success.moduleId;
-          navigate(`/education/module/${moduleId}`);
+        if (success.moduleId) {
+          const newModuleId = success.moduleId;
+          navigate(`/education/module/${newModuleId}`);
         } else {
           navigate('/education')
         }

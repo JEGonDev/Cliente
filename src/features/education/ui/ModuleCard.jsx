@@ -1,15 +1,47 @@
-import PropTypes from 'prop-types';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { educationService } from '../services/educationService';
 
 export const ModuleCard = ({ 
   id,
   title, 
   tags = [],
-  videosCount = 0,
-  articlesCount = 0,
-  guidesCount = 0,
   isAdmin = false
 }) => {
+  const [counters, setCounters] = useState({
+    videos: 0,
+    articles: 0,
+    guides: 0
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCounters = async () => {
+      try {
+        // Obtener datos en paralelo para mejorar rendimiento
+        const [articles, guides, videos] = await Promise.all([
+          educationService.getArticlesByModuleId(id).catch(() => ({ data: [] })),
+          educationService.getGuidesByModuleId(id).catch(() => ({ data: [] })),
+          educationService.getVideosByModuleId(id).catch(() => ({ data: [] }))
+        ]);
+
+        setCounters({
+          videos: Array.isArray(videos.data) ? videos.data.length : 0,
+          articles: Array.isArray(articles.data) ? articles.data.length : 0,
+          guides: Array.isArray(guides.data) ? guides.data.length : 0
+        });
+      } catch (error) {
+        console.error(`Error obteniendo contadores para módulo ${id}:`, error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchCounters();
+    }
+  }, [id]);
+
   return (
     <Link to={`/education/module/${id}`} className="block">
       <div className={`p-4 rounded-sm shadow-md hover:shadow-lg transition-shadow 
@@ -26,13 +58,19 @@ export const ModuleCard = ({
           ))}
         </div>
         
-        {/* Contadores de contenido reales */}
+        {/* Contadores de contenido */}
         <div className="text-xs text-gray-600 flex gap-1">
-          <span>{videosCount} Videos</span>
-          <span>-</span>
-          <span>{articlesCount} Artículos</span>
-          <span>-</span>
-          <span>{guidesCount} Guías</span>
+          {isLoading ? (
+            <span>Cargando contadores...</span>
+          ) : (
+            <>
+              <span>{counters.videos} Videos</span>
+              <span>-</span>
+              <span>{counters.articles} Artículos</span>
+              <span>-</span>
+              <span>{counters.guides} Guías</span>
+            </>
+          )}
         </div>
       </div>
     </Link>

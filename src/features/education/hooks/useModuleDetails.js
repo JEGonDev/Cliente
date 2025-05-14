@@ -77,41 +77,39 @@ export const useModuleDetails = () => {
     if (!moduleId) return;
     
     try {
-      // Primero intentamos cargar el módulo principal
+      // Primero cargamos el módulo principal
       await fetchModuleById(moduleId);
       
-      // Luego cargamos todos los contenidos relacionados, capturando errores individualmente
-      try {
-        await fetchArticlesByModuleId(moduleId);
-      } catch (error) {
-        console.error("Error cargando artículos:", error);
-      }
-      
-      try {
-        await fetchGuidesByModuleId(moduleId);
-      } catch (error) {
-        console.error("Error cargando guías:", error);
-      }
-      
-      try {
-        await fetchVideosByModuleId(moduleId);
-      } catch (error) {
-        console.error("Error cargando videos:", error);
-      }
+      // Ahora cargamos todos los contenidos relacionados con forceReload=true
+      await Promise.all([
+        fetchArticlesByModuleId(moduleId, true),
+        fetchGuidesByModuleId(moduleId, true),
+        fetchVideosByModuleId(moduleId, true)
+      ]);
     } catch (error) {
       console.error("Error cargando el módulo:", error);
     } finally {
       setLoadAttempted(true);
     }
-  }, [moduleId]); // Solo dependemos del moduleId, NO de las funciones fetch
+  }, [moduleId]);
 
   // Cargar datos al iniciar
   useEffect(() => {
-    // Evitamos cargar si ya se ha intentado antes
-    if (!loadAttempted) {
+    // Cuando cambia el moduleId, necesitamos hacer una nueva carga
+    if (moduleId) {
+      // Reset la bandera de carga
+      setLoadAttempted(false);
+      
+      // Carga los datos
       loadModuleData();
     }
-  }, [loadModuleData, loadAttempted]);
+    
+    // Función de limpieza al desmontar
+    return () => {
+      // Podemos hacer alguna limpieza si es necesario
+      setLoadAttempted(false);
+    };
+  }, [moduleId]); 
 
   // ==================== Funciones para modales de Artículos ====================
   
