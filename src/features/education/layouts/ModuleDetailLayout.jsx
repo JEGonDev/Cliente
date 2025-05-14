@@ -9,10 +9,11 @@ import PropTypes from 'prop-types';
  */
 export const ModuleDetailLayout = ({ children }) => {
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      {/* Contenido principal */}
-      <main className="flex-1 p-6 max-w-7xl mx-auto">
-        {children}
+    <div className="bg-gray-50 min-h-screen">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-sm p-6 sm:p-8">
+          {children}
+        </div>
       </main>
     </div>
   );

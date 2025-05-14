@@ -1,22 +1,27 @@
 import { useContext, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ModuleDetailLayout } from '../layouts/ModuleDetailLayout';
-import { ArticlesLayout } from '../layouts/ArticlesLayout';
-import { GuidesLayout } from '../layouts/GuidesLayout';
-import { VideosLayout } from '../layouts/VideosLayout';
 import { Header } from '../../../ui/layouts/Header';
-import { SidebarLayout } from '../layouts/SidebarLayout ';
 import { AuthContext } from '../../authentication/context/AuthContext';
 import { ModuleHeader } from '../ui/ModuleHeader';
-import { AdminActions } from '../ui/AdminActions';
 import { useModules } from '../hooks/useModules';
 import { useArticles } from '../hooks/useArticles';
 import { useGuides } from '../hooks/useGuides';
 import { useVideos } from '../hooks/useVideos';
 
+// Importar nuevos componentes modal
+import { ArticleFormModal } from '../ui/ArticleFormModal';
+import { GuideFormModal } from '../ui/GuideFormModal';
+import { VideoFormModal } from '../ui/VideoFormModal';
+import { DeleteConfirmationModal } from '../ui/DeleteConfirmationModal';
+
+// Componentes para cada sección
+import { SectionHeader } from '../ui/SectionHeader';
+import { ArticlesList } from '../ui/ArticleList';
+import { GuidesList } from '../ui/GuidesList';
+import { VideosList } from '../ui/VideosList';
+
 export const OpenModulePage = () => {
-  console.log("Renderizando OpenModulePage");
-  
   // Obtener información de autenticación y roles
   const { isAdmin } = useContext(AuthContext);
   const { moduleId } = useParams();
@@ -34,8 +39,6 @@ export const OpenModulePage = () => {
     loading: loadingArticles, 
     error: articleError,
     fetchArticlesByModuleId,
-    handleCreateArticle,
-    handleUpdateArticle,
     handleDeleteArticle 
   } = useArticles();
   
@@ -44,8 +47,6 @@ export const OpenModulePage = () => {
     loading: loadingGuides, 
     error: guideError,
     fetchGuidesByModuleId,
-    handleCreateGuide,
-    handleUpdateGuide,
     handleDeleteGuide 
   } = useGuides();
   
@@ -54,49 +55,51 @@ export const OpenModulePage = () => {
     loading: loadingVideos, 
     error: videoError,
     fetchVideosByModuleId,
-    handleCreateVideo,
-    handleUpdateVideo,
     handleDeleteVideo 
   } = useVideos();
 
-  // Estado para la sección que se está editando (si hay)
-  const [editingSection, setEditingSection] = useState(null);
-  const [editingId, setEditingId] = useState(null);
+  // Estado para controlar las modales
+  const [articleModalOpen, setArticleModalOpen] = useState(false);
+  const [guideModalOpen, setGuideModalOpen] = useState(false);
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  
+  // Estados para guardar los IDs de elementos seleccionados para edición o eliminación
+  const [selectedArticleId, setSelectedArticleId] = useState(null);
+  const [selectedGuideId, setSelectedGuideId] = useState(null);
+  const [selectedVideoId, setSelectedVideoId] = useState(null);
+  
+  // Estado para controlar el tipo de elemento a eliminar
+  const [deleteType, setDeleteType] = useState('');
+  const [deleteId, setDeleteId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Estado para controlar si se ha intentado cargar los datos
   const [loadAttempted, setLoadAttempted] = useState(false);
 
   // Cargar datos al iniciar
   useEffect(() => {
-    console.log("Ejecutando useEffect en OpenModulePage");
-    
     const loadModuleData = async () => {
-      console.log("Cargando datos del módulo", moduleId);
-      
       if (moduleId) {
         try {
           // Primero intentamos cargar el módulo principal
-          const moduleData = await fetchModuleById(moduleId);
-          console.log("Módulo cargado:", moduleData);
+          await fetchModuleById(moduleId);
           
           // Luego cargamos todos los contenidos relacionados, capturando errores individualmente
           try {
-            const articlesData = await fetchArticlesByModuleId(moduleId);
-            console.log("Artículos cargados:", articlesData);
+            await fetchArticlesByModuleId(moduleId);
           } catch (error) {
             console.error("Error cargando artículos:", error);
           }
           
           try {
-            const guidesData = await fetchGuidesByModuleId(moduleId);
-            console.log("Guías cargadas:", guidesData);
+            await fetchGuidesByModuleId(moduleId);
           } catch (error) {
             console.error("Error cargando guías:", error);
           }
           
           try {
-            const videosData = await fetchVideosByModuleId(moduleId);
-            console.log("Videos cargados:", videosData);
+            await fetchVideosByModuleId(moduleId);
           } catch (error) {
             console.error("Error cargando videos:", error);
           }
@@ -111,46 +114,105 @@ export const OpenModulePage = () => {
     loadModuleData();
   }, [moduleId]);
 
-  // Manejadores para artículos
-  const handleAddArticle = () => {
-    setEditingSection('article');
-    setEditingId(null);
-    // Aquí podrías navegar a un formulario o mostrar un modal
-    console.log('Añadir artículo');
+  // Funciones para abrir modales de creación
+  const openCreateArticleModal = () => {
+    setSelectedArticleId(null);
+    setArticleModalOpen(true);
   };
 
-  const handleEditArticle = (articleId) => {
-    setEditingSection('article');
-    setEditingId(articleId);
-    console.log('Editar artículo', articleId);
+  const openCreateGuideModal = () => {
+    setSelectedGuideId(null);
+    setGuideModalOpen(true);
   };
 
-  // Manejadores para guías
-  const handleAddGuide = () => {
-    setEditingSection('guide');
-    setEditingId(null);
-    console.log('Añadir guía');
+  const openCreateVideoModal = () => {
+    setSelectedVideoId(null);
+    setVideoModalOpen(true);
   };
 
-  const handleEditGuide = (guideId) => {
-    setEditingSection('guide');
-    setEditingId(guideId);
-    console.log('Editar guía', guideId);
+  // Funciones para abrir modales de edición
+  const openEditArticleModal = (id) => {
+    setSelectedArticleId(id);
+    setArticleModalOpen(true);
   };
 
-  // Manejadores para videos
-  const handleAddVideo = () => {
-    setEditingSection('video');
-    setEditingId(null);
-    console.log('Añadir video');
+  const openEditGuideModal = (id) => {
+    setSelectedGuideId(id);
+    setGuideModalOpen(true);
   };
 
-  const handleEditVideo = (videoId) => {
-    setEditingSection('video');
-    setEditingId(videoId);
-    console.log('Editar video', videoId);
+  const openEditVideoModal = (id) => {
+    setSelectedVideoId(id);
+    setVideoModalOpen(true);
   };
-  
+
+  // Funciones para confirmar eliminación
+  const confirmDeleteArticle = (id) => {
+    setDeleteType('article');
+    setDeleteId(id);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeleteGuide = (id) => {
+    setDeleteType('guide');
+    setDeleteId(id);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeleteVideo = (id) => {
+    setDeleteType('video');
+    setDeleteId(id);
+    setDeleteModalOpen(true);
+  };
+
+  // Función para realizar la eliminación
+  const handleDelete = async () => {
+    if (!deleteId || !deleteType) return;
+    
+    setIsDeleting(true);
+    try {
+      let success = false;
+      
+      switch (deleteType) {
+        case 'article':
+          success = await handleDeleteArticle(deleteId);
+          if (success) await fetchArticlesByModuleId(moduleId);
+          break;
+        case 'guide':
+          success = await handleDeleteGuide(deleteId);
+          if (success) await fetchGuidesByModuleId(moduleId);
+          break;
+        case 'video':
+          success = await handleDeleteVideo(deleteId);
+          if (success) await fetchVideosByModuleId(moduleId);
+          break;
+      }
+      
+      if (success) {
+        setDeleteModalOpen(false);
+        setDeleteId(null);
+        setDeleteType('');
+      }
+    } catch (error) {
+      console.error(`Error eliminando ${deleteType}:`, error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Función de recarga para actualizar datos después de operaciones CRUD
+  const refreshContent = async () => {
+    if (moduleId) {
+      try {
+        await fetchArticlesByModuleId(moduleId);
+        await fetchGuidesByModuleId(moduleId);
+        await fetchVideosByModuleId(moduleId);
+      } catch (error) {
+        console.error("Error refrescando contenido:", error);
+      }
+    }
+  };
+
   // Estado de carga general
   const isLoading = loadingModule && !loadAttempted;
 
@@ -173,34 +235,55 @@ export const OpenModulePage = () => {
     return [];
   };
 
-  console.log("Module data:", module);
-  console.log("Articles:", articles);
-  console.log("Guides:", guides);
-  console.log("Videos:", videos);
+  // Mensajes para el modal de eliminación
+  const getDeleteModalProps = () => {
+    switch (deleteType) {
+      case 'article':
+        return {
+          title: "Eliminar artículo",
+          message: "¿Estás seguro de que deseas eliminar este artículo?"
+        };
+      case 'guide':
+        return {
+          title: "Eliminar guía",
+          message: "¿Estás seguro de que deseas eliminar esta guía?"
+        };
+      case 'video':
+        return {
+          title: "Eliminar video",
+          message: "¿Estás seguro de que deseas eliminar este video?"
+        };
+      default:
+        return {
+          title: "Confirmar eliminación",
+          message: "¿Estás seguro de que deseas eliminar este elemento?"
+        };
+    }
+  };
 
   return (
     <>
       <Header />
-      <div className="flex">
-        <SidebarLayout activeIcon="settings" onIconClick={(id) => console.log(id)} />
-
-        <ModuleDetailLayout>
-          {isLoading ? (
-            <div className="flex justify-center items-center h-64">
-              <p className="text-gray-500">Cargando contenido educativo...</p>
-            </div>
-          ) : moduleError ? (
-            <div className="bg-red-100 text-red-800 p-4 rounded">
-              <p>Ha ocurrido un error al cargar el módulo.</p>
-              <p className="text-sm">{moduleError}</p>
-            </div>
-          ) : !module ? (
-            <div className="bg-yellow-100 text-yellow-800 p-4 rounded">
-              <p>No se encontró el módulo solicitado.</p>
-            </div>
-          ) : (
-            <>
-              {/* Siempre mostramos el encabezado del módulo si existe */}
+      
+      <ModuleDetailLayout>
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        ) : moduleError ? (
+          <div className="bg-red-100 text-red-800 p-4 rounded-md shadow mb-6">
+            <h3 className="font-medium mb-2">Error al cargar el módulo</h3>
+            <p className="text-sm">{moduleError}</p>
+          </div>
+        ) : !module ? (
+          <div className="bg-yellow-100 text-yellow-800 p-4 rounded-md shadow mb-6">
+            <h3 className="font-medium mb-2">Módulo no encontrado</h3>
+            <p className="text-sm">No se encontró el módulo solicitado.</p>
+          </div>
+        ) : (
+          <>
+            {/* Encabezado del módulo */}
+            <div className="mb-10">
               <ModuleHeader 
                 videoCount={videos?.length || 0}
                 articleCount={articles?.length || 0}
@@ -209,103 +292,160 @@ export const OpenModulePage = () => {
                 description={module.description || ''}
                 tags={getModuleTags()}
               />
+            </div>
 
-              {/* Sección de artículos - Se muestra incluso si hay error, solo verificamos si está cargando */}
-              <div className="mb-8">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">Artículos</h2>
+            {/* Sección de artículos */}
+            <section className="mb-12">
+              <SectionHeader 
+                title="Artículos" 
+                isAdmin={isAdmin}
+                onAdd={openCreateArticleModal}
+              />
+              
+              {loadingArticles ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                </div>
+              ) : articleError ? (
+                <div className="bg-orange-50 text-orange-800 p-3 rounded-md mb-6">
+                  <p className="text-sm">No se pudieron cargar los artículos. Intente más tarde.</p>
+                </div>
+              ) : articles?.length === 0 ? (
+                <div className="bg-gray-50 text-gray-600 p-6 rounded-md text-center mb-6">
+                  <p>No hay artículos disponibles para este módulo.</p>
                   {isAdmin && (
-                    <AdminActions
-                      onAddClick={handleAddArticle}
-                      onDeleteClick={() => handleDeleteArticle(editingId)}
-                      onEditClick={() => handleEditArticle(editingId)}
-                      resourceType="artículo"
-                    />
+                    <button 
+                      className="mt-2 text-primary hover:underline text-sm"
+                      onClick={openCreateArticleModal}
+                    >
+                      + Agregar primer artículo
+                    </button>
                   )}
                 </div>
-                
-                {loadingArticles ? (
-                  <p className="text-gray-500">Cargando artículos...</p>
-                ) : articleError ? (
-                  <div className="bg-orange-50 text-orange-800 p-3 rounded mb-4">
-                    <p className="text-sm">No se pudieron cargar los artículos. Intente más tarde.</p>
-                  </div>
-                ) : (
-                  <ArticlesLayout 
-                    articles={articles || []} 
-                    isAdmin={isAdmin} 
-                    onAddArticle={handleAddArticle}
-                    onEditArticle={handleEditArticle}
-                    onDeleteArticle={() => handleDeleteArticle(editingId)}
-                  />
-                )}
-              </div>
+              ) : (
+                <ArticlesList 
+                  articles={articles || []} 
+                  isAdmin={isAdmin}
+                  onEdit={openEditArticleModal}
+                  onDelete={confirmDeleteArticle}
+                />
+              )}
+            </section>
 
-              {/* Sección de guías */}
-              <div className="mb-8">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">Guías descargables</h2>
+            {/* Sección de guías */}
+            <section className="mb-12">
+              <SectionHeader 
+                title="Guías descargables" 
+                isAdmin={isAdmin}
+                onAdd={openCreateGuideModal}
+              />
+              
+              {loadingGuides ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                </div>
+              ) : guideError ? (
+                <div className="bg-orange-50 text-orange-800 p-3 rounded-md mb-6">
+                  <p className="text-sm">No se pudieron cargar las guías. Intente más tarde.</p>
+                </div>
+              ) : guides?.length === 0 ? (
+                <div className="bg-gray-50 text-gray-600 p-6 rounded-md text-center mb-6">
+                  <p>No hay guías disponibles para este módulo.</p>
                   {isAdmin && (
-                    <AdminActions
-                      onAddClick={handleAddGuide}
-                      onDeleteClick={() => handleDeleteGuide(editingId)}
-                      onEditClick={() => handleEditGuide(editingId)}
-                      resourceType="guía"
-                    />
+                    <button 
+                      className="mt-2 text-primary hover:underline text-sm"
+                      onClick={openCreateGuideModal}
+                    >
+                      + Agregar primera guía
+                    </button>
                   )}
                 </div>
-                
-                {loadingGuides ? (
-                  <p className="text-gray-500">Cargando guías...</p>
-                ) : guideError ? (
-                  <div className="bg-orange-50 text-orange-800 p-3 rounded mb-4">
-                    <p className="text-sm">No se pudieron cargar las guías. Intente más tarde.</p>
-                  </div>
-                ) : (
-                  <GuidesLayout 
-                    guides={guides || []} 
-                    isAdmin={isAdmin}
-                    onAddGuide={handleAddGuide}
-                    onEditGuide={handleEditGuide}
-                    onDeleteGuide={() => handleDeleteGuide(editingId)}
-                  />
-                )}
-              </div>
+              ) : (
+                <GuidesList 
+                  guides={guides || []} 
+                  isAdmin={isAdmin}
+                  onEdit={openEditGuideModal}
+                  onDelete={confirmDeleteGuide}
+                />
+              )}
+            </section>
 
-              {/* Sección de videos */}
-              <div className="mb-8">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">Videos</h2>
+            {/* Sección de videos */}
+            <section className="mb-12">
+              <SectionHeader 
+                title="Videos" 
+                isAdmin={isAdmin}
+                onAdd={openCreateVideoModal}
+              />
+              
+              {loadingVideos ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                </div>
+              ) : videoError ? (
+                <div className="bg-orange-50 text-orange-800 p-3 rounded-md mb-6">
+                  <p className="text-sm">No se pudieron cargar los videos. Intente más tarde.</p>
+                </div>
+              ) : videos?.length === 0 ? (
+                <div className="bg-gray-50 text-gray-600 p-6 rounded-md text-center mb-6">
+                  <p>No hay videos disponibles para este módulo.</p>
                   {isAdmin && (
-                    <AdminActions
-                      onAddClick={handleAddVideo}
-                      onDeleteClick={() => handleDeleteVideo(editingId)}
-                      onEditClick={() => handleEditVideo(editingId)}
-                      resourceType="video"
-                    />
+                    <button 
+                      className="mt-2 text-primary hover:underline text-sm"
+                      onClick={openCreateVideoModal}
+                    >
+                      + Agregar primer video
+                    </button>
                   )}
                 </div>
-                
-                {loadingVideos ? (
-                  <p className="text-gray-500">Cargando videos...</p>
-                ) : videoError ? (
-                  <div className="bg-orange-50 text-orange-800 p-3 rounded mb-4">
-                    <p className="text-sm">No se pudieron cargar los videos. Intente más tarde.</p>
-                  </div>
-                ) : (
-                  <VideosLayout 
-                    videos={videos || []} 
-                    isAdmin={isAdmin}
-                    onAddVideo={handleAddVideo}
-                    onEditVideo={handleEditVideo}
-                    onDeleteVideo={() => handleDeleteVideo(editingId)}
-                  />
-                )}
-              </div>
-            </>
-          )}
-        </ModuleDetailLayout>
-      </div>
+              ) : (
+                <VideosList 
+                  videos={videos || []} 
+                  isAdmin={isAdmin}
+                  onEdit={openEditVideoModal}
+                  onDelete={confirmDeleteVideo}
+                />
+              )}
+            </section>
+          </>
+        )}
+      </ModuleDetailLayout>
+
+      {/* Modal de artículo */}
+      <ArticleFormModal 
+        isOpen={articleModalOpen}
+        onClose={() => setArticleModalOpen(false)}
+        moduleId={Number(moduleId)}
+        articleId={selectedArticleId}
+        onSuccess={refreshContent}
+      />
+
+      {/* Modal de guía */}
+      <GuideFormModal 
+        isOpen={guideModalOpen}
+        onClose={() => setGuideModalOpen(false)}
+        moduleId={Number(moduleId)}
+        guideId={selectedGuideId}
+        onSuccess={refreshContent}
+      />
+
+      {/* Modal de video */}
+      <VideoFormModal 
+        isOpen={videoModalOpen}
+        onClose={() => setVideoModalOpen(false)}
+        moduleId={Number(moduleId)}
+        videoId={selectedVideoId}
+        onSuccess={refreshContent}
+      />
+
+      {/* Modal de confirmación de eliminación */}
+      <DeleteConfirmationModal 
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={handleDelete}
+        isDeleting={isDeleting}
+        {...getDeleteModalProps()}
+      />
     </>
   );
 };
