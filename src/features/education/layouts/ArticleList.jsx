@@ -2,7 +2,8 @@ import PropTypes from 'prop-types';
 import { PencilIcon, TrashIcon, LinkIcon } from '@heroicons/react/24/outline';
 
 /**
- * Componente para mostrar una lista de artículos con opciones de edición y eliminación
+ * Componente para mostrar una lista de artículos educativos
+ * Incluye opciones de administración si el usuario es administrador
  * 
  * @param {Object} props - Propiedades del componente
  * @param {Array} props.articles - Lista de artículos a mostrar
@@ -24,7 +25,7 @@ export const ArticlesList = ({
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
       {articles.map(article => (
         <div 
-          key={article.articleId} 
+          key={article.articleId || article.id} 
           className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200"
         >
           <div className="bg-gradient-to-r from-primary to-green-700 h-4"></div>
@@ -45,14 +46,14 @@ export const ArticlesList = ({
               {isAdmin && (
                 <div className="flex space-x-2">
                   <button 
-                    onClick={() => onEdit(article.articleId)}
+                    onClick={() => onEdit(article.articleId || article.id)}
                     className="text-gray-500 hover:text-primary transition-colors"
                     title="Editar artículo"
                   >
                     <PencilIcon className="w-4 h-4" />
                   </button>
                   <button 
-                    onClick={() => onDelete(article.articleId)}
+                    onClick={() => onDelete(article.articleId || article.id)}
                     className="text-gray-500 hover:text-red-500 transition-colors"
                     title="Eliminar artículo"
                   >
@@ -71,7 +72,8 @@ export const ArticlesList = ({
 ArticlesList.propTypes = {
   articles: PropTypes.arrayOf(
     PropTypes.shape({
-      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+      articleId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
       title: PropTypes.string.isRequired,
       articleUrl: PropTypes.string
     })

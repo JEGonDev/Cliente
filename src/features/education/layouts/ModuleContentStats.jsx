@@ -2,7 +2,8 @@ import PropTypes from 'prop-types';
 import { Book, Video, FileText } from 'lucide-react';
 
 /**
- * Componente que muestra un encabezado con título, etiquetas, descripción y estadísticas del módulo
+ * Componente que muestra las estadísticas de contenido de un módulo
+ * Incluye título, etiquetas, descripción y contadores de recursos
  * 
  * @param {Object} props - Propiedades del componente
  * @param {string} props.title - Título del módulo
@@ -20,7 +21,11 @@ export const ModuleContentStats = ({
   articleCount = 0,
   guideCount = 0
 }) => {
-  // Función para obtener el nombre de la etiqueta dependiendo de si es un objeto o string
+  /**
+   * Obtiene el nombre de la etiqueta dependiendo de si es un objeto o string
+   * @param {string|Object} tag - Etiqueta (string u objeto con propiedad name)
+   * @returns {string} Nombre de la etiqueta
+   */
   const getTagName = (tag) => {
     if (typeof tag === 'string') return tag;
     if (tag && typeof tag === 'object' && tag.name) return tag.name;
@@ -39,7 +44,7 @@ export const ModuleContentStats = ({
             
             return (
               <span 
-                key={idx} 
+                key={`tag-${idx}-${tagName}`}
                 className="text-sm bg-gray-100 text-gray-800 px-2 py-1 rounded-full"
               >
                 #{tagName}

@@ -1,265 +1,90 @@
-import { useContext, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { ModuleDetailLayout } from '../layouts/ModuleDetailLayout';
 import { Header } from '../../../ui/layouts/Header';
-import { AuthContext } from '../../authentication/context/AuthContext';
 import { ModuleHeader } from '../ui/ModuleHeader';
-import { useModules } from '../hooks/useModules';
-import { useArticles } from '../hooks/useArticles';
-import { useGuides } from '../hooks/useGuides';
-import { useVideos } from '../hooks/useVideos';
 
-// Importar nuevos componentes modal
+// Componentes modales
 import { ArticleFormModal } from '../ui/ArticleFormModal';
 import { GuideFormModal } from '../ui/GuideFormModal';
 import { VideoFormModal } from '../ui/VideoFormModal';
 import { DeleteConfirmationModal } from '../ui/DeleteConfirmationModal';
 
 // Componentes para cada sección
-import { SectionHeader } from '../ui/SectionHeader';
-import { ArticlesList } from '../ui/ArticleList';
-import { GuidesList } from '../ui/GuidesList';
-import { VideosList } from '../ui/VideosList';
+import { SectionHeader } from '../layouts/SectionHeader';
+import { ArticlesList } from '../layouts/ArticleList';
+import { GuidesList } from '../layouts/GuidesList';
+import { VideosList } from '../layouts/VideosList';
 
+// Hook personalizado que centraliza toda la lógica
+import { useModuleDetails } from '../hooks/useModuleDetails';
+
+/**
+ * Página que muestra los detalles completos de un módulo educativo
+ * Permite ver, crear, editar y eliminar artículos, guías y videos
+ * 
+ * @returns {JSX.Element} Página de detalles del módulo
+ */
 export const OpenModulePage = () => {
-  // Obtener información de autenticación y roles
-  const { isAdmin } = useContext(AuthContext);
-  const { moduleId } = useParams();
-
-  // Hooks personalizados para cada tipo de contenido
-  const { 
-    module, 
-    loading: loadingModule, 
-    error: moduleError, 
-    fetchModuleById 
-  } = useModules();
-  
-  const { 
-    articles, 
-    loading: loadingArticles, 
-    error: articleError,
-    fetchArticlesByModuleId,
-    handleDeleteArticle 
-  } = useArticles();
-  
-  const { 
-    guides, 
-    loading: loadingGuides, 
-    error: guideError,
-    fetchGuidesByModuleId,
-    handleDeleteGuide 
-  } = useGuides();
-  
-  const { 
-    videos, 
-    loading: loadingVideos, 
-    error: videoError,
-    fetchVideosByModuleId,
-    handleDeleteVideo 
-  } = useVideos();
-
-  // Estado para controlar las modales
-  const [articleModalOpen, setArticleModalOpen] = useState(false);
-  const [guideModalOpen, setGuideModalOpen] = useState(false);
-  const [videoModalOpen, setVideoModalOpen] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  
-  // Estados para guardar los IDs de elementos seleccionados para edición o eliminación
-  const [selectedArticleId, setSelectedArticleId] = useState(null);
-  const [selectedGuideId, setSelectedGuideId] = useState(null);
-  const [selectedVideoId, setSelectedVideoId] = useState(null);
-  
-  // Estado para controlar el tipo de elemento a eliminar
-  const [deleteType, setDeleteType] = useState('');
-  const [deleteId, setDeleteId] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  // Estado para controlar si se ha intentado cargar los datos
-  const [loadAttempted, setLoadAttempted] = useState(false);
-
-  // Cargar datos al iniciar
-  useEffect(() => {
-    const loadModuleData = async () => {
-      if (moduleId) {
-        try {
-          // Primero intentamos cargar el módulo principal
-          await fetchModuleById(moduleId);
-          
-          // Luego cargamos todos los contenidos relacionados, capturando errores individualmente
-          try {
-            await fetchArticlesByModuleId(moduleId);
-          } catch (error) {
-            console.error("Error cargando artículos:", error);
-          }
-          
-          try {
-            await fetchGuidesByModuleId(moduleId);
-          } catch (error) {
-            console.error("Error cargando guías:", error);
-          }
-          
-          try {
-            await fetchVideosByModuleId(moduleId);
-          } catch (error) {
-            console.error("Error cargando videos:", error);
-          }
-        } catch (error) {
-          console.error("Error cargando el módulo:", error);
-        } finally {
-          setLoadAttempted(true);
-        }
-      }
-    };
-
-    loadModuleData();
-  }, [moduleId]);
-
-  // Funciones para abrir modales de creación
-  const openCreateArticleModal = () => {
-    setSelectedArticleId(null);
-    setArticleModalOpen(true);
-  };
-
-  const openCreateGuideModal = () => {
-    setSelectedGuideId(null);
-    setGuideModalOpen(true);
-  };
-
-  const openCreateVideoModal = () => {
-    setSelectedVideoId(null);
-    setVideoModalOpen(true);
-  };
-
-  // Funciones para abrir modales de edición
-  const openEditArticleModal = (id) => {
-    setSelectedArticleId(id);
-    setArticleModalOpen(true);
-  };
-
-  const openEditGuideModal = (id) => {
-    setSelectedGuideId(id);
-    setGuideModalOpen(true);
-  };
-
-  const openEditVideoModal = (id) => {
-    setSelectedVideoId(id);
-    setVideoModalOpen(true);
-  };
-
-  // Funciones para confirmar eliminación
-  const confirmDeleteArticle = (id) => {
-    setDeleteType('article');
-    setDeleteId(id);
-    setDeleteModalOpen(true);
-  };
-
-  const confirmDeleteGuide = (id) => {
-    setDeleteType('guide');
-    setDeleteId(id);
-    setDeleteModalOpen(true);
-  };
-
-  const confirmDeleteVideo = (id) => {
-    setDeleteType('video');
-    setDeleteId(id);
-    setDeleteModalOpen(true);
-  };
-
-  // Función para realizar la eliminación
-  const handleDelete = async () => {
-    if (!deleteId || !deleteType) return;
+  // Usamos el hook personalizado que encapsula toda la lógica
+  const {
+    // Estados principales
+    moduleId,
+    isAdmin,
+    module,
+    articles,
+    guides,
+    videos,
+    moduleTags,
     
-    setIsDeleting(true);
-    try {
-      let success = false;
-      
-      switch (deleteType) {
-        case 'article':
-          success = await handleDeleteArticle(deleteId);
-          if (success) await fetchArticlesByModuleId(moduleId);
-          break;
-        case 'guide':
-          success = await handleDeleteGuide(deleteId);
-          if (success) await fetchGuidesByModuleId(moduleId);
-          break;
-        case 'video':
-          success = await handleDeleteVideo(deleteId);
-          if (success) await fetchVideosByModuleId(moduleId);
-          break;
-      }
-      
-      if (success) {
-        setDeleteModalOpen(false);
-        setDeleteId(null);
-        setDeleteType('');
-      }
-    } catch (error) {
-      console.error(`Error eliminando ${deleteType}:`, error);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  // Función de recarga para actualizar datos después de operaciones CRUD
-  const refreshContent = async () => {
-    if (moduleId) {
-      try {
-        await fetchArticlesByModuleId(moduleId);
-        await fetchGuidesByModuleId(moduleId);
-        await fetchVideosByModuleId(moduleId);
-      } catch (error) {
-        console.error("Error refrescando contenido:", error);
-      }
-    }
-  };
-
-  // Estado de carga general
-  const isLoading = loadingModule && !loadAttempted;
-
-  // Procesamos los tags para asegurarnos de que nunca enviemos algo incorrecto
-  const getModuleTags = () => {
-    if (!module || !module.tags) return [];
+    // Estados de carga y errores
+    isLoading,
+    loadingArticles,
+    loadingGuides,
+    loadingVideos,
+    moduleError,
+    articleError,
+    guideError,
+    videoError,
     
-    // Si los tags son strings, los usamos directamente
-    if (Array.isArray(module.tags) && module.tags.length > 0) {
-      if (typeof module.tags[0] === 'string') {
-        return module.tags;
-      }
-      
-      // Si son objetos, extraemos la propiedad name
-      if (typeof module.tags[0] === 'object' && module.tags[0] !== null) {
-        return module.tags;
-      }
-    }
+    // Estados de modales
+    articleModalOpen,
+    guideModalOpen,
+    videoModalOpen,
+    deleteModalOpen,
     
-    return [];
-  };
-
-  // Mensajes para el modal de eliminación
-  const getDeleteModalProps = () => {
-    switch (deleteType) {
-      case 'article':
-        return {
-          title: "Eliminar artículo",
-          message: "¿Estás seguro de que deseas eliminar este artículo?"
-        };
-      case 'guide':
-        return {
-          title: "Eliminar guía",
-          message: "¿Estás seguro de que deseas eliminar esta guía?"
-        };
-      case 'video':
-        return {
-          title: "Eliminar video",
-          message: "¿Estás seguro de que deseas eliminar este video?"
-        };
-      default:
-        return {
-          title: "Confirmar eliminación",
-          message: "¿Estás seguro de que deseas eliminar este elemento?"
-        };
-    }
-  };
+    // IDs seleccionados
+    selectedArticleId,
+    selectedGuideId,
+    selectedVideoId,
+    
+    // Estados de eliminación
+    isDeleting,
+    deleteModalProps,
+    
+    // Funciones de modales de artículos
+    openCreateArticleModal,
+    openEditArticleModal,
+    confirmDeleteArticle,
+    
+    // Funciones de modales de guías
+    openCreateGuideModal,
+    openEditGuideModal,
+    confirmDeleteGuide,
+    
+    // Funciones de modales de videos
+    openCreateVideoModal,
+    openEditVideoModal,
+    confirmDeleteVideo,
+    
+    // Funciones de cierre de modales
+    closeArticleModal,
+    closeGuideModal,
+    closeVideoModal,
+    closeDeleteModal,
+    
+    // Funciones de operaciones
+    handleDelete,
+    refreshContent
+  } = useModuleDetails();
 
   return (
     <>
@@ -290,7 +115,7 @@ export const OpenModulePage = () => {
                 guideCount={guides?.length || 0}
                 title={module.title || ''}
                 description={module.description || ''}
-                tags={getModuleTags()}
+                tags={moduleTags}
               />
             </div>
 
@@ -414,7 +239,7 @@ export const OpenModulePage = () => {
       {/* Modal de artículo */}
       <ArticleFormModal 
         isOpen={articleModalOpen}
-        onClose={() => setArticleModalOpen(false)}
+        onClose={closeArticleModal}
         moduleId={Number(moduleId)}
         articleId={selectedArticleId}
         onSuccess={refreshContent}
@@ -423,7 +248,7 @@ export const OpenModulePage = () => {
       {/* Modal de guía */}
       <GuideFormModal 
         isOpen={guideModalOpen}
-        onClose={() => setGuideModalOpen(false)}
+        onClose={closeGuideModal}
         moduleId={Number(moduleId)}
         guideId={selectedGuideId}
         onSuccess={refreshContent}
@@ -432,7 +257,7 @@ export const OpenModulePage = () => {
       {/* Modal de video */}
       <VideoFormModal 
         isOpen={videoModalOpen}
-        onClose={() => setVideoModalOpen(false)}
+        onClose={closeVideoModal}
         moduleId={Number(moduleId)}
         videoId={selectedVideoId}
         onSuccess={refreshContent}
@@ -441,10 +266,10 @@ export const OpenModulePage = () => {
       {/* Modal de confirmación de eliminación */}
       <DeleteConfirmationModal 
         isOpen={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
+        onClose={closeDeleteModal}
         onConfirm={handleDelete}
         isDeleting={isDeleting}
-        {...getDeleteModalProps()}
+        {...deleteModalProps}
       />
     </>
   );

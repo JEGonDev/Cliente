@@ -1,8 +1,9 @@
 import PropTypes from 'prop-types';
-import { ModuleContentStats } from './ModuleContentStats';
+import { ModuleContentStats } from '../layouts/ModuleContentStats';
 
 /**
- * Componente que encapsula el encabezado de un módulo
+ * Componente que encapsula el encabezado de un módulo educativo
+ * Muestra título, descripción, etiquetas y estadísticas del módulo
  * 
  * @param {Object} props - Propiedades del componente
  * @param {string} props.title - Título del módulo
@@ -20,17 +21,36 @@ export const ModuleHeader = ({
   articleCount = 0, 
   guideCount = 0 
 }) => {
-  // Procesamos las etiquetas para que siempre sean un formato uniforme
-  const processedTags = tags ? (
-    Array.isArray(tags) ? tags : []
-  ) : [];
+  /**
+   * Procesa las etiquetas para asegurar un formato consistente
+   * @returns {Array} Lista de etiquetas procesadas
+   */
+  const processedTags = () => {
+    if (!tags) return [];
+    
+    // Si ya es un array, lo devolvemos
+    if (Array.isArray(tags)) {
+      // Si es un array de strings, lo devolvemos directamente
+      if (tags.length === 0 || typeof tags[0] === 'string') {
+        return tags;
+      }
+      
+      // Si es un array de objetos, verificamos su formato
+      if (typeof tags[0] === 'object') {
+        return tags;
+      }
+    }
+    
+    // Si no es un array o no tiene el formato esperado, devolvemos array vacío
+    return [];
+  };
 
   return (
     <div className="mb-8">
       <ModuleContentStats
         title={title}
         description={description}
-        tags={processedTags}
+        tags={processedTags()}
         videoCount={videoCount}
         articleCount={articleCount}
         guideCount={guideCount}
