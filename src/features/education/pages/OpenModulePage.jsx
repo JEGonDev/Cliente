@@ -9,10 +9,10 @@ import { VideoFormModal } from '../ui/VideoFormModal';
 import { DeleteConfirmationModal } from '../ui/DeleteConfirmationModal';
 
 // Componentes para cada sección
-import { SectionHeader } from '../ui/SectionHeader';
-import { ArticlesList } from '../ui/ArticleList';
-import { GuidesList } from '../ui/GuidesList';
-import { VideosList } from '../ui/VideosList';
+import { SectionHeader } from '../layouts/SectionHeader';
+import { ArticlesList } from '../layouts/ArticleList';
+import { GuidesList } from '../layouts/GuidesList';
+import { VideosList } from '../layouts/VideosList';
 
 // Hook personalizado que centraliza toda la lógica
 import { useModuleDetails } from '../hooks/useModuleDetails';

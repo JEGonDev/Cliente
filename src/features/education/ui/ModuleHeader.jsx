@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { ModuleContentStats } from './ModuleContentStats';
+import { ModuleContentStats } from '../layouts/ModuleContentStats';
 
 /**
  * Componente que encapsula el encabezado de un módulo educativo
