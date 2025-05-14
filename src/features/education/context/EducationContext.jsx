@@ -283,20 +283,32 @@ export const EducationProvider = ({ children }) => {
    * Obtiene artículos por ID de módulo
    * @param {number} moduleId - ID del módulo
    */
-  const fetchArticlesByModuleId = async (moduleId) => {
+  const fetchArticlesByModuleId = async (moduleId, forceReload = false) => {
     if (!isAuthenticated) return;
 
+    // Siempre establecer el estado de carga
     setLoadingArticles(true);
     setArticleError(null);
+    
+    // Si forceReload es true, limpiamos el estado actual
+    if (forceReload) {
+      setArticles([]);
+    }
 
     try {
       const response = await educationService.getArticlesByModuleId(moduleId);
-      setArticles(response.data);
-      return response.data;
+      if (response && response.data) {
+        setArticles(response.data);
+        return response.data;
+      }
+      // Si no hay respuesta válida, establecer un array vacío
+      setArticles([]);
+      return [];
     } catch (error) {
       console.error(`Error obteniendo artículos del módulo ${moduleId}:`, error);
       setArticleError(error.message || `Error al cargar artículos del módulo ${moduleId}`);
-      return null;
+      setArticles([]); // Importante: resetear a array vacío en caso de error
+      return [];
     } finally {
       setLoadingArticles(false);
     }
@@ -437,28 +449,42 @@ export const EducationProvider = ({ children }) => {
     }
   };
 
-  /**
-   * Obtiene guías por ID de módulo
-   * @param {number} moduleId - ID del módulo
-   */
-  const fetchGuidesByModuleId = async (moduleId) => {
-    if (!isAuthenticated) return;
+/**
+ * Obtiene guías por ID de módulo
+ * @param {number} moduleId - ID del módulo
+ * @param {boolean} forceReload - Indica si se debe forzar la recarga
+ * @returns {Promise<Array>} Lista de guías o array vacío
+ */
+const fetchGuidesByModuleId = async (moduleId, forceReload = false) => {
+  if (!isAuthenticated) return [];
 
-    setLoadingGuides(true);
-    setGuideError(null);
+  // Siempre establecer el estado de carga
+  setLoadingGuides(true);
+  setGuideError(null);
+  
+  // Si forceReload es true, limpiamos el estado actual
+  if (forceReload) {
+    setGuides([]);
+  }
 
-    try {
-      const response = await educationService.getGuidesByModuleId(moduleId);
+  try {
+    const response = await educationService.getGuidesByModuleId(moduleId);
+    if (response && response.data) {
       setGuides(response.data);
       return response.data;
-    } catch (error) {
-      console.error(`Error obteniendo guías del módulo ${moduleId}:`, error);
-      setGuideError(error.message || `Error al cargar guías del módulo ${moduleId}`);
-      return null;
-    } finally {
-      setLoadingGuides(false);
     }
-  };
+    // Si no hay respuesta válida, establecer un array vacío
+    setGuides([]);
+    return [];
+  } catch (error) {
+    console.error(`Error obteniendo guías del módulo ${moduleId}:`, error);
+    setGuideError(error.message || `Error al cargar guías del módulo ${moduleId}`);
+    setGuides([]); // Importante: resetear a array vacío en caso de error
+    return [];
+  } finally {
+    setLoadingGuides(false);
+  }
+};
 
   /**
    * Obtiene una guía por su ID
@@ -750,28 +776,42 @@ export const EducationProvider = ({ children }) => {
 
   // ==================== Funciones para videos ====================
 
-  /**
-   * Obtiene videos por ID de módulo
-   * @param {number} moduleId - ID del módulo
-   */
-  const fetchVideosByModuleId = async (moduleId) => {
-    if (!isAuthenticated) return;
+/**
+ * Obtiene videos por ID de módulo
+ * @param {number} moduleId - ID del módulo
+ * @param {boolean} forceReload - Indica si se debe forzar la recarga
+ * @returns {Promise<Array>} Lista de videos o array vacío
+ */
+const fetchVideosByModuleId = async (moduleId, forceReload = false) => {
+  if (!isAuthenticated) return [];
 
-    setLoadingVideos(true);
-    setVideoError(null);
+  // Siempre establecer el estado de carga
+  setLoadingVideos(true);
+  setVideoError(null);
+  
+  // Si forceReload es true, limpiamos el estado actual
+  if (forceReload) {
+    setVideos([]);
+  }
 
-    try {
-      const response = await educationService.getVideosByModuleId(moduleId);
+  try {
+    const response = await educationService.getVideosByModuleId(moduleId);
+    if (response && response.data) {
       setVideos(response.data);
       return response.data;
-    } catch (error) {
-      console.error(`Error obteniendo videos del módulo ${moduleId}:`, error);
-      setVideoError(error.message || `Error al cargar videos del módulo ${moduleId}`);
-      return null;
-    } finally {
-      setLoadingVideos(false);
     }
-  };
+    // Si no hay respuesta válida, establecer un array vacío
+    setVideos([]);
+    return [];
+  } catch (error) {
+    console.error(`Error obteniendo videos del módulo ${moduleId}:`, error);
+    setVideoError(error.message || `Error al cargar videos del módulo ${moduleId}`);
+    setVideos([]); // Importante: resetear a array vacío en caso de error
+    return [];
+  } finally {
+    setLoadingVideos(false);
+  }
+};
 
   /**
    * Obtiene un video por su ID
