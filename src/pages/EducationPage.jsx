@@ -9,6 +9,8 @@ import { DeleteModeNotice } from '../features/education/ui/DeleteModeNotice';
 import { useModules } from '../features/education/hooks/useModules';
 import { useTags } from '../features/education/hooks/useTags';
 import { Button } from '../ui/components/Button';
+import { TagManagementButtons } from '../features/education/layouts/TagManagementButtons';
+
 
 export const EducationPage = () => {
   const { isAdmin } = useContext(AuthContext);
@@ -255,6 +257,9 @@ export const EducationPage = () => {
         </>
       ) : (
         <>
+          {/* Botones de gestión de etiquetas (solo para administradores) */}
+          {isAdmin && <TagManagementButtons />}
+
           {/* Filtros de módulos (mostrar solo si hay etiquetas) */}
           {Array.isArray(tags) && tags.length > 0 && (
             <ModuleFilters
