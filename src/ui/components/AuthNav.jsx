@@ -69,11 +69,11 @@ export const AuthNav = () => {
   const isLoading = profileLoading;
 
   return (
-    <div  >
+    <div className="flex items-center space-x-4">
       {/* Icono de notificaciones */}
       <button
         type="button"
-        className="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden"
+        className="relative flex items-center justify-center rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden"
       >
         <span className="absolute -inset-1.5"></span>
         <span className="sr-only">Ver notificaciones</span>
@@ -81,26 +81,25 @@ export const AuthNav = () => {
       </button>
 
       {/* Menú de usuario */}
-      <Menu as="div" className="relative ml-3">
-        <div>
-          <Menu.Button className="relative flex rounded-full bg-gray-800 text-sm focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden">
-            <span className="absolute -inset-1.5"></span>
-            <span className="sr-only">Abrir menú de usuario</span>
-            {isLoading ? (
-              <div className="size-8 rounded-full bg-gray-600 animate-pulse"></div>
-            ) : (
-              <img
-                alt={`Avatar de ${getDisplayName()}`}
-                src={getAvatarUrl()}
-                className="size-8 rounded-full"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = getDefaultAvatar();
-                }}
-              />
-            )}
-          </Menu.Button>
-        </div>
+      <Menu as="div" className="relative">
+        <Menu.Button className="relative flex items-center justify-center rounded-full bg-gray-800 text-sm focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden">
+          <span className="absolute -inset-1.5"></span>
+          <span className="sr-only">Abrir menú de usuario</span>
+          {isLoading ? (
+            <div className="size-8 rounded-full bg-gray-600 animate-pulse"></div>
+          ) : (
+            <img
+              alt={`Avatar de ${getDisplayName()}`}
+              src={getAvatarUrl()}
+              className="size-8 rounded-full"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = getDefaultAvatar();
+              }}
+            />
+          )}
+        </Menu.Button>
+        
         <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 ring-1 shadow-lg ring-black/5 transition focus:outline-hidden">
           <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100">
             {isLoading ? (
@@ -117,7 +116,7 @@ export const AuthNav = () => {
             {({ active }) => (
               <a
                 href="/profile"
-                className={`block px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''}`}
+                className={`block px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''} flex items-center`}
               >
                 Mi Perfil
               </a>
@@ -128,7 +127,7 @@ export const AuthNav = () => {
             {({ active }) => (
               <a
                 href="/settings"
-                className={`block px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''}`}
+                className={`block px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''} flex items-center`}
               >
                 Configuración
               </a>
@@ -139,7 +138,7 @@ export const AuthNav = () => {
             {({ active }) => (
               <button
                 onClick={handleLogout}
-                className={`w-full text-left px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''}`}
+                className={`w-full text-left px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''} flex items-center`}
               >
                 Cerrar sesión
               </button>
@@ -150,7 +149,6 @@ export const AuthNav = () => {
     </div>
   );
 };
-
 
 // import { useContext, useEffect } from "react";
 // import { Menu } from "@headlessui/react";

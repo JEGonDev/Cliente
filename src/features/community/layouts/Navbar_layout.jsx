@@ -1,8 +1,23 @@
-import React from "react";
+import React, { useContext } from "react";
 import { useState } from "react";
+import { useContent } from "../hooks/useContent";
+import { MessageSquare } from "lucide-react";
+import { AuthContext } from "../../authentication/context/AuthContext";
 
 export const Navbar_layout = () => {
     const [isNavOpen, setIsNavOpen] = useState(false);
+    const { activeContent, setActiveContent } = useContent();
+    const { isAuthenticated } = useContext(AuthContext);
+
+    // Función para manejar la navegación a diferentes secciones
+    const navigateTo = (section) => {
+      setActiveContent(section);
+      // En dispositivos móviles, cerrar la navegación después de la selección
+      if (window.innerWidth < 768) {
+        setIsNavOpen(false);
+      }
+    };
+
   return (
     <div
       className={`w-full md:w-64 bg-white border-r border-gray-300 flex flex-col p-4 ${
@@ -30,6 +45,24 @@ export const Navbar_layout = () => {
           </li>
         </ul>
       </div>
+
+      {/* Sección "Mis hilos" - Solo visible para usuarios autenticados */}
+      {isAuthenticated && (
+        <div className="mb-4">
+          <h2 className="text-gray-700 font-medium text-sm mb-2">
+            Mis contenidos
+          </h2>
+          <ul className="space-y-2">
+            <li 
+              className={`flex items-center text-sm ${activeContent === "threads" ? "text-green-600 font-medium" : "text-gray-700"} cursor-pointer hover:text-green-600 transition-colors`}
+              onClick={() => navigateTo("threads")}
+            >
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Mis hilos
+            </li>
+          </ul>
+        </div>
+      )}
 
       <div>
         <h2 className="text-gray-700 font-medium text-sm mb-2">

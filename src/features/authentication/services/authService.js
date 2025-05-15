@@ -15,7 +15,9 @@ export const authService = {
   login: async (credentials) => {
     try {
       const response = await API.post('/auth/login', credentials);
+      console.log('Login exitoso:', response.data);
       return response.data;
+
     } catch (error) {
       console.error('Error durante el login:', error);
       throw error;

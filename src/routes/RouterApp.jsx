@@ -8,7 +8,9 @@ import { RegisterPage } from "../features/authentication/pages/RegisterPage";
 import { ForgotPasswordPage } from "../features/authentication/pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "../features/authentication/pages/ResetPasswordPage";
 // Importaciones del modulo de comunidad
-import { CommunityPage } from "../features/community/pages/CommunityPage";
+import { ComunityPage } from "../features/community/pages/ComunityPage";
+
+
 // Importaciones de modulo educativo
 import { EducationPage } from "../pages/EducationPage";
 import { OpenModulePage } from "../features/education/pages/OpenModulePage";
@@ -49,7 +51,8 @@ export const RouterApp = () => {
         />
 
         {/* Rutas del modulo de comunidad */}
-        <Route path="/community" element={<CommunityPage />} />
+        <Route path="/comunity" element={<ComunityPage />} />
+       
 
         {/* Rutas del modulo de profile */}
         <Route path="/profile/edit" element={<ProfileEditPage />} />
@@ -59,7 +62,10 @@ export const RouterApp = () => {
         <Route path="/monitoring" element={<MonitoringPage />} />
         <Route path="/monitoring/history" element={<DataHistoryPage />} />
         <Route path="/monitoring/alerts" element={<AlertsPage />} />
-        <Route path ="/monitoring/real-time"element={<RealTimeMonitoringPage />} />
+        <Route
+          path="/monitoring/real-time"
+          element={<RealTimeMonitoringPage />}
+        />
         <Route path="/monitoring/crops" element={<CropsPage />} />
       </Route>
     </Routes>

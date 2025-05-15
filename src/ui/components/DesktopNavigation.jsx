@@ -69,7 +69,7 @@ export const DesktopNavigation = () => {
         <>
           <div className="hidden lg:flex lg:gap-x-12">
             <ItemsNavbar
-              link="/community"
+              link="/comunity"
               style="text-white hover:text-gray-300"
               text="Comunidad"
             />
@@ -78,6 +78,10 @@ export const DesktopNavigation = () => {
               style="text-white hover:text-gray-300"
               text="Educación"
             />
+            <ItemsNavbar
+              link="/monitoring"
+              style="text-white hover:text-gray-300"
+              text="Monitoreo"/>
 
             {(isAdmin || isModerator) && (
               <ItemsNavbar

@@ -3,41 +3,41 @@ import { CommunityContext } from '../context/CommunityContext';
 import { AuthContext } from '../../authentication/context/AuthContext';
 
 /**
- * Hook personalizado para manejar la lógica de hilos
+ * Hook personalizado para manejar la lógica de grupos
  * 
  * Este hook encapsula:
- * - Estados del formulario de creación y actualización de hilos
+ * - Estados del formulario de creación y actualización de grupos
  * - Estado de la UI (errores, carga)
- * - Handlers para interacción con hilos (crear, actualizar, eliminar)
+ * - Handlers para interacción con grupos (crear, actualizar, eliminar, unirse)
  * 
- * @returns {Object} Propiedades y métodos para trabajar con hilos
+ * @returns {Object} Propiedades y métodos para trabajar con grupos
  */
-export const useThread = () => {
+export const useGroup = () => {
   // Contexto de comunidad
-  const {
-    threads,
-    thread,
+  const { 
+    groups,
+    group,
     posts,
-    loadingThreads,
-    threadError,
-    fetchAllThreads,
-    fetchThreadById,
-    createThread: contextCreateThread,
-    updateThread: contextUpdateThread,
-    deleteThread: contextDeleteThread,
-    canCreateThread,
-    canEditThread,
-    canDeleteThread
+    loadingGroups,
+    groupError,
+    fetchAllGroups,
+    fetchGroupById,
+    createGroup: contextCreateGroup,
+    updateGroup: contextUpdateGroup,
+    deleteGroup: contextDeleteGroup,
+    joinGroup: contextJoinGroup,
+    canCreateGroup,
+    canEditGroup,
+    canDeleteGroup
   } = useContext(CommunityContext);
   
-  // Contexto de autenticación para validar permisos
-  const { isAdmin, isModerator, user } = useContext(AuthContext);
+  // Contexto de autenticación
+  const { user, isAdmin, isModerator } = useContext(AuthContext);
   
   // Estados locales para el formulario
   const [formData, setFormData] = useState({
-    groupId: null,
-    title: '',
-    content: ''
+    name: '',
+    description: ''
   });
   
   // Estado para errores del formulario
@@ -46,6 +46,9 @@ export const useThread = () => {
   // Estado para mostrar mensaje de éxito
   const [successMessage, setSuccessMessage] = useState('');
   
+  // Estado para rastrear grupos a los que el usuario se ha unido
+  const [joinedGroups, setJoinedGroups] = useState([]);
+  
   /**
    * Valida el formulario antes de enviarlo
    * @returns {boolean} true si es válido, false si no
@@ -53,12 +56,8 @@ export const useThread = () => {
   const validateForm = () => {
     const errors = {};
     
-    if (!formData.title.trim()) {
-      errors.title = 'El título es obligatorio';
-    }
-    
-    if (!formData.content.trim()) {
-      errors.content = 'El contenido es obligatorio';
+    if (!formData.name.trim()) {
+      errors.name = 'El nombre del grupo es obligatorio';
     }
     
     setFormErrors(errors);
@@ -71,25 +70,7 @@ export const useThread = () => {
    */
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    if (name === 'groupId') {
-      // Convertir a número o null si está vacío
-      const numValue = value ? parseInt(value, 10) : null;
-      setFormData({ ...formData, [name]: numValue });
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
-  };
-  
-  /**
-   * Establece directamente el groupId en el formulario
-   * @param {number} groupId - ID del grupo asociado al hilo
-   */
-  const setThreadGroup = (groupId) => {
-    setFormData(prev => ({
-      ...prev,
-      groupId
-    }));
+    setFormData({ ...formData, [name]: value });
   };
   
   /**
@@ -97,92 +78,23 @@ export const useThread = () => {
    */
   const resetForm = () => {
     setFormData({
-      groupId: null,
-      title: '',
-      content: ''
+      name: '',
+      description: ''
     });
     setFormErrors({});
   };
   
   /**
-   * Maneja el envío del formulario para crear un hilo
+   * Maneja el envío del formulario para crear un grupo
    * @param {Event} e - Evento de envío del formulario
    */
-  const handleCreateThread = async (e) => {
+  const handleCreateGroup = async (e) => {
     e.preventDefault();
     
     // Verificar permisos
-    if (!canCreateThread()) {
+    if (!canCreateGroup()) {
       setFormErrors({
-        permission: 'No tienes permisos para crear hilos. Se requiere ser administrador o moderador.'
-      });
-      return;
-    }
-    
-    // Reset mensajes
-    setSuccessMessage('');
-    
-    // Validar formulario
-    if (!validateForm()) return;
-    
-    try {
-      const newThread = await contextCreateThread(formData);
-      if (newThread) {
-        setSuccessMessage('Hilo creado correctamente');
-        resetForm();
-        return newThread;
-      }
-      return null;
-    } catch (error) {
-      console.error('Error al crear hilo:', error);
-      return null;
-    }
-  };
-  
-  /**
-   * Carga los datos de un hilo para editarlo
-   * @param {number} id - ID del hilo a editar
-   */
-  const loadThreadForEdit = async (id) => {
-    try {
-      const threadData = await fetchThreadById(id);
-      if (threadData) {
-        // Verificar permisos
-        if (!canEditThread(threadData)) {
-          setFormErrors({
-            permission: 'No tienes permisos para editar este hilo. Solo el creador puede editar su propio hilo.'
-          });
-          return null;
-        }
-        
-        setFormData({
-          groupId: threadData.groupId || null,
-          title: threadData.title || '',
-          content: threadData.content || ''
-        });
-        
-        return threadData;
-      }
-      return null;
-    } catch (error) {
-      console.error(`Error al cargar hilo ${id} para editar:`, error);
-      return null;
-    }
-  };
-  
-  /**
-   * Maneja el envío del formulario para actualizar un hilo
-   * @param {number} id - ID del hilo a actualizar
-   * @param {Event} e - Evento de envío del formulario
-   */
-  const handleUpdateThread = async (id, e) => {
-    e.preventDefault();
-    
-    // Verificamos si el usuario puede actualizar este hilo
-    const threadData = await fetchThreadById(id);
-    if (!threadData || !canEditThread(threadData)) {
-      setFormErrors({
-        permission: 'No tienes permisos para actualizar este hilo. Solo el creador puede editar su propio hilo.'
+        permission: 'No tienes permisos para crear grupos. Se requiere ser administrador o moderador.'
       });
       return null;
     }
@@ -194,48 +106,111 @@ export const useThread = () => {
     if (!validateForm()) return null;
     
     try {
-      // Creamos un objeto con los datos a actualizar según el formato esperado por el backend
-      const updateData = {
-        title: formData.title,
-        content: formData.content
-      };
-      
-      const updatedThread = await contextUpdateThread(id, updateData);
-      if (updatedThread) {
-        setSuccessMessage('Hilo actualizado correctamente');
-        return updatedThread;
+      const newGroup = await contextCreateGroup(formData);
+      if (newGroup) {
+        setSuccessMessage('Grupo creado correctamente');
+        resetForm();
+        return newGroup;
       }
       return null;
     } catch (error) {
-      console.error(`Error al actualizar hilo ${id}:`, error);
+      console.error('Error al crear grupo:', error);
+      setFormErrors({ general: error.message || 'Error al crear el grupo' });
       return null;
     }
   };
   
   /**
-   * Maneja la eliminación de un hilo
-   * @param {number} id - ID del hilo a eliminar
+   * Carga los datos de un grupo para editarlo
+   * @param {number} id - ID del grupo a editar
    */
-  const handleDeleteThread = async (id) => {
-    // Verificamos si el usuario puede eliminar este hilo
-    const threadData = await fetchThreadById(id);
-    if (!threadData || !canDeleteThread(threadData)) {
+  const loadGroupForEdit = async (id) => {
+    try {
+      const groupData = await fetchGroupById(id);
+      if (groupData) {
+        // Verificar permisos
+        if (!canEditGroup()) {
+          setFormErrors({
+            permission: 'No tienes permisos para editar grupos. Se requiere ser administrador o moderador.'
+          });
+          return null;
+        }
+        
+        setFormData({
+          name: groupData.name || '',
+          description: groupData.description || ''
+        });
+        
+        return groupData;
+      }
+      return null;
+    } catch (error) {
+      console.error(`Error al cargar grupo ${id} para editar:`, error);
+      setFormErrors({ general: error.message || `Error al cargar el grupo ${id}` });
+      return null;
+    }
+  };
+  
+  /**
+   * Maneja el envío del formulario para actualizar un grupo
+   * @param {number} id - ID del grupo a actualizar
+   * @param {Event} e - Evento de envío del formulario
+   */
+  const handleUpdateGroup = async (id, e) => {
+    e.preventDefault();
+    
+    // Verificar permisos
+    if (!canEditGroup()) {
       setFormErrors({
-        permission: 'No tienes permisos para eliminar este hilo. Solo el creador y los administradores pueden eliminar hilos.'
+        permission: 'No tienes permisos para editar grupos. Se requiere ser administrador o moderador.'
+      });
+      return null;
+    }
+    
+    // Reset mensajes
+    setSuccessMessage('');
+    
+    // Validar formulario
+    if (!validateForm()) return null;
+    
+    try {
+      const updatedGroup = await contextUpdateGroup(id, formData);
+      if (updatedGroup) {
+        setSuccessMessage('Grupo actualizado correctamente');
+        return updatedGroup;
+      }
+      return null;
+    } catch (error) {
+      console.error(`Error al actualizar grupo ${id}:`, error);
+      setFormErrors({ general: error.message || `Error al actualizar el grupo ${id}` });
+      return null;
+    }
+  };
+  
+  /**
+   * Maneja la eliminación de un grupo
+   * @param {number} id - ID del grupo a eliminar
+   */
+  const handleDeleteGroup = async (id) => {
+    // Verificar permisos
+    if (!canDeleteGroup()) {
+      setFormErrors({
+        permission: 'No tienes permisos para eliminar grupos. Se requiere ser administrador.'
       });
       return false;
     }
     
-    if (window.confirm('¿Estás seguro de que deseas eliminar este hilo?')) {
+    if (window.confirm('¿Estás seguro de que deseas eliminar este grupo?')) {
       try {
-        const success = await contextDeleteThread(id);
+        const success = await contextDeleteGroup(id);
         if (success) {
-          setSuccessMessage('Hilo eliminado correctamente');
+          setSuccessMessage('Grupo eliminado correctamente');
           return true;
         }
         return false;
       } catch (error) {
-        console.error(`Error al eliminar hilo ${id}:`, error);
+        console.error(`Error al eliminar grupo ${id}:`, error);
+        setFormErrors({ general: error.message || `Error al eliminar el grupo ${id}` });
         return false;
       }
     }
@@ -243,54 +218,91 @@ export const useThread = () => {
   };
   
   /**
-   * Obtiene hilos asociados con un grupo específico
+   * Maneja la acción de unirse/abandonar un grupo
    * @param {number} groupId - ID del grupo
-   * @returns {Array} Lista de hilos filtrados
    */
-  const getThreadsByGroupId = (groupId) => {
-    return threads.filter(t => t.groupId === groupId);
+  const handleToggleJoinGroup = async (groupId) => {
+    try {
+      // Verificar si el usuario ya está unido al grupo
+      const isJoined = joinedGroups.includes(groupId);
+      
+      if (isJoined) {
+        // Lógica para abandonar el grupo 
+        // (Nota: Se asume que el backend tiene un endpoint para esto)
+        // await communityService.leaveGroup(groupId);
+        
+        // Actualizar estado local
+        setJoinedGroups(prevGroups => prevGroups.filter(id => id !== groupId));
+        setSuccessMessage('Has abandonado el grupo correctamente');
+      } else {
+        // Unirse al grupo
+        await contextJoinGroup(groupId);
+        
+        // Actualizar estado local
+        setJoinedGroups(prevGroups => [...prevGroups, groupId]);
+        setSuccessMessage('Te has unido al grupo correctamente');
+      }
+      
+      // Refrescar lista de grupos
+      await fetchAllGroups();
+      return true;
+    } catch (error) {
+      console.error(`Error al ${joinedGroups.includes(groupId) ? 'abandonar' : 'unirse al'} grupo ${groupId}:`, error);
+      setFormErrors({ general: error.message || `Error al procesar la acción en el grupo ${groupId}` });
+      return false;
+    }
   };
   
   /**
-   * Obtiene posts asociados con un hilo específico
-   * @param {number} threadId - ID del hilo
+   * Obtiene posts asociados con un grupo específico
+   * @param {number} groupId - ID del grupo
    * @returns {Array} Lista de posts filtrados
    */
-  const getPostsByThreadId = (threadId) => {
-    return posts.filter(p => p.threadId === threadId);
+  const getPostsByGroupId = (groupId) => {
+    return posts.filter(post => post.groupId === groupId);
+  };
+  
+  /**
+   * Comprueba si el usuario está unido a un grupo
+   * @param {number} groupId - ID del grupo
+   * @returns {boolean} true si está unido, false si no
+   */
+  const isUserJoined = (groupId) => {
+    return joinedGroups.includes(groupId);
   };
   
   // Retornamos todos los estados y funciones que necesita el componente
   return {
     // Estados
-    threads,
-    thread,
-    loading: loadingThreads,
-    error: threadError,
+    groups,
+    group,
+    loading: loadingGroups,
+    error: groupError,
     formData,
     formErrors,
     successMessage,
+    joinedGroups,
     
     // Funciones para obtener datos
-    fetchAllThreads,
-    fetchThreadById,
-    getThreadsByGroupId,
-    getPostsByThreadId,
+    fetchAllGroups,
+    fetchGroupById,
+    getPostsByGroupId,
+    isUserJoined,
     
     // Funciones de formulario
     handleChange,
-    setThreadGroup,
     resetForm,
     
     // Funciones de CRUD
-    handleCreateThread,
-    loadThreadForEdit,
-    handleUpdateThread,
-    handleDeleteThread,
+    handleCreateGroup,
+    loadGroupForEdit,
+    handleUpdateGroup,
+    handleDeleteGroup,
+    handleToggleJoinGroup,
     
     // Helpers
-    canCreateThread,
-    canEditThread,
-    canDeleteThread
+    canCreateGroup,
+    canEditGroup,
+    canDeleteGroup
   };
 };

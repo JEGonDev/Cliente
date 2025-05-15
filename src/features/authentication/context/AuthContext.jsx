@@ -146,6 +146,7 @@ export const AuthProvider = ({ children }) => {
       const response = await authService.login(credentials);
       // Después del login exitoso, obtener los datos del usuario
       const userData = response;
+      console.log('Usuario autenticado:', userData);
       
       setUser(userData);
       setIsAuthenticated(true);

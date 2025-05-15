@@ -48,7 +48,7 @@ export const useLoginForm = () => {
       await login(credentials);
       
       // Si todo sale bien, redirigimos al usuario a la pestania de comunidad
-      navigate('/community');
+      navigate('/comunity');
     } catch (err) {
       // En caso de error, mostramos el mensaje
       setError(err.response?.data?.message || 'Credenciales inválidas');
