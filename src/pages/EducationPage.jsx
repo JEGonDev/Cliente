@@ -244,6 +244,17 @@ export const EducationPage = () => {
     }
   };
 
+    const handleTagsUpdated = async () => {
+    try {
+      await fetchAllTags();
+      const all = await fetchAllModules();
+      setAllModules(Array.isArray(all) ? all : []);
+      setFilteredModules(Array.isArray(all) ? all : []);
+    } catch (error) {
+      console.error("Error actualizando datos después de cambios en etiquetas:", error);
+    }
+  };
+
   /**
    * Renderiza la interfaz de la página de educación.
    */
@@ -329,7 +340,7 @@ export const EducationPage = () => {
         </>
       ) : (
         <>
-          {isAdmin && <TagManagementButtons />}
+          {isAdmin && <TagManagementButtons onTagsUpdated={handleTagsUpdated}/>}
           {Array.isArray(tags) && tags.length > 0 && (
             <ModuleFilters
               tags={tags || []}
