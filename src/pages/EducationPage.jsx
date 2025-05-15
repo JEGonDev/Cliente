@@ -289,7 +289,7 @@ export const EducationPage = () => {
       ) : isEditMode ? (
         <>
           <ModulesList
-            modules={modules || []}
+            modules={filteredModules || []}
             isAdmin={isAdmin}
             isSelectable
             selectedModules={selectedModuleToEdit ? [selectedModuleToEdit] : []}
@@ -326,7 +326,7 @@ export const EducationPage = () => {
       ) : isDeleteMode ? (
         <>
           <ModulesList
-            modules={modules || []}
+            modules={filteredModules || []}
             isAdmin={isAdmin}
             isSelectable
             selectedModules={selectedModules}

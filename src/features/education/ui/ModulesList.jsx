@@ -1,3 +1,4 @@
+// src/features/education/ui/ModulesList.jsx
 import PropTypes from 'prop-types';
 import { ModuleCard } from './ModuleCard';
 
@@ -48,6 +49,9 @@ export const ModulesList = ({
               articlesCount={module.articlesCount || 0}
               guidesCount={module.guidesCount || 0}
               isAdmin={isAdmin}
+              isSelectable={isSelectable}
+              isSelected={selectedModules.includes(module.moduleId || module.id)}
+              onSelect={handleSelect}
             />
           </div>
         ))
@@ -61,6 +65,9 @@ ModulesList.propTypes = {
   modules: PropTypes.arrayOf(PropTypes.object),
   isAdmin: PropTypes.bool,
   isSelectable: PropTypes.bool,
-  selectedModules: PropTypes.arrayOf(PropTypes.string),
+  selectedModules: PropTypes.arrayOf(PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.number
+  ])),
   onSelectModule: PropTypes.func
 };

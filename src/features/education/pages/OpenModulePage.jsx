@@ -16,6 +16,8 @@ import { VideosList } from '../layouts/VideosList';
 
 // Hook personalizado que centraliza toda la lógica
 import { useModuleDetails } from '../hooks/useModuleDetails';
+import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 
 /**
  * Página que muestra los detalles completos de un módulo educativo
@@ -91,6 +93,12 @@ export const OpenModulePage = () => {
       <Header />
       
       <ModuleDetailLayout>
+
+      <Link to="/education" className="flex items-center text-primary hover:underline mb-4">
+        <ArrowLeft className="w-4 h-4 mr-1" />
+        <span>Volver a módulos</span>
+      </Link>
+
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
