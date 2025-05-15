@@ -88,8 +88,13 @@ export const educationService = {
    */
   filterModulesByTags: async (tagIds) => {
     try {
+      // Convertir el array de IDs a string separado por comas
+      const tagIdsParam = Array.isArray(tagIds) ? tagIds.join(',') : tagIds;
+      
+      console.log('DEBUG - Filtrando por tagIds:', tagIdsParam);
+      
       const response = await API.get('/modules/filter', {
-        params: { tagIds }
+        params: { tagIds: tagIdsParam }
       });
       return response.data;
     } catch (error) {

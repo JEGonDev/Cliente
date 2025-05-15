@@ -40,42 +40,64 @@ export const EducationPage = () => {
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedModuleToEdit, setSelectedModuleToEdit] = useState(null);
+  const [filteredModules, setFilteredModules] = useState([]);
 
   useEffect(() => {
-    fetchAllModules();
+    // 2) carga inicial
+    fetchAllModules().then(all => {
+      setFilteredModules(all);
+    });
     fetchAllTags();
   }, []);
 
   useEffect(() => {
     if (activeTagIds.length > 0) {
-      filterModulesByTags(activeTagIds);
+      console.log('DEBUG - Aplicando filtro por etiquetas, IDs:', activeTagIds);
+      filterModulesByTags(activeTagIds)
+        .then(filtered => {
+          console.log('DEBUG - Resultado del filtrado:', filtered);
+          setFilteredModules(filtered);       // <-- aquí asignas el resultado
+        })
+        .catch(error => {
+          console.error('DEBUG - Error al filtrar módulos:', error);
+        });
     } else {
-      fetchAllModules();
+      // 3) sin filtros, muestras todo
+      fetchAllModules().then(all => {
+        setFilteredModules(all);
+      });
     }
   }, [activeTagIds]);
 
   const handleIconClick = (iconId) => setActiveIcon(iconId);
   const handleSearchChange = e => setSearchValue(e.target.value);
 
-  const handleTagClick = (tagName, tagId) => {
-    if (tagId == null && tags) {
-      const tagObj = tags.find(t => t.name === tagName);
-      if (!tagObj) return;
-      tagId = tagObj.id;
-    }
-    setActiveTags(prev =>
-      prev.includes(tagName)
-        ? prev.filter(name => name !== tagName)
-        : [...prev, tagName]
-    );
-    if (tagId != null) {
-      setActiveTagIds(prev =>
-        prev.includes(tagId)
-          ? prev.filter(id => id !== tagId)
-          : [...prev, tagId]
-      );
-    }
-  };
+const handleTagClick = (tagId) => {
+  // Buscamos el objeto completo para sacar el nombre
+  const tagObj = tags.find(t => t.id === tagId);
+
+  if (!tagObj) {
+    console.warn("DEBUG - Etiqueta no encontrada para ID:", tagId);
+    return;
+  }
+
+  const tagName = tagObj.name;
+  console.log("DEBUG - Clic en etiqueta:", tagName, "con ID:", tagId);
+
+  // Actualiza nombres (por si los usas para resaltados con texto)
+  setActiveTags(prev =>
+    prev.includes(tagName)
+      ? prev.filter(name => name !== tagName)
+      : [...prev, tagName]
+  );
+
+  // Actualiza IDs
+  setActiveTagIds(prev =>
+    prev.includes(tagId)
+      ? prev.filter(id => id !== tagId)
+      : [...prev, tagId]
+  );
+};
 
   const handleCreateModule = () => navigate('/education/module-form');
 
@@ -134,8 +156,8 @@ export const EducationPage = () => {
     <EducationLayout
       activeIcon={activeIcon}
       onIconClick={handleIconClick}
-      tags={tags ? tags.map(t => t.name) : []}
-      activeTags={activeTags}
+      tags={tags || []}
+      activeTagIds={activeTagIds}
       onTagClick={handleTagClick}
       isAdmin={isAdmin}
       searchValue={searchValue}
@@ -197,16 +219,13 @@ export const EducationPage = () => {
       ) : (
         <>
           <ModuleFilters
-            tags={tags ? tags.map(t => t.name) : []}
-            activeTags={activeTags}
-            onTagClick={(tagName) => {
-              const tagObj = tags.find(t => t.name === tagName);
-              handleTagClick(tagName, tagObj ? tagObj.id : null);
-            }}
+            tags={tags || []}
+            activeTagIds={activeTagIds}
+            onTagClick={handleTagClick}
           />
 
           <ModulesList
-            modules={modules}
+            modules={filteredModules}
             isAdmin={isAdmin}
             isSelectable={false}
           />
