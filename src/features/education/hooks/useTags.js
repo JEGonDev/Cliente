@@ -137,37 +137,55 @@ export const useTags = () => {
    * Actualiza una etiqueta existente
    * @param {Event} e - Evento de envío del formulario
    */
-  const handleUpdateTag = async (e) => {
-    e.preventDefault();
-
+  const handleUpdateTag = async (tagData) => {
     // Verificar autenticación y permisos
     if (!isAuthenticated) {
       setFormErrors({ auth: 'Debes iniciar sesión para realizar esta acción' });
       return null;
     }
-
+    
     // Sólo los administradores pueden actualizar etiquetas
     if (!isAdmin) {
       setFormErrors({ permission: 'No tienes permisos para actualizar etiquetas' });
       return null;
     }
-
+    
+    // Verificar que tenemos los datos necesarios
+    if (!tagData || !tagData.id || !tagData.name) {
+      setFormErrors({ data: 'Datos de etiqueta incompletos' });
+      return null;
+    }
+    
     // Limpiar mensajes previos
     setSuccessMessage('');
-
-    // Validar formulario
-    if (!validateForm()) return null;
-
+    
     try {
-      const updatedTag = await contextUpdateTag(formData);
-
+      // Asegurarse de que estamos enviando los datos correctos
+      const updateData = {
+        id: tagData.id,
+        name: tagData.name.trim()
+      };
+      
+      console.log('Datos enviados para actualización:', updateData);
+      
+      const updatedTag = await contextUpdateTag(updateData);
+      
       if (updatedTag) {
         setSuccessMessage('Etiqueta actualizada correctamente');
+        
+        // Actualizar la lista local de etiquetas
+        setTags(prevTags => 
+          prevTags.map(t => t.id === updatedTag.id ? updatedTag : t)
+        );
+        
         return updatedTag;
       }
       return null;
     } catch (error) {
-      console.error(`Error actualizando etiqueta ${formData.id}:`, error);
+      console.error(`Error actualizando etiqueta ${tagData.id}:`, error);
+      setFormErrors({ 
+        api: error.response?.data?.message || 'Error al actualizar la etiqueta' 
+      });
       return null;
     }
   };

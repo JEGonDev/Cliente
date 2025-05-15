@@ -104,23 +104,31 @@ export const EditTagModal = ({ isOpen, onClose, tag, onSuccess }) => {
   } = useTags();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [localFormData, setLocalFormData] = useState({ id: null, name: '' });
 
   // Cargar datos de la etiqueta seleccionada
   useEffect(() => {
     if (isOpen && tag && tag.id) {
-      loadTagForEdit(tag.id);
+      // Inicializar el estado local con los datos de la etiqueta
+      setLocalFormData({
+        id: tag.id,
+        name: tag.name || ''
+      });
     }
-  }, [isOpen, tag, loadTagForEdit]);
+  }, [isOpen, tag]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-
+    
     try {
-      // Llamamos a la función del hook con el evento
-      const result = await handleUpdateTag(e);
+      // Importante: Pasar los datos del formulario local directamente
+      const result = await handleUpdateTag({
+        ...localFormData // Asegurar que se envía el ID y el nombre actualizado
+      });
+      
       if (result) {
-        onSuccess();
+        onSuccess && onSuccess();
         onClose();
       }
     } catch (error) {
@@ -129,10 +137,19 @@ export const EditTagModal = ({ isOpen, onClose, tag, onSuccess }) => {
       setIsSubmitting(false);
     }
   };
+  
+  // Manejar cambios en el formulario local
+  const handleLocalChange = (e) => {
+    const { name, value } = e.target;
+    setLocalFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   return (
-    <Modal
-      isOpen={isOpen}
+    <Modal 
+      isOpen={isOpen} 
       onClose={onClose}
       title="Editar Etiqueta"
     >
@@ -145,8 +162,8 @@ export const EditTagModal = ({ isOpen, onClose, tag, onSuccess }) => {
             type="text"
             id="name"
             name="name"
-            value={formData.name || ''}
-            onChange={handleChange}
+            value={localFormData.name}
+            onChange={handleLocalChange}
             className={`w-full px-3 py-2 border ${formErrors.name ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-1 focus:ring-primary`}
             disabled={isSubmitting}
           />
@@ -154,11 +171,11 @@ export const EditTagModal = ({ isOpen, onClose, tag, onSuccess }) => {
             <p className="mt-1 text-xs text-red-500">{formErrors.name}</p>
           )}
         </div>
-
+        
         <div className="flex justify-end gap-2">
-          <Button
-            type="button"
-            variant="white"
+          <Button 
+            type="button" 
+            variant="white" 
             onClick={onClose}
             disabled={isSubmitting}
           >
