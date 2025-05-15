@@ -8,7 +8,7 @@ import { useTags } from '../hooks/useTags';
  * 
  * @returns {JSX.Element} Componente con botones para gestión de etiquetas
  */
-export const TagManagementButtons = () => {
+export const TagManagementButtons = ({ onTagsUpdated }) => {
   const { tags, fetchAllTags } = useTags();
 
   // Estados para controlar la apertura de modales
@@ -119,21 +119,21 @@ export const TagManagementButtons = () => {
       <CreateTagModal
         isOpen={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
-        onSuccess={handleTagsUpdated}
+        onSuccess={onTagsUpdated}
       />
 
       <EditTagModal
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
         tag={selectedTag}
-        onSuccess={handleTagsUpdated}
+        onSuccess={onTagsUpdated}
       />
 
       <DeleteTagModal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         tags={selectedTag}
-        onSuccess={handleTagsUpdated}
+        onSuccess={onTagsUpdated}
       />
 
       {/* Modal para seleccionar etiqueta */}

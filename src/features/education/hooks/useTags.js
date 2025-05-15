@@ -173,10 +173,8 @@ export const useTags = () => {
       if (updatedTag) {
         setSuccessMessage('Etiqueta actualizada correctamente');
         
-        // Actualizar la lista local de etiquetas
-        setTags(prevTags => 
-          prevTags.map(t => t.id === updatedTag.id ? updatedTag : t)
-        );
+        // Actualizar el contexto llamando a fetchAllTags para refrescar la lista completa
+        await fetchAllTags();
         
         return updatedTag;
       }
