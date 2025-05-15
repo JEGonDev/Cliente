@@ -192,19 +192,17 @@ export const DeleteTagModal = ({ isOpen, onClose, tags, onSuccess }) => {
 
       if (Array.isArray(tags) && tags.length > 0) {
         // Eliminar múltiples etiquetas
-        const deletePromises = tags.map(tag =>
-          handleDeleteTag(tag.id)
+        const results = await Promise.all(
+          tags.map(tag => handleDeleteTag(tag.id))
         );
-
-        const results = await Promise.all(deletePromises);
-        success = results.every(result => !!result);
+        success = results.some(result => !!result);
       } else if (tags.id) {
-        // Eliminar una sola etiqueta
+        // Eliminar una sola etiqueta - llamada directa sin confirmación adicional
         success = await handleDeleteTag(tags.id);
       }
 
       if (success) {
-        onSuccess();
+        onSuccess && onSuccess();
         onClose();
       }
     } catch (error) {

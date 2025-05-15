@@ -22,34 +22,34 @@ export const useTags = () => {
     deleteTag: contextDeleteTag,
     getOrCreateTag
   } = useContext(EducationContext);
-  
+
   // Contexto de autenticación para validar permisos
   const { isAdmin, isAuthenticated } = useContext(AuthContext);
-  
+
   // Estado para formularios y UI
   const [formData, setFormData] = useState({
     id: null,
     name: '',
   });
-  
+
   const [formErrors, setFormErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
-  
+
   /**
    * Valida el formulario de etiqueta
    * @returns {boolean} true si es válido, false si no
    */
   const validateForm = () => {
     const errors = {};
-    
+
     if (!formData.name.trim()) {
       errors.name = 'El nombre de la etiqueta es obligatorio';
     }
-    
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
-  
+
   /**
    * Maneja cambios en los campos del formulario
    * @param {Event} e - Evento de cambio
@@ -58,7 +58,7 @@ export const useTags = () => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
-  
+
   /**
    * Resetea el formulario
    */
@@ -70,7 +70,7 @@ export const useTags = () => {
     setFormErrors({});
     setSuccessMessage('');
   };
-  
+
   /**
    * Carga datos de una etiqueta existente en el formulario
    * @param {number} id - ID de la etiqueta
@@ -78,7 +78,7 @@ export const useTags = () => {
   const loadTagForEdit = async (id) => {
     try {
       const tagData = await fetchTagById(id);
-      
+
       if (tagData) {
         setFormData({
           id: tagData.id,
@@ -92,35 +92,35 @@ export const useTags = () => {
       return null;
     }
   };
-  
+
   /**
    * Crea una nueva etiqueta
    * @param {Event} e - Evento de envío del formulario
    */
   const handleCreateTag = async (e) => {
     e.preventDefault();
-    
+
     // Verificar autenticación y permisos
     if (!isAuthenticated) {
       setFormErrors({ auth: 'Debes iniciar sesión para realizar esta acción' });
       return null;
     }
-    
+
     // Sólo los administradores pueden crear etiquetas
     if (!isAdmin) {
       setFormErrors({ permission: 'No tienes permisos para crear etiquetas' });
       return null;
     }
-    
+
     // Limpiar mensajes previos
     setSuccessMessage('');
-    
+
     // Validar formulario
     if (!validateForm()) return null;
-    
+
     try {
       const newTag = await contextCreateTag(formData.name);
-      
+
       if (newTag) {
         setSuccessMessage('Etiqueta creada correctamente');
         resetForm();
@@ -132,35 +132,35 @@ export const useTags = () => {
       return null;
     }
   };
-  
+
   /**
    * Actualiza una etiqueta existente
    * @param {Event} e - Evento de envío del formulario
    */
   const handleUpdateTag = async (e) => {
     e.preventDefault();
-    
+
     // Verificar autenticación y permisos
     if (!isAuthenticated) {
       setFormErrors({ auth: 'Debes iniciar sesión para realizar esta acción' });
       return null;
     }
-    
+
     // Sólo los administradores pueden actualizar etiquetas
     if (!isAdmin) {
       setFormErrors({ permission: 'No tienes permisos para actualizar etiquetas' });
       return null;
     }
-    
+
     // Limpiar mensajes previos
     setSuccessMessage('');
-    
+
     // Validar formulario
     if (!validateForm()) return null;
-    
+
     try {
       const updatedTag = await contextUpdateTag(formData);
-      
+
       if (updatedTag) {
         setSuccessMessage('Etiqueta actualizada correctamente');
         return updatedTag;
@@ -171,7 +171,7 @@ export const useTags = () => {
       return null;
     }
   };
-  
+
   /**
    * Elimina una etiqueta
    * @param {number} id - ID de la etiqueta
@@ -182,22 +182,20 @@ export const useTags = () => {
       setFormErrors({ auth: 'Debes iniciar sesión para realizar esta acción' });
       return false;
     }
-    
+
     // Sólo los administradores pueden eliminar etiquetas
     if (!isAdmin) {
       setFormErrors({ permission: 'No tienes permisos para eliminar etiquetas' });
       return false;
     }
-    
+
     try {
-      // Confirmar eliminación
-      if (window.confirm('¿Estás seguro de que deseas eliminar esta etiqueta? Esto puede afectar a los módulos que la usan.')) {
-        const success = await contextDeleteTag(id);
-        
-        if (success) {
-          setSuccessMessage('Etiqueta eliminada correctamente');
-          return true;
-        }
+      // Eliminamos el confirm ya que usamos el modal para confirmar
+      const success = await contextDeleteTag(id);
+
+      if (success) {
+        setSuccessMessage('Etiqueta eliminada correctamente');
+        return true;
       }
       return false;
     } catch (error) {
@@ -205,7 +203,7 @@ export const useTags = () => {
       return false;
     }
   };
-  
+
   /**
    * Maneja la obtención o creación de una etiqueta
    * @param {string} name - Nombre de la etiqueta
@@ -216,13 +214,13 @@ export const useTags = () => {
       setFormErrors({ auth: 'Debes iniciar sesión para realizar esta acción' });
       return null;
     }
-    
+
     // Sólo los administradores pueden crear etiquetas (si no existe)
     if (!isAdmin) {
       setFormErrors({ permission: 'No tienes permisos para crear etiquetas' });
       return null;
     }
-    
+
     try {
       return await getOrCreateTag(name);
     } catch (error) {
@@ -230,7 +228,7 @@ export const useTags = () => {
       return null;
     }
   };
-  
+
   // Retornamos los estados y funciones que necesita el componente
   return {
     // Estados
@@ -241,23 +239,23 @@ export const useTags = () => {
     formData,
     formErrors,
     successMessage,
-    
+
     // Funciones de obtención de datos
     fetchAllTags,
     fetchTagById,
     fetchTagByName,
-    
+
     // Funciones de formulario
     handleChange,
     resetForm,
     loadTagForEdit,
-    
+
     // Funciones CRUD
     handleCreateTag,
     handleUpdateTag,
     handleDeleteTag,
     handleGetOrCreateTag,
-    
+
     // Helper para permisos
     canManageTags: isAdmin
   };
