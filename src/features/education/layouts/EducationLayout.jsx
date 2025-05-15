@@ -1,7 +1,6 @@
 import PropTypes from 'prop-types';
 import { Header } from '../../../ui/layouts/Header';
 import { SidebarLayout } from './SidebarLayout ';
-import { FilterSidebarLayout } from './FilterSidebarLayout';
 import { SearchFilterBar } from '../ui/SearchFilterBar';
 
 export const EducationLayout = ({
@@ -42,14 +41,6 @@ export const EducationLayout = ({
           {/* Contenido */}
           {children}
         </main>
-        
-        {/* Barra lateral derecha de filtros */}
-        <FilterSidebarLayout 
-          tags={tags}
-          activeTags={activeTags}
-          onTagClick={onTagClick}
-          isAdmin={isAdmin}
-        />
       </div>
     </div>
   );

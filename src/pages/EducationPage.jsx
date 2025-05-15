@@ -40,14 +40,29 @@ export const EducationPage = () => {
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedModuleToEdit, setSelectedModuleToEdit] = useState(null);
+  // Inicializar filteredModules como un array vacío para evitar problemas cuando no hay datos
   const [filteredModules, setFilteredModules] = useState([]);
 
   useEffect(() => {
-    // 2) carga inicial
-    fetchAllModules().then(all => {
-      setFilteredModules(all);
-    });
-    fetchAllTags();
+    // Cargar datos iniciales y asegurarse de manejar respuestas vacías correctamente
+    const loadInitialData = async () => {
+      try {
+        const allModules = await fetchAllModules();
+        // Asegurarse de que filteredModules sea siempre un array, incluso si fetchAllModules devuelve null o undefined
+        setFilteredModules(Array.isArray(allModules) ? allModules : []);
+      } catch (error) {
+        console.error("Error cargando módulos:", error);
+        setFilteredModules([]);
+      }
+
+      try {
+        await fetchAllTags();
+      } catch (error) {
+        console.error("Error cargando etiquetas:", error);
+      }
+    };
+
+    loadInitialData();
   }, []);
 
   useEffect(() => {
@@ -56,48 +71,56 @@ export const EducationPage = () => {
       filterModulesByTags(activeTagIds)
         .then(filtered => {
           console.log('DEBUG - Resultado del filtrado:', filtered);
-          setFilteredModules(filtered);       // <-- aquí asignas el resultado
+          // Asegurarse de que filtered sea siempre un array
+          setFilteredModules(Array.isArray(filtered) ? filtered : []);
         })
         .catch(error => {
           console.error('DEBUG - Error al filtrar módulos:', error);
+          setFilteredModules([]);
         });
     } else {
-      // 3) sin filtros, muestras todo
-      fetchAllModules().then(all => {
-        setFilteredModules(all);
-      });
+      // Sin filtros, mostrar todos los módulos
+      fetchAllModules()
+        .then(all => {
+          // Asegurarse de que all sea siempre un array
+          setFilteredModules(Array.isArray(all) ? all : []);
+        })
+        .catch(error => {
+          console.error("Error recargando módulos:", error);
+          setFilteredModules([]);
+        });
     }
   }, [activeTagIds]);
 
   const handleIconClick = (iconId) => setActiveIcon(iconId);
   const handleSearchChange = e => setSearchValue(e.target.value);
 
-const handleTagClick = (tagId) => {
-  // Buscamos el objeto completo para sacar el nombre
-  const tagObj = tags.find(t => t.id === tagId);
+  const handleTagClick = (tagId) => {
+    // Buscamos el objeto completo para sacar el nombre
+    const tagObj = tags && Array.isArray(tags) ? tags.find(t => t.id === tagId) : null;
 
-  if (!tagObj) {
-    console.warn("DEBUG - Etiqueta no encontrada para ID:", tagId);
-    return;
-  }
+    if (!tagObj) {
+      console.warn("DEBUG - Etiqueta no encontrada para ID:", tagId);
+      return;
+    }
 
-  const tagName = tagObj.name;
-  console.log("DEBUG - Clic en etiqueta:", tagName, "con ID:", tagId);
+    const tagName = tagObj.name;
+    console.log("DEBUG - Clic en etiqueta:", tagName, "con ID:", tagId);
 
-  // Actualiza nombres (por si los usas para resaltados con texto)
-  setActiveTags(prev =>
-    prev.includes(tagName)
-      ? prev.filter(name => name !== tagName)
-      : [...prev, tagName]
-  );
+    // Actualiza nombres (por si los usas para resaltados con texto)
+    setActiveTags(prev =>
+      prev.includes(tagName)
+        ? prev.filter(name => name !== tagName)
+        : [...prev, tagName]
+    );
 
-  // Actualiza IDs
-  setActiveTagIds(prev =>
-    prev.includes(tagId)
-      ? prev.filter(id => id !== tagId)
-      : [...prev, tagId]
-  );
-};
+    // Actualiza IDs
+    setActiveTagIds(prev =>
+      prev.includes(tagId)
+        ? prev.filter(id => id !== tagId)
+        : [...prev, tagId]
+    );
+  };
 
   const handleCreateModule = () => navigate('/education/module-form');
 
@@ -111,7 +134,7 @@ const handleTagClick = (tagId) => {
     setIsEditMode(false);
     setSelectedModuleToEdit(null);
   };
-  
+
   const handleSelectModuleForEdit = (moduleId) => {
     setSelectedModuleToEdit(prev => prev === moduleId ? null : moduleId);
   };
@@ -144,7 +167,9 @@ const handleTagClick = (tagId) => {
     if (!selectedModules.length) return;
     try {
       await Promise.all(selectedModules.map(id => handleDeleteModule(id)));
-      fetchAllModules();
+      fetchAllModules().then(all => {
+        setFilteredModules(Array.isArray(all) ? all : []);
+      });
       setIsDeleteMode(false);
       setSelectedModules([]);
     } catch (error) {
@@ -156,7 +181,8 @@ const handleTagClick = (tagId) => {
     <EducationLayout
       activeIcon={activeIcon}
       onIconClick={handleIconClick}
-      tags={tags || []}
+      // Asegurarse de que tags sea siempre un array
+      tags={Array.isArray(tags) ? tags : []}
       activeTagIds={activeTagIds}
       onTagClick={handleTagClick}
       isAdmin={isAdmin}
@@ -168,8 +194,19 @@ const handleTagClick = (tagId) => {
           <p className="text-gray-500">Cargando...</p>
         </div>
       ) : modulesError || tagsError ? (
-        <div className="bg-red-100 text-red-800 p-4 rounded">
-          <p>{modulesError || tagsError}</p>
+        <div className="bg-yellow-50 text-yellow-800 p-4 rounded mb-6">
+          <p className="text-center">No hay módulos disponibles para mostrar</p>
+
+          {/* Añadir los botones de administración incluso cuando hay error */}
+          {isAdmin && (
+            <div className="mt-8">
+              <AdminControlPanel
+                onCreateClick={handleCreateModule}
+                onEditClick={handleEditModule}
+                onDeleteClick={handleEnterDeleteMode}
+              />
+            </div>
+          )}
         </div>
       ) : isEditMode ? (
         <>
@@ -180,7 +217,7 @@ const handleTagClick = (tagId) => {
           </div>
 
           <ModulesList
-            modules={modules}
+            modules={modules || []}
             isAdmin={isAdmin}
             isSelectable
             selectedModules={selectedModuleToEdit ? [selectedModuleToEdit] : []}
@@ -209,7 +246,7 @@ const handleTagClick = (tagId) => {
           />
 
           <ModulesList
-            modules={modules}
+            modules={modules || []}
             isAdmin={isAdmin}
             isSelectable
             selectedModules={selectedModules}
@@ -218,18 +255,30 @@ const handleTagClick = (tagId) => {
         </>
       ) : (
         <>
-          <ModuleFilters
-            tags={tags || []}
-            activeTagIds={activeTagIds}
-            onTagClick={handleTagClick}
-          />
+          {/* Filtros de módulos (mostrar solo si hay etiquetas) */}
+          {Array.isArray(tags) && tags.length > 0 && (
+            <ModuleFilters
+              tags={tags || []}
+              activeTagIds={activeTagIds}
+              onTagClick={handleTagClick}
+            />
+          )}
 
+          {/* Estado vacío para tags */}
+          {Array.isArray(tags) && tags.length === 0 && isAdmin && (
+            <div className="bg-gray-50 border border-gray-200 rounded-md p-4 mb-6">
+              <p className="text-gray-600 mb-3">No hay etiquetas disponibles. Como administrador, puedes crear etiquetas para categorizar los módulos.</p>
+            </div>
+          )}
+
+          {/* Lista de módulos (siempre se muestra, incluso vacía) */}
           <ModulesList
-            modules={filteredModules}
+            modules={filteredModules || []}
             isAdmin={isAdmin}
             isSelectable={false}
           />
 
+          {/* Panel de administración (siempre visible para administradores) */}
           {isAdmin && (
             <AdminControlPanel
               onCreateClick={handleCreateModule}

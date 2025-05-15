@@ -5,7 +5,7 @@ import { API } from '../../../common/config/api';
  */
 export const educationService = {
   // ==================== Operaciones para los módulos especificos ====================
-  
+
   /**
    * Obtiene todos los módulos disponibles
    * @returns {Promise} Lista de módulos
@@ -15,6 +15,12 @@ export const educationService = {
       const response = await API.get('/modules');
       return response.data;
     } catch (error) {
+      // Manejo personalizado para el error 404
+      if (error.response && error.response.status === 404) {
+        console.info('No hay módulos disponibles para mostrar');
+        // En lugar de propagar el error, devolvemos un array vacío
+        return { data: [] };
+      }
       console.error('Error obteniendo módulos:', error);
       throw error;
     }
@@ -90,9 +96,9 @@ export const educationService = {
     try {
       // Convertir el array de IDs a string separado por comas
       const tagIdsParam = Array.isArray(tagIds) ? tagIds.join(',') : tagIds;
-      
+
       console.log('DEBUG - Filtrando por tagIds:', tagIdsParam);
-      
+
       const response = await API.get('/modules/filter', {
         params: { tagIds: tagIdsParam }
       });
@@ -104,7 +110,7 @@ export const educationService = {
   },
 
   // ==================== Operaciones para artículos educativos ====================
-  
+
   /**
    * Crea un nuevo artículo
    * @param {Object} articleData - Datos del artículo (moduleId, title, articleUrl)
@@ -182,7 +188,7 @@ export const educationService = {
   },
 
   // ==================== Operaciones para guías ====================
-  
+
   /**
    * Crea una nueva guía con archivo PDF
    * @param {Object} guideData - Datos de la guía incluido el archivo PDF
@@ -192,7 +198,7 @@ export const educationService = {
     try {
       // Creamos un FormData para enviar el archivo
       const formData = new FormData();
-      
+
       // Agregamos todos los campos al FormData
       for (const key in guideData) {
         if (key === 'pdfFile') {
@@ -201,13 +207,13 @@ export const educationService = {
           formData.append(key, guideData[key]);
         }
       }
-      
+
       const response = await API.post('/guides', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'  // Importante para enviar archivos
         }
       });
-      
+
       return response.data;
     } catch (error) {
       console.error('Error creando guía:', error);
@@ -291,7 +297,7 @@ export const educationService = {
   },
 
   // ==================== Operaciones para etiquetas ====================
-  
+
   /**
    * Obtiene todas las etiquetas disponibles
    * @returns {Promise} Lista de etiquetas
@@ -397,7 +403,7 @@ export const educationService = {
   },
 
   // ==================== Operaciones para videos ====================
-  
+
   /**
    * Crea un nuevo video
    * @param {Object} videoData - Datos del video
