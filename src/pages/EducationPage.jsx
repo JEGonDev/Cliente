@@ -277,11 +277,6 @@ export const EducationPage = () => {
         </div>
       ) : isEditMode ? (
         <>
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-            <p className="text-yellow-700">
-              Seleccione el módulo que desea modificar y oprima el botón "Editar seleccionado".
-            </p>
-          </div>
           <ModulesList
             modules={modules || []}
             isAdmin={isAdmin}
@@ -289,6 +284,21 @@ export const EducationPage = () => {
             selectedModules={selectedModuleToEdit ? [selectedModuleToEdit] : []}
             onSelectModule={handleSelectModuleForEdit}
           />
+          <div
+            role="status"
+            className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4"
+          >
+            <p className="text-yellow-700 font-semibold mb-2">
+              ⚙️ Editar módulo educativo
+            </p>
+            <p className="text-yellow-700 mb-2">
+              Selecciona el módulo que quieres **modificar** y luego pulsa <strong>“Editar seleccionado”</strong>.
+            </p>
+            <ul className="list-decimal list-inside text-yellow-700">
+              <li>Escoge el módulo en la lista.</li>
+              <li>Haz clic en <strong>“Editar seleccionado”</strong>.</li>
+            </ul>
+          </div>
           <div className="flex flex-wrap gap-4 mt-8 justify-center">
             <Button variant="white" onClick={handleCancelEdit}>
               Cancelar
@@ -304,17 +314,17 @@ export const EducationPage = () => {
         </>
       ) : isDeleteMode ? (
         <>
-          <DeleteModeNotice
-            onCancel={handleCancelDelete}
-            onConfirm={handleConfirmDelete}
-            hasSelected={selectedModules.length > 0}
-          />
           <ModulesList
             modules={modules || []}
             isAdmin={isAdmin}
             isSelectable
             selectedModules={selectedModules}
             onSelectModule={handleSelectModule}
+          />
+          <DeleteModeNotice
+            onCancel={handleCancelDelete}
+            onConfirm={handleConfirmDelete}
+            hasSelected={selectedModules.length > 0}
           />
         </>
       ) : (
