@@ -5,29 +5,30 @@ import { useTags } from '../hooks/useTags';
 
 // Modal para crear etiqueta
 export const CreateTagModal = ({ isOpen, onClose, onSuccess }) => {
-  const { 
-    formData, 
-    formErrors, 
-    handleChange, 
-    resetForm, 
-    handleCreateTag 
+  const {
+    formData,
+    formErrors,
+    handleChange,
+    resetForm,
+    handleCreateTag
   } = useTags();
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Resetear el formulario al abrir/cerrar modal
   useEffect(() => {
     if (isOpen) {
       resetForm();
     }
-  }, [isOpen, resetForm]);
-  
+  }, [isOpen]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
       // Llamamos a la función del hook con el evento
+      const formValue = { ...formData };
       const result = await handleCreateTag(e);
       if (result) {
         onSuccess();
@@ -39,10 +40,15 @@ export const CreateTagModal = ({ isOpen, onClose, onSuccess }) => {
       setIsSubmitting(false);
     }
   };
-  
+
+  const handleLocalChange = (e) => {
+    e.persist(); // Importante para eventos sintéticos en React
+    handleChange(e);
+  };
+
   return (
-    <Modal 
-      isOpen={isOpen} 
+    <Modal
+      isOpen={isOpen}
       onClose={onClose}
       title="Crear Nueva Etiqueta"
     >
@@ -56,7 +62,7 @@ export const CreateTagModal = ({ isOpen, onClose, onSuccess }) => {
             id="name"
             name="name"
             value={formData.name || ''}
-            onChange={handleChange}
+            onChange={handleLocalChange}
             className={`w-full px-3 py-2 border ${formErrors.name ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-1 focus:ring-primary`}
             disabled={isSubmitting}
           />
@@ -64,11 +70,11 @@ export const CreateTagModal = ({ isOpen, onClose, onSuccess }) => {
             <p className="mt-1 text-xs text-red-500">{formErrors.name}</p>
           )}
         </div>
-        
+
         <div className="flex justify-end gap-2">
-          <Button 
-            type="button" 
-            variant="white" 
+          <Button
+            type="button"
+            variant="white"
             onClick={onClose}
             disabled={isSubmitting}
           >
@@ -89,27 +95,27 @@ export const CreateTagModal = ({ isOpen, onClose, onSuccess }) => {
 
 // Modal para editar etiqueta
 export const EditTagModal = ({ isOpen, onClose, tag, onSuccess }) => {
-  const { 
-    formData, 
-    formErrors, 
-    handleChange, 
-    loadTagForEdit, 
-    handleUpdateTag 
+  const {
+    formData,
+    formErrors,
+    handleChange,
+    loadTagForEdit,
+    handleUpdateTag
   } = useTags();
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Cargar datos de la etiqueta seleccionada
   useEffect(() => {
     if (isOpen && tag && tag.id) {
       loadTagForEdit(tag.id);
     }
   }, [isOpen, tag, loadTagForEdit]);
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
       // Llamamos a la función del hook con el evento
       const result = await handleUpdateTag(e);
@@ -123,10 +129,10 @@ export const EditTagModal = ({ isOpen, onClose, tag, onSuccess }) => {
       setIsSubmitting(false);
     }
   };
-  
+
   return (
-    <Modal 
-      isOpen={isOpen} 
+    <Modal
+      isOpen={isOpen}
       onClose={onClose}
       title="Editar Etiqueta"
     >
@@ -148,11 +154,11 @@ export const EditTagModal = ({ isOpen, onClose, tag, onSuccess }) => {
             <p className="mt-1 text-xs text-red-500">{formErrors.name}</p>
           )}
         </div>
-        
+
         <div className="flex justify-end gap-2">
-          <Button 
-            type="button" 
-            variant="white" 
+          <Button
+            type="button"
+            variant="white"
             onClick={onClose}
             disabled={isSubmitting}
           >
@@ -175,28 +181,28 @@ export const EditTagModal = ({ isOpen, onClose, tag, onSuccess }) => {
 export const DeleteTagModal = ({ isOpen, onClose, tags, onSuccess }) => {
   const { handleDeleteTag } = useTags();
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   const handleDelete = async () => {
     // Verificar que hay etiquetas para eliminar
     if (!tags) return;
-    
+
     setIsDeleting(true);
     try {
       let success = false;
-      
+
       if (Array.isArray(tags) && tags.length > 0) {
         // Eliminar múltiples etiquetas
-        const deletePromises = tags.map(tag => 
+        const deletePromises = tags.map(tag =>
           handleDeleteTag(tag.id)
         );
-        
+
         const results = await Promise.all(deletePromises);
         success = results.every(result => !!result);
       } else if (tags.id) {
         // Eliminar una sola etiqueta
         success = await handleDeleteTag(tags.id);
       }
-      
+
       if (success) {
         onSuccess();
         onClose();
@@ -207,7 +213,7 @@ export const DeleteTagModal = ({ isOpen, onClose, tags, onSuccess }) => {
       setIsDeleting(false);
     }
   };
-  
+
   // Determinar el mensaje según si es una o múltiples etiquetas
   const getDeleteMessage = () => {
     if (Array.isArray(tags)) {
@@ -219,7 +225,7 @@ export const DeleteTagModal = ({ isOpen, onClose, tags, onSuccess }) => {
     }
     return tags?.name ? `¿Estás seguro de que deseas eliminar la etiqueta "${tags.name}"?` : "No hay etiqueta seleccionada";
   };
-  
+
   return (
     <Modal
       isOpen={isOpen}
@@ -233,17 +239,17 @@ export const DeleteTagModal = ({ isOpen, onClose, tags, onSuccess }) => {
       <p className="text-sm text-gray-500 mb-6">
         Esta acción no se puede deshacer y puede afectar a los módulos que utilizan estas etiquetas.
       </p>
-      
+
       <div className="flex justify-end gap-2">
-        <Button 
-          variant="white" 
+        <Button
+          variant="white"
           onClick={onClose}
           disabled={isDeleting}
         >
           Cancelar
         </Button>
-        <Button 
-          variant="danger" 
+        <Button
+          variant="danger"
           onClick={handleDelete}
           disabled={isDeleting || (Array.isArray(tags) && tags.length === 0) || (!Array.isArray(tags) && !tags?.id)}
         >
