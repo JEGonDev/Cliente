@@ -40,63 +40,64 @@ export const EducationPage = () => {
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedModuleToEdit, setSelectedModuleToEdit] = useState(null);
+  // Inicializar filteredModules como un array vacío para evitar problemas cuando no hay datos
   const [filteredModules, setFilteredModules] = useState([]);
-  const [allModules, setAllModules] = useState([]);
 
   useEffect(() => {
-    // Carga inicial de módulos y tags
-    fetchAllModules().then(all => {
-      setFilteredModules(all);
-      setAllModules(all); // Guardamos todos los módulos para filtrar localmente
-    });
-    fetchAllTags();
+    // Cargar datos iniciales y asegurarse de manejar respuestas vacías correctamente
+    const loadInitialData = async () => {
+      try {
+        const allModules = await fetchAllModules();
+        // Asegurarse de que filteredModules sea siempre un array, incluso si fetchAllModules devuelve null o undefined
+        setFilteredModules(Array.isArray(allModules) ? allModules : []);
+      } catch (error) {
+        console.error("Error cargando módulos:", error);
+        setFilteredModules([]);
+      }
+
+      try {
+        await fetchAllTags();
+      } catch (error) {
+        console.error("Error cargando etiquetas:", error);
+      }
+    };
+
+    loadInitialData();
   }, []);
 
-  // Este useEffect filtra por etiquetas y búsqueda
   useEffect(() => {
-    const filterModules = async () => {
-      let result = [];
-      
-      // Si hay etiquetas activas, filtramos por ellas
-      if (activeTagIds.length > 0) {
-        try {
-          result = await filterModulesByTags(activeTagIds);
-        } catch (error) {
-          console.error('Error al filtrar módulos por etiquetas:', error);
-          result = allModules; // En caso de error, usamos todos los módulos
-        }
-      } else {
-        // Sin etiquetas activas, usamos todos los módulos
-        result = allModules;
-      }
-      
-      // Filtrar por título si hay un valor de búsqueda
-      if (searchValue.trim() !== '') {
-        const searchLower = searchValue.toLowerCase();
-        result = result.filter(module => 
-          module.title && module.title.toLowerCase().includes(searchLower)
-        );
-      }
-      
-      setFilteredModules(result);
-    };
-    
-    // Solo ejecutamos el filtrado si tenemos módulos cargados
-    if (allModules.length > 0) {
-      filterModules();
+    if (activeTagIds.length > 0) {
+      console.log('DEBUG - Aplicando filtro por etiquetas, IDs:', activeTagIds);
+      filterModulesByTags(activeTagIds)
+        .then(filtered => {
+          console.log('DEBUG - Resultado del filtrado:', filtered);
+          // Asegurarse de que filtered sea siempre un array
+          setFilteredModules(Array.isArray(filtered) ? filtered : []);
+        })
+        .catch(error => {
+          console.error('DEBUG - Error al filtrar módulos:', error);
+          setFilteredModules([]);
+        });
+    } else {
+      // Sin filtros, mostrar todos los módulos
+      fetchAllModules()
+        .then(all => {
+          // Asegurarse de que all sea siempre un array
+          setFilteredModules(Array.isArray(all) ? all : []);
+        })
+        .catch(error => {
+          console.error("Error recargando módulos:", error);
+          setFilteredModules([]);
+        });
     }
-  }, [activeTagIds, searchValue, allModules]);
+  }, [activeTagIds]);
 
   const handleIconClick = (iconId) => setActiveIcon(iconId);
-  
-  // Actualizar función para manejar cambios en la búsqueda
-  const handleSearchChange = e => {
-    setSearchValue(e.target.value);
-  };
+  const handleSearchChange = e => setSearchValue(e.target.value);
 
   const handleTagClick = (tagId) => {
     // Buscamos el objeto completo para sacar el nombre
-    const tagObj = tags.find(t => t.id === tagId);
+    const tagObj = tags && Array.isArray(tags) ? tags.find(t => t.id === tagId) : null;
 
     if (!tagObj) {
       console.warn("DEBUG - Etiqueta no encontrada para ID:", tagId);
@@ -133,7 +134,7 @@ export const EducationPage = () => {
     setIsEditMode(false);
     setSelectedModuleToEdit(null);
   };
-  
+
   const handleSelectModuleForEdit = (moduleId) => {
     setSelectedModuleToEdit(prev => prev === moduleId ? null : moduleId);
   };
@@ -167,8 +168,7 @@ export const EducationPage = () => {
     try {
       await Promise.all(selectedModules.map(id => handleDeleteModule(id)));
       fetchAllModules().then(all => {
-        setFilteredModules(all);
-        setAllModules(all);
+        setFilteredModules(Array.isArray(all) ? all : []);
       });
       setIsDeleteMode(false);
       setSelectedModules([]);
@@ -181,7 +181,8 @@ export const EducationPage = () => {
     <EducationLayout
       activeIcon={activeIcon}
       onIconClick={handleIconClick}
-      tags={tags || []}
+      // Asegurarse de que tags sea siempre un array
+      tags={Array.isArray(tags) ? tags : []}
       activeTagIds={activeTagIds}
       onTagClick={handleTagClick}
       isAdmin={isAdmin}
@@ -193,8 +194,19 @@ export const EducationPage = () => {
           <p className="text-gray-500">Cargando...</p>
         </div>
       ) : modulesError || tagsError ? (
-        <div className="bg-red-100 text-red-800 p-4 rounded">
-          <p>{modulesError || tagsError}</p>
+        <div className="bg-yellow-50 text-yellow-800 p-4 rounded mb-6">
+          <p className="text-center">No hay módulos disponibles para mostrar</p>
+
+          {/* Añadir los botones de administración incluso cuando hay error */}
+          {isAdmin && (
+            <div className="mt-8">
+              <AdminControlPanel
+                onCreateClick={handleCreateModule}
+                onEditClick={handleEditModule}
+                onDeleteClick={handleEnterDeleteMode}
+              />
+            </div>
+          )}
         </div>
       ) : isEditMode ? (
         <>
@@ -205,7 +217,7 @@ export const EducationPage = () => {
           </div>
 
           <ModulesList
-            modules={filteredModules}
+            modules={modules || []}
             isAdmin={isAdmin}
             isSelectable
             selectedModules={selectedModuleToEdit ? [selectedModuleToEdit] : []}
@@ -234,7 +246,7 @@ export const EducationPage = () => {
           />
 
           <ModulesList
-            modules={filteredModules}
+            modules={modules || []}
             isAdmin={isAdmin}
             isSelectable
             selectedModules={selectedModules}
@@ -243,25 +255,30 @@ export const EducationPage = () => {
         </>
       ) : (
         <>
-          <ModuleFilters
-            tags={tags || []}
-            activeTagIds={activeTagIds}
-            onTagClick={handleTagClick}
-          />
+          {/* Filtros de módulos (mostrar solo si hay etiquetas) */}
+          {Array.isArray(tags) && tags.length > 0 && (
+            <ModuleFilters
+              tags={tags || []}
+              activeTagIds={activeTagIds}
+              onTagClick={handleTagClick}
+            />
+          )}
 
-          {/* Mostrar mensaje si no hay resultados */}
-          {filteredModules.length === 0 && searchValue && (
-            <div className="bg-gray-50 text-gray-600 p-4 rounded-md text-center my-4">
-              No se encontraron módulos que coincidan con "{searchValue}"
+          {/* Estado vacío para tags */}
+          {Array.isArray(tags) && tags.length === 0 && isAdmin && (
+            <div className="bg-gray-50 border border-gray-200 rounded-md p-4 mb-6">
+              <p className="text-gray-600 mb-3">No hay etiquetas disponibles. Como administrador, puedes crear etiquetas para categorizar los módulos.</p>
             </div>
           )}
 
+          {/* Lista de módulos (siempre se muestra, incluso vacía) */}
           <ModulesList
-            modules={filteredModules}
+            modules={filteredModules || []}
             isAdmin={isAdmin}
             isSelectable={false}
           />
 
+          {/* Panel de administración (siempre visible para administradores) */}
           {isAdmin && (
             <AdminControlPanel
               onCreateClick={handleCreateModule}
