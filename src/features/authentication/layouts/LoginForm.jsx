@@ -5,9 +5,11 @@ import { FormLink } from '../../../ui/components/FormLink';
 import { PasswordInput } from '../ui/PasswordInput';
 import { useLoginForm } from '../hooks/useLoginForm';
 import { Link } from 'react-router-dom';
+import { AlertError } from '../ui/AlertError';
 
 /**
  * Layout de formulario de login que utiliza el custom hook para su lógica
+ * y muestra errores de autenticación
  * 
  * @returns {JSX.Element} Componente de formulario de login
  */
@@ -22,6 +24,9 @@ export const LoginForm = () => {
 
   return (
     <>
+      {/* Mostrar alerta de error si existe */}
+      <AlertError message={error} show={!!error} />
+      
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Campo de usuario */}
         <div className="relative">

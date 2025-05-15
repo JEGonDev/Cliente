@@ -1,3 +1,4 @@
+
 import { 
   RiUserLine, 
   RiMailLockLine, 
@@ -9,9 +10,11 @@ import { FormButton } from '../../../ui/components/FormButton';
 import { FormLink } from '../../../ui/components/FormLink';
 import { PasswordInput } from '../ui/PasswordInput';
 import { useRegisterForm } from '../hooks/useRegisterForm';
+import { AlertError } from '../ui/AlertError';
 
 /**
  * Layout de formulario de registro que utiliza el custom hook para su lógica
+ * y muestra errores de validación
  * 
  * @returns {JSX.Element} Componente de formulario de registro
  */
@@ -21,6 +24,9 @@ export const RegisterForm = () => {
 
   return (
     <>
+      {/* Mostrar alerta de error si existe */}
+      <AlertError message={error} show={!!error} />
+      
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Campos básicos de información */}
         <div className="relative">
