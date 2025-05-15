@@ -41,63 +41,85 @@ export const EducationPage = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedModuleToEdit, setSelectedModuleToEdit] = useState(null);
   const [filteredModules, setFilteredModules] = useState([]);
+  const [allModules, setAllModules] = useState([]);
 
   useEffect(() => {
-    // 2) carga inicial
+    // Carga inicial de módulos y tags
     fetchAllModules().then(all => {
       setFilteredModules(all);
+      setAllModules(all); // Guardamos todos los módulos para filtrar localmente
     });
     fetchAllTags();
   }, []);
 
+  // Este useEffect filtra por etiquetas y búsqueda
   useEffect(() => {
-    if (activeTagIds.length > 0) {
-      console.log('DEBUG - Aplicando filtro por etiquetas, IDs:', activeTagIds);
-      filterModulesByTags(activeTagIds)
-        .then(filtered => {
-          console.log('DEBUG - Resultado del filtrado:', filtered);
-          setFilteredModules(filtered);       // <-- aquí asignas el resultado
-        })
-        .catch(error => {
-          console.error('DEBUG - Error al filtrar módulos:', error);
-        });
-    } else {
-      // 3) sin filtros, muestras todo
-      fetchAllModules().then(all => {
-        setFilteredModules(all);
-      });
+    const filterModules = async () => {
+      let result = [];
+      
+      // Si hay etiquetas activas, filtramos por ellas
+      if (activeTagIds.length > 0) {
+        try {
+          result = await filterModulesByTags(activeTagIds);
+        } catch (error) {
+          console.error('Error al filtrar módulos por etiquetas:', error);
+          result = allModules; // En caso de error, usamos todos los módulos
+        }
+      } else {
+        // Sin etiquetas activas, usamos todos los módulos
+        result = allModules;
+      }
+      
+      // Filtrar por título si hay un valor de búsqueda
+      if (searchValue.trim() !== '') {
+        const searchLower = searchValue.toLowerCase();
+        result = result.filter(module => 
+          module.title && module.title.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      setFilteredModules(result);
+    };
+    
+    // Solo ejecutamos el filtrado si tenemos módulos cargados
+    if (allModules.length > 0) {
+      filterModules();
     }
-  }, [activeTagIds]);
+  }, [activeTagIds, searchValue, allModules]);
 
   const handleIconClick = (iconId) => setActiveIcon(iconId);
-  const handleSearchChange = e => setSearchValue(e.target.value);
+  
+  // Actualizar función para manejar cambios en la búsqueda
+  const handleSearchChange = e => {
+    setSearchValue(e.target.value);
+  };
 
-const handleTagClick = (tagId) => {
-  // Buscamos el objeto completo para sacar el nombre
-  const tagObj = tags.find(t => t.id === tagId);
+  const handleTagClick = (tagId) => {
+    // Buscamos el objeto completo para sacar el nombre
+    const tagObj = tags.find(t => t.id === tagId);
 
-  if (!tagObj) {
-    console.warn("DEBUG - Etiqueta no encontrada para ID:", tagId);
-    return;
-  }
+    if (!tagObj) {
+      console.warn("DEBUG - Etiqueta no encontrada para ID:", tagId);
+      return;
+    }
 
-  const tagName = tagObj.name;
-  console.log("DEBUG - Clic en etiqueta:", tagName, "con ID:", tagId);
+    const tagName = tagObj.name;
+    console.log("DEBUG - Clic en etiqueta:", tagName, "con ID:", tagId);
 
-  // Actualiza nombres (por si los usas para resaltados con texto)
-  setActiveTags(prev =>
-    prev.includes(tagName)
-      ? prev.filter(name => name !== tagName)
-      : [...prev, tagName]
-  );
+    // Actualiza nombres (por si los usas para resaltados con texto)
+    setActiveTags(prev =>
+      prev.includes(tagName)
+        ? prev.filter(name => name !== tagName)
+        : [...prev, tagName]
+    );
 
-  // Actualiza IDs
-  setActiveTagIds(prev =>
-    prev.includes(tagId)
-      ? prev.filter(id => id !== tagId)
-      : [...prev, tagId]
-  );
-};
+    // Actualiza IDs
+    setActiveTagIds(prev =>
+      prev.includes(tagId)
+        ? prev.filter(id => id !== tagId)
+        : [...prev, tagId]
+    );
+  };
 
   const handleCreateModule = () => navigate('/education/module-form');
 
@@ -144,7 +166,10 @@ const handleTagClick = (tagId) => {
     if (!selectedModules.length) return;
     try {
       await Promise.all(selectedModules.map(id => handleDeleteModule(id)));
-      fetchAllModules();
+      fetchAllModules().then(all => {
+        setFilteredModules(all);
+        setAllModules(all);
+      });
       setIsDeleteMode(false);
       setSelectedModules([]);
     } catch (error) {
@@ -180,7 +205,7 @@ const handleTagClick = (tagId) => {
           </div>
 
           <ModulesList
-            modules={modules}
+            modules={filteredModules}
             isAdmin={isAdmin}
             isSelectable
             selectedModules={selectedModuleToEdit ? [selectedModuleToEdit] : []}
@@ -209,7 +234,7 @@ const handleTagClick = (tagId) => {
           />
 
           <ModulesList
-            modules={modules}
+            modules={filteredModules}
             isAdmin={isAdmin}
             isSelectable
             selectedModules={selectedModules}
@@ -223,6 +248,13 @@ const handleTagClick = (tagId) => {
             activeTagIds={activeTagIds}
             onTagClick={handleTagClick}
           />
+
+          {/* Mostrar mensaje si no hay resultados */}
+          {filteredModules.length === 0 && searchValue && (
+            <div className="bg-gray-50 text-gray-600 p-4 rounded-md text-center my-4">
+              No se encontraron módulos que coincidan con "{searchValue}"
+            </div>
+          )}
 
           <ModulesList
             modules={filteredModules}
