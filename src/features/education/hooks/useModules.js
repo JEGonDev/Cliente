@@ -27,6 +27,7 @@ export const useModules = () => {
   
   // Estado para formularios y UI
   const [formData, setFormData] = useState({
+    id: null, // Inicializamos id como null para claridad
     title: '',
     description: '',
     tagIds: []
@@ -45,7 +46,7 @@ export const useModules = () => {
     if (!formData.title.trim()) {
       errors.title = 'El título es obligatorio';
     } else {
-      // Comprobar si ya existe un módulo con el mismo título
+      // Comprobar si ya existe un módulo con el mismo título, excluyendo el módulo actual
       const duplicateModule = modules.find(
         module => 
           module.title && 
@@ -84,6 +85,7 @@ export const useModules = () => {
    */
   const resetForm = () => {
     setFormData({
+      id: null,
       title: '',
       description: '',
       tagIds: []
@@ -102,6 +104,7 @@ export const useModules = () => {
       
       if (moduleData) {
         setFormData({
+          id: moduleData.id || moduleData.moduleId, // Incluimos el id del módulo
           title: moduleData.title || '',
           description: moduleData.description || '',
           tagIds: moduleData.tagIds || []
@@ -128,7 +131,7 @@ export const useModules = () => {
       return null;
     }
     
-    // Sólo los administradores pueden crear módulos
+    // Solo los administradores pueden crear módulos
     if (!isAdmin) {
       setFormErrors({ permission: 'No tienes permisos para crear módulos' });
       return null;
@@ -169,7 +172,7 @@ export const useModules = () => {
       return null;
     }
     
-    // Sólo los administradores pueden actualizar módulos
+    // Solo los administradores pueden actualizar módulos
     if (!isAdmin) {
       setFormErrors({ permission: 'No tienes permisos para actualizar módulos' });
       return null;
@@ -206,7 +209,7 @@ export const useModules = () => {
       return false;
     }
     
-    // Sólo los administradores pueden eliminar módulos
+    // Solo los administradores pueden eliminar módulos
     if (!isAdmin) {
       setFormErrors({ permission: 'No tienes permisos para eliminar módulos' });
       return false;
