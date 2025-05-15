@@ -11,7 +11,6 @@ export const ModuleFormPage = () => {
   const { isAdmin } = useContext(AuthContext);
   const navigate = useNavigate();
   
-  // Usar hooks personalizados para formulario
   const { 
     formData, 
     formErrors, 
@@ -27,7 +26,6 @@ export const ModuleFormPage = () => {
   
   const { tags, loading: loadingTags, fetchAllTags } = useTags();
   
-  // Verificar permisos y cargar datos para edición
   useEffect(() => {
     if (!isAdmin) {
       navigate('/education');
@@ -42,7 +40,6 @@ export const ModuleFormPage = () => {
     fetchAllTags();
   }, [isEditing, moduleId, isAdmin, navigate]);
   
-  // Manejador de envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -58,7 +55,7 @@ export const ModuleFormPage = () => {
           const newModuleId = success.moduleId;
           navigate(`/education/module/${newModuleId}`);
         } else {
-          navigate('/education')
+          navigate('/education');
         }
       }
     } catch (error) {
@@ -66,12 +63,10 @@ export const ModuleFormPage = () => {
     }
   };
   
-  // Manejador para cancelar y volver a la página principal
   const handleCancel = () => {
     navigate('/education');
   };
   
-  // Determinamos si debemos mostrar un estado de carga
   const isLoading = loadingModule || loadingTags;
   
   return (
@@ -95,7 +90,7 @@ export const ModuleFormPage = () => {
           {Object.keys(formErrors).length > 0 && (
             <div className="bg-red-100 text-red-800 p-4 rounded mb-4">
               <ul className="list-disc list-inside">
-                {Object.values(formErrors).map((error, index) => (
+                {Object.entries(formErrors).map(([key, error], index) => (
                   <li key={index}>{error}</li>
                 ))}
               </ul>
@@ -134,7 +129,6 @@ export const ModuleFormPage = () => {
               Etiquetas
             </label>
             <div className="flex flex-wrap gap-2">
-              {/* Usar etiquetas dinámicas del hook useTags en lugar de lista estática */}
               {tags.length > 0 ? (
                 tags.map((tag) => (
                   <div key={tag.id} className="flex items-center">

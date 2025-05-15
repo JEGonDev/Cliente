@@ -44,12 +44,24 @@ export const useModules = () => {
     
     if (!formData.title.trim()) {
       errors.title = 'El título es obligatorio';
+    } else {
+      // Comprobar si ya existe un módulo con el mismo título
+      const duplicateModule = modules.find(
+        module => 
+          module.title && 
+          module.title.toLowerCase() === formData.title.toLowerCase() && 
+          (module.id || module.moduleId) !== (formData.id || null)
+      );
+      
+      if (duplicateModule) {
+        errors.title = 'Ya existe un módulo con este título. Por favor, use un título diferente.';
+      }
     }
     
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
-  
+
   /**
    * Maneja cambios en los campos del formulario
    * @param {Event} e - Evento de cambio
