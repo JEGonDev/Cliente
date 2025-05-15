@@ -11,11 +11,20 @@ import { useTags } from '../features/education/hooks/useTags';
 import { Button } from '../ui/components/Button';
 import { TagManagementButtons } from '../features/education/layouts/TagManagementButtons';
 
-
+/**
+ * Componente principal para la página de educación.
+ * Gestiona la visualización y manipulación de módulos educativos, incluyendo filtrado por etiquetas y búsqueda por título.
+ */
 export const EducationPage = () => {
+  /**
+   * Contexto de autenticación para determinar si el usuario es administrador.
+   */
   const { isAdmin } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  /**
+   * Hook personalizado para manejar operaciones relacionadas con módulos.
+   */
   const {
     modules,
     loading: loadingModules,
@@ -25,6 +34,9 @@ export const EducationPage = () => {
     filterModulesByTags
   } = useModules();
 
+  /**
+   * Hook personalizado para manejar operaciones relacionadas con etiquetas.
+   */
   const {
     tags,
     loading: loadingTags,
@@ -36,24 +48,26 @@ export const EducationPage = () => {
   const [searchValue, setSearchValue] = useState('');
   const [activeTags, setActiveTags] = useState([]);
   const [activeTagIds, setActiveTagIds] = useState([]);
-
   const [isDeleteMode, setIsDeleteMode] = useState(false);
   const [selectedModules, setSelectedModules] = useState([]);
-
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedModuleToEdit, setSelectedModuleToEdit] = useState(null);
-  // Inicializar filteredModules como un array vacío para evitar problemas cuando no hay datos
   const [filteredModules, setFilteredModules] = useState([]);
+  const [allModules, setAllModules] = useState([]);
 
+  /**
+   * Efecto para cargar los datos iniciales de módulos y etiquetas.
+   */
   useEffect(() => {
-    // Cargar datos iniciales y asegurarse de manejar respuestas vacías correctamente
     const loadInitialData = async () => {
       try {
-        const allModules = await fetchAllModules();
-        // Asegurarse de que filteredModules sea siempre un array, incluso si fetchAllModules devuelve null o undefined
-        setFilteredModules(Array.isArray(allModules) ? allModules : []);
+        const all = await fetchAllModules();
+        const modulesArray = Array.isArray(all) ? all : [];
+        setAllModules(modulesArray);
+        setFilteredModules(modulesArray);
       } catch (error) {
         console.error("Error cargando módulos:", error);
+        setAllModules([]);
         setFilteredModules([]);
       }
 
@@ -67,40 +81,57 @@ export const EducationPage = () => {
     loadInitialData();
   }, []);
 
+  /**
+   * Efecto para filtrar módulos por etiquetas y búsqueda.
+   */
   useEffect(() => {
-    if (activeTagIds.length > 0) {
-      console.log('DEBUG - Aplicando filtro por etiquetas, IDs:', activeTagIds);
-      filterModulesByTags(activeTagIds)
-        .then(filtered => {
-          console.log('DEBUG - Resultado del filtrado:', filtered);
-          // Asegurarse de que filtered sea siempre un array
-          setFilteredModules(Array.isArray(filtered) ? filtered : []);
-        })
-        .catch(error => {
-          console.error('DEBUG - Error al filtrar módulos:', error);
-          setFilteredModules([]);
-        });
-    } else {
-      // Sin filtros, mostrar todos los módulos
-      fetchAllModules()
-        .then(all => {
-          // Asegurarse de que all sea siempre un array
-          setFilteredModules(Array.isArray(all) ? all : []);
-        })
-        .catch(error => {
-          console.error("Error recargando módulos:", error);
-          setFilteredModules([]);
-        });
-    }
-  }, [activeTagIds]);
+    const filterModules = async () => {
+      let result = [];
 
+      if (activeTagIds.length > 0) {
+        try {
+          result = await filterModulesByTags(activeTagIds);
+        } catch (error) {
+          console.error('Error al filtrar módulos por etiquetas:', error);
+          result = allModules;
+        }
+      } else {
+        result = allModules;
+      }
+
+      if (searchValue.trim() !== '') {
+        const searchLower = searchValue.toLowerCase();
+        result = result.filter(module =>
+          module.title && module.title.toLowerCase().includes(searchLower)
+        );
+      }
+
+      setFilteredModules(Array.isArray(result) ? result : []);
+    };
+
+    if (allModules.length > 0) {
+      filterModules();
+    }
+  }, [activeTagIds, searchValue, allModules]);
+
+  /**
+   * Maneja el clic en un ícono de la barra de navegación.
+   * @param {string} iconId - ID del ícono seleccionado
+   */
   const handleIconClick = (iconId) => setActiveIcon(iconId);
+
+  /**
+   * Maneja el cambio en el campo de búsqueda.
+   * @param {Object} e - Evento del input
+   */
   const handleSearchChange = e => setSearchValue(e.target.value);
 
+  /**
+   * Maneja el clic en una etiqueta para activarla o desactivarla.
+   * @param {number} tagId - ID de la etiqueta
+   */
   const handleTagClick = (tagId) => {
-    // Buscamos el objeto completo para sacar el nombre
     const tagObj = tags && Array.isArray(tags) ? tags.find(t => t.id === tagId) : null;
-
     if (!tagObj) {
       console.warn("DEBUG - Etiqueta no encontrada para ID:", tagId);
       return;
@@ -109,14 +140,12 @@ export const EducationPage = () => {
     const tagName = tagObj.name;
     console.log("DEBUG - Clic en etiqueta:", tagName, "con ID:", tagId);
 
-    // Actualiza nombres (por si los usas para resaltados con texto)
     setActiveTags(prev =>
       prev.includes(tagName)
         ? prev.filter(name => name !== tagName)
         : [...prev, tagName]
     );
 
-    // Actualiza IDs
     setActiveTagIds(prev =>
       prev.includes(tagId)
         ? prev.filter(id => id !== tagId)
@@ -124,24 +153,44 @@ export const EducationPage = () => {
     );
   };
 
+  /**
+   * Redirige al formulario para crear un nuevo módulo.
+   */
   const handleCreateModule = () => navigate('/education/module-form');
 
+  /**
+   * Activa el modo de edición.
+   */
   const handleEnterEditMode = () => {
     setIsEditMode(true);
     setSelectedModuleToEdit(null);
     setIsDeleteMode(false);
   };
 
+  /**
+   * Cancela el modo de edición.
+   */
   const handleCancelEdit = () => {
     setIsEditMode(false);
     setSelectedModuleToEdit(null);
   };
 
+  /**
+   * Selecciona un módulo para editar.
+   * @param {number} moduleId - ID del módulo
+   */
   const handleSelectModuleForEdit = (moduleId) => {
     setSelectedModuleToEdit(prev => prev === moduleId ? null : moduleId);
   };
+
+  /**
+   * Activa el modo de edición desde el panel de control.
+   */
   const handleEditModule = () => handleEnterEditMode();
 
+  /**
+   * Confirma la edición y redirige al formulario con el módulo seleccionado.
+   */
   const handleConfirmEdit = () => {
     if (!selectedModuleToEdit) return;
     navigate(`/education/module-form/${selectedModuleToEdit}`);
@@ -149,15 +198,27 @@ export const EducationPage = () => {
     setSelectedModuleToEdit(null);
   };
 
+  /**
+   * Activa el modo de eliminación.
+   */
   const handleEnterDeleteMode = () => {
     setIsDeleteMode(true);
     setSelectedModules([]);
     setIsEditMode(false);
   };
+
+  /**
+   * Cancela el modo de eliminación.
+   */
   const handleCancelDelete = () => {
     setIsDeleteMode(false);
     setSelectedModules([]);
   };
+
+  /**
+   * Selecciona o deselecciona un módulo para eliminar.
+   * @param {number} moduleId - ID del módulo
+   */
   const handleSelectModule = (moduleId) => {
     setSelectedModules(prev =>
       prev.includes(moduleId)
@@ -165,13 +226,17 @@ export const EducationPage = () => {
         : [...prev, moduleId]
     );
   };
+
+  /**
+   * Confirma la eliminación de los módulos seleccionados.
+   */
   const handleConfirmDelete = async () => {
     if (!selectedModules.length) return;
     try {
       await Promise.all(selectedModules.map(id => handleDeleteModule(id)));
-      fetchAllModules().then(all => {
-        setFilteredModules(Array.isArray(all) ? all : []);
-      });
+      const all = await fetchAllModules();
+      setAllModules(Array.isArray(all) ? all : []);
+      setFilteredModules(Array.isArray(all) ? all : []);
       setIsDeleteMode(false);
       setSelectedModules([]);
     } catch (error) {
@@ -179,11 +244,13 @@ export const EducationPage = () => {
     }
   };
 
+  /**
+   * Renderiza la interfaz de la página de educación.
+   */
   return (
     <EducationLayout
       activeIcon={activeIcon}
       onIconClick={handleIconClick}
-      // Asegurarse de que tags sea siempre un array
       tags={Array.isArray(tags) ? tags : []}
       activeTagIds={activeTagIds}
       onTagClick={handleTagClick}
@@ -198,8 +265,6 @@ export const EducationPage = () => {
       ) : modulesError || tagsError ? (
         <div className="bg-yellow-50 text-yellow-800 p-4 rounded mb-6">
           <p className="text-center">No hay módulos disponibles para mostrar</p>
-
-          {/* Añadir los botones de administración incluso cuando hay error */}
           {isAdmin && (
             <div className="mt-8">
               <AdminControlPanel
@@ -212,12 +277,6 @@ export const EducationPage = () => {
         </div>
       ) : isEditMode ? (
         <>
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-            <p className="text-yellow-700">
-              Seleccione el módulo que desea modificar y oprima el botón "Editar seleccionado".
-            </p>
-          </div>
-
           <ModulesList
             modules={modules || []}
             isAdmin={isAdmin}
@@ -225,7 +284,21 @@ export const EducationPage = () => {
             selectedModules={selectedModuleToEdit ? [selectedModuleToEdit] : []}
             onSelectModule={handleSelectModuleForEdit}
           />
-
+          <div
+            role="status"
+            className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4"
+          >
+            <p className="text-yellow-700 font-semibold mb-2">
+              ⚙️ Editar módulo educativo
+            </p>
+            <p className="text-yellow-700 mb-2">
+              Selecciona el módulo que quieres **modificar** y luego pulsa <strong>“Editar seleccionado”</strong>.
+            </p>
+            <ul className="list-decimal list-inside text-yellow-700">
+              <li>Escoge el módulo en la lista.</li>
+              <li>Haz clic en <strong>“Editar seleccionado”</strong>.</li>
+            </ul>
+          </div>
           <div className="flex flex-wrap gap-4 mt-8 justify-center">
             <Button variant="white" onClick={handleCancelEdit}>
               Cancelar
@@ -241,12 +314,6 @@ export const EducationPage = () => {
         </>
       ) : isDeleteMode ? (
         <>
-          <DeleteModeNotice
-            onCancel={handleCancelDelete}
-            onConfirm={handleConfirmDelete}
-            hasSelected={selectedModules.length > 0}
-          />
-
           <ModulesList
             modules={modules || []}
             isAdmin={isAdmin}
@@ -254,13 +321,15 @@ export const EducationPage = () => {
             selectedModules={selectedModules}
             onSelectModule={handleSelectModule}
           />
+          <DeleteModeNotice
+            onCancel={handleCancelDelete}
+            onConfirm={handleConfirmDelete}
+            hasSelected={selectedModules.length > 0}
+          />
         </>
       ) : (
         <>
-          {/* Botones de gestión de etiquetas (solo para administradores) */}
           {isAdmin && <TagManagementButtons />}
-
-          {/* Filtros de módulos (mostrar solo si hay etiquetas) */}
           {Array.isArray(tags) && tags.length > 0 && (
             <ModuleFilters
               tags={tags || []}
@@ -268,22 +337,21 @@ export const EducationPage = () => {
               onTagClick={handleTagClick}
             />
           )}
-
-          {/* Estado vacío para tags */}
           {Array.isArray(tags) && tags.length === 0 && isAdmin && (
             <div className="bg-gray-50 border border-gray-200 rounded-md p-4 mb-6">
               <p className="text-gray-600 mb-3">No hay etiquetas disponibles. Como administrador, puedes crear etiquetas para categorizar los módulos.</p>
             </div>
           )}
-
-          {/* Lista de módulos (siempre se muestra, incluso vacía) */}
+          {filteredModules.length === 0 && searchValue && (
+            <div className="bg-gray-50 text-gray-600 p-4 rounded-md text-center my-4">
+              No se encontraron módulos que coincidan con "{searchValue}"
+            </div>
+          )}
           <ModulesList
             modules={filteredModules || []}
             isAdmin={isAdmin}
             isSelectable={false}
           />
-
-          {/* Panel de administración (siempre visible para administradores) */}
           {isAdmin && (
             <AdminControlPanel
               onCreateClick={handleCreateModule}
