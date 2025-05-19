@@ -1,15 +1,15 @@
 import PropTypes from 'prop-types';
 
 /**
- * Componente que muestra filtros para los módulos educativos.
- * Versión responsiva para pantallas pequeñas.
+ * Componente para filtrar módulos educativos por etiquetas
  * 
- * Ahora trabaja con objetos { id, name } y compara por ID.
+ * Este componente muestra una lista de etiquetas que actúan como filtros
+ * y permite al usuario seleccionar/deseleccionar múltiples etiquetas.
  * 
  * @param {Object} props
- * @param {Array<{id: string|number, name: string}>} props.tags         Lista de etiquetas disponibles
- * @param {Array<string|number>}            props.activeTagIds  Lista de IDs de etiquetas activas
- * @param {Function}                         props.onTagClick    Función (tagId) => void
+ * @param {Array<{id: string|number, name: string}>} props.tags - Lista de etiquetas disponibles
+ * @param {Array<string|number>} props.activeTagIds - Lista de IDs de etiquetas activas
+ * @param {Function} props.onTagClick - Función para manejar clic en etiquetas (tagId) => void
  */
 export const ModuleFilters = ({
   tags = [],
