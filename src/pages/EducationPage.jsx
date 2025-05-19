@@ -10,6 +10,7 @@ import { useModules } from '../features/education/hooks/useModules';
 import { useTags } from '../features/education/hooks/useTags';
 import { Button } from '../ui/components/Button';
 import { TagManagementButtons } from '../features/education/layouts/TagManagementButtons';
+import { DeleteConfirmationModal } from '../features/education/ui/DeleteConfirmationModal';
 
 /**
  * Componente principal para la página de educación.
@@ -54,6 +55,8 @@ export const EducationPage = () => {
   const [selectedModuleToEdit, setSelectedModuleToEdit] = useState(null);
   const [filteredModules, setFilteredModules] = useState([]);
   const [allModules, setAllModules] = useState([]);
+  const [deleteConfirmModalOpen, setDeleteConfirmModalOpen] = useState(false);
+  const [moduleToDelete, setModuleToDelete] = useState(null);
 
   /**
    * Efecto para cargar los datos iniciales de módulos y etiquetas.
@@ -230,21 +233,31 @@ export const EducationPage = () => {
   /**
    * Confirma la eliminación de los módulos seleccionados.
    */
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = () => {
     if (!selectedModules.length) return;
+    setModuleToDelete(selectedModules[0]); // Solo tomamos el primer módulo seleccionado
+    setDeleteConfirmModalOpen(true);
+  };
+
+  // Función para manejar la confirmación en el modal
+  const handleModalConfirmDelete = async () => {
+    if (!moduleToDelete) return;
+
     try {
-      await Promise.all(selectedModules.map(id => handleDeleteModule(id)));
+      await handleDeleteModule(moduleToDelete);
       const all = await fetchAllModules();
       setAllModules(Array.isArray(all) ? all : []);
       setFilteredModules(Array.isArray(all) ? all : []);
       setIsDeleteMode(false);
       setSelectedModules([]);
+      setDeleteConfirmModalOpen(false);
+      setModuleToDelete(null);
     } catch (error) {
-      console.error('Error al eliminar módulos:', error);
+      console.error('Error al eliminar módulo:', error);
     }
   };
 
-    const handleTagsUpdated = async () => {
+  const handleTagsUpdated = async () => {
     try {
       await fetchAllTags();
       const all = await fetchAllModules();
@@ -340,7 +353,7 @@ export const EducationPage = () => {
         </>
       ) : (
         <>
-          {isAdmin && <TagManagementButtons onTagsUpdated={handleTagsUpdated}/>}
+          {isAdmin && <TagManagementButtons onTagsUpdated={handleTagsUpdated} />}
           {Array.isArray(tags) && tags.length > 0 && (
             <ModuleFilters
               tags={tags || []}
@@ -370,8 +383,17 @@ export const EducationPage = () => {
               onDeleteClick={handleEnterDeleteMode}
             />
           )}
+
         </>
       )}
+      {/* Agregar justo antes del cierre del componente */}
+      <DeleteConfirmationModal
+        isOpen={deleteConfirmModalOpen}
+        onClose={() => setDeleteConfirmModalOpen(false)}
+        onConfirm={handleModalConfirmDelete}
+        title="Eliminar módulo educativo"
+        message="¿Estás seguro de que deseas eliminar este módulo? Esta acción no se puede deshacer y eliminará todo el contenido asociado."
+      />
     </EducationLayout>
   );
 };
