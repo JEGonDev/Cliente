@@ -7,14 +7,67 @@ import { useGuides } from './useGuides';
 import { useVideos } from './useVideos';
 
 /**
- * Hook personalizado para manejar toda la lógica de la vista de detalles de un módulo educativo
- * Centraliza el manejo de estado y operaciones CRUD para todos los tipos de contenido
+ * @returns {Object} Estado y funciones para gestionar todos los aspectos de un módulo
  * 
- * @returns {Object} Estado y funciones para manipular detalles del módulo
+ * @property {string|number} moduleId - ID del módulo actual
+ * @property {boolean} isAdmin - Si el usuario actual es administrador
+ * @property {Object} module - Datos del módulo actual
+ * @property {Array} articles - Lista de artículos del módulo
+ * @property {Array} guides - Lista de guías del módulo
+ * @property {Array} videos - Lista de videos del módulo
+ * @property {Array} moduleTags - Etiquetas del módulo actual procesadas
+ * 
+ * @property {boolean} isLoading - Estado general de carga
+ * @property {boolean} loadingModule - Estado de carga del módulo
+ * @property {boolean} loadingArticles - Estado de carga de artículos
+ * @property {boolean} loadingGuides - Estado de carga de guías
+ * @property {boolean} loadingVideos - Estado de carga de videos
+ * 
+ * @property {Object} moduleError - Error de carga del módulo
+ * @property {Object} articleError - Error de carga de artículos
+ * @property {Object} guideError - Error de carga de guías
+ * @property {Object} videoError - Error de carga de videos
+ * 
+ * @property {boolean} articleModalOpen - Estado del modal de artículos
+ * @property {boolean} guideModalOpen - Estado del modal de guías 
+ * @property {boolean} videoModalOpen - Estado del modal de videos
+ * @property {boolean} deleteModalOpen - Estado del modal de eliminación
+ * 
+ * @property {number|null} selectedArticleId - ID del artículo seleccionado
+ * @property {number|null} selectedGuideId - ID de la guía seleccionada
+ * @property {number|null} selectedVideoId - ID del video seleccionado
+ * 
+ * @property {string} deleteType - Tipo de contenido a eliminar
+ * @property {boolean} isDeleting - Estado de proceso de eliminación
+ * @property {Object} deleteModalProps - Propiedades para el modal de eliminación
+ * 
+ * @property {Function} openCreateArticleModal - Abre modal para crear artículo
+ * @property {Function} openEditArticleModal - Abre modal para editar artículo
+ * @property {Function} confirmDeleteArticle - Confirma eliminación de artículo
+ * 
+ * @property {Function} openCreateGuideModal - Abre modal para crear guía
+ * @property {Function} openEditGuideModal - Abre modal para editar guía
+ * @property {Function} confirmDeleteGuide - Confirma eliminación de guía
+ * 
+ * @property {Function} openCreateVideoModal - Abre modal para crear video
+ * @property {Function} openEditVideoModal - Abre modal para editar video
+ * @property {Function} confirmDeleteVideo - Confirma eliminación de video
+ * 
+ * @property {Function} closeArticleModal - Cierra modal de artículo
+ * @property {Function} closeGuideModal - Cierra modal de guía
+ * @property {Function} closeVideoModal - Cierra modal de video
+ * @property {Function} closeDeleteModal - Cierra modal de eliminación
+ * 
+ * @property {Function} handleDelete - Ejecuta la eliminación del elemento
+ * @property {Function} refreshContent - Recarga todo el contenido del módulo
+ * @property {Function} loadModuleData - Carga inicial de datos del módulo
  */
 export const useModuleDetails = () => {
   // Obtenemos el ID del módulo de los parámetros de la URL
   const { moduleId } = useParams();
+
+  // IMPORTANTE: Usamos useParams para obtener dinámicamente el ID del módulo de la URL 
+  // en lugar de requerir que se pase como prop, simplificando el uso del hook
   
   // Información de autenticación y permisos
   const { isAdmin } = useContext(AuthContext);
@@ -245,6 +298,9 @@ export const useModuleDetails = () => {
 
   /**
    * Refresca todos los contenidos del módulo
+   * 
+   * IMPORTANTE: Esta función usa Promise.all para cargar datos en paralelo
+   * mejorando el rendimiento al no bloquear las llamadas sucesivas
    */
   const refreshContent = useCallback(async () => {
     if (!moduleId) return;
