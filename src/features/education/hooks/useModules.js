@@ -216,14 +216,11 @@ export const useModules = () => {
     }
     
     try {
-      // Confirmar eliminación
-      if (window.confirm('¿Estás seguro de que deseas eliminar este módulo?')) {
-        const success = await contextDeleteModule(id);
-        
-        if (success) {
-          setSuccessMessage('Módulo eliminado correctamente');
-          return true;
-        }
+      const success = await contextDeleteModule(id);
+      
+      if (success) {
+        setSuccessMessage('Módulo eliminado correctamente');
+        return true;
       }
       return false;
     } catch (error) {
