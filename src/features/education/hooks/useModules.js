@@ -3,9 +3,35 @@ import { EducationContext } from '../context/EducationContext';
 import { AuthContext } from '../../authentication/context/AuthContext';
 
 /**
- * Hook personalizado para manejar la lógica de módulos educativos
+ * Hook personalizado para centralizar la gestión completa de módulos educativos
  * 
- * @returns {Object} Propiedades y métodos para trabajar con módulos
+ * Este hook implementa el patrón Custom Hook para separar la lógica de negocio de la presentación,
+ * proporcionando una API clara para trabajar con módulos (CRUD completo).
+ * 
+ * @returns {Object} Estado y funciones para manipular módulos educativos
+ * 
+ * @property {Array} modules - Lista de módulos cargados
+ * @property {Object} module - Módulo individual seleccionado actualmente
+ * @property {boolean} loading - Estado de carga de operaciones
+ * @property {Object} error - Error actual si existe
+ * @property {Object} formData - Estado actual del formulario
+ * @property {Object} formErrors - Errores de validación del formulario
+ * @property {string} successMessage - Mensaje de éxito tras operaciones
+ * 
+ * @property {Function} fetchAllModules - Carga todos los módulos disponibles
+ * @property {Function} fetchModuleById - Carga un módulo específico por ID
+ * @property {Function} filterModulesByTags - Filtra módulos por etiquetas
+ * 
+ * @property {Function} handleChange - Gestiona cambios en inputs del formulario
+ * @property {Function} handleTagsChange - Gestiona cambios en selección de etiquetas
+ * @property {Function} resetForm - Reinicia el formulario a valores predeterminados
+ * @property {Function} loadModuleForEdit - Carga datos para edición
+ * 
+ * @property {Function} handleCreateModule - Crea un nuevo módulo
+ * @property {Function} handleUpdateModule - Actualiza un módulo existente
+ * @property {Function} handleDeleteModule - Elimina un módulo
+ * 
+ * @property {boolean} canManageModules - Indica si el usuario tiene permisos
  */
 export const useModules = () => {
   // Contexto de educación
@@ -26,6 +52,8 @@ export const useModules = () => {
   const { isAdmin, isAuthenticated } = useContext(AuthContext);
   
   // Estado para formularios y UI
+  // IMPORTANTE: Separamos el estado del formulario del estado principal de la aplicación
+  // para evitar actualizaciones innecesarias del contexto global mientras el usuario edita
   const [formData, setFormData] = useState({
     id: null, // Inicializamos id como null para claridad
     title: '',
