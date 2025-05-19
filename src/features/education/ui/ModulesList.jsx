@@ -1,7 +1,22 @@
-// src/features/education/ui/ModulesList.jsx
 import PropTypes from 'prop-types';
 import { ModuleCard } from './ModuleCard';
 
+/**
+ * Componente que muestra una cuadrícula de módulos educativos
+ * 
+ * Este componente maneja tres modos de funcionamiento:
+ * 1. Modo normal: Muestra los módulos como enlaces a sus detalles
+ * 2. Modo de selección simple: Permite seleccionar un único módulo (para edición)
+ * 3. Modo de selección múltiple: Permite seleccionar varios módulos (para eliminación)
+ * 
+ * 
+ * @param {Object} props - Propiedades del componente
+ * @param {Array} props.modules - Lista de módulos a mostrar
+ * @param {boolean} props.isAdmin - Si el usuario es administrador
+ * @param {boolean} props.isSelectable - Si los módulos pueden seleccionarse
+ * @param {Array} props.selectedModules - IDs de módulos seleccionados
+ * @param {Function} props.onSelectModule - Función que maneja la selección
+ */
 export const ModulesList = ({ 
   modules = [], 
   isAdmin = false,
@@ -9,7 +24,15 @@ export const ModulesList = ({
   selectedModules = [],
   onSelectModule = () => {}
 }) => {
-  // Función para manejar la selección de un módulo
+  /**
+   * Función para manejar la selección de un módulo
+   * 
+   * IMPORTANTE: Esta implementación permite dos modos:
+   * - Selección simple (edición): Solo permite seleccionar un módulo a la vez
+   * - Selección múltiple (eliminación): Permite seleccionar varios módulos
+   * 
+   * @param {number|string} moduleId - ID del módulo seleccionado
+   */
   const handleSelect = (moduleId) => {
     if (isSelectable) {
       // Si ya hay un módulo seleccionado y es diferente al actual, deseleccionarlo
