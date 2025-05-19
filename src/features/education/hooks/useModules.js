@@ -103,12 +103,37 @@ export const useModules = () => {
       const moduleData = await fetchModuleById(id);
       
       if (moduleData) {
+        // Procesar tags para extraer los IDs correctamente
+        let tagIds = [];
+        
+        // Si el módulo tiene tags como array
+        if (moduleData.tags && Array.isArray(moduleData.tags)) {
+          // Extraer IDs si los tags son objetos con id
+          tagIds = moduleData.tags.map(tag => {
+            // Si el tag es un objeto con id
+            if (typeof tag === 'object' && tag !== null && tag.id) {
+              return tag.id;
+            }
+            // Si el tag es directamente un id (string o número)
+            if (typeof tag === 'string' || typeof tag === 'number') {
+              return tag;
+            }
+            return null;
+          }).filter(id => id !== null); // Eliminar valores nulos
+        } 
+        // Si el módulo ya tiene tagIds
+        else if (moduleData.tagIds && Array.isArray(moduleData.tagIds)) {
+          tagIds = moduleData.tagIds;
+        }
+        
         setFormData({
-          id: moduleData.id || moduleData.moduleId, // Incluimos el id del módulo
+          id: moduleData.id || moduleData.moduleId,
           title: moduleData.title || '',
           description: moduleData.description || '',
-          tagIds: moduleData.tagIds || []
+          tagIds: tagIds
         });
+        
+        console.log('Tags cargados para edición:', tagIds);
         return moduleData;
       }
       return null;
