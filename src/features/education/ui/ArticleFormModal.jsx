@@ -3,6 +3,19 @@ import { Modal } from '../../../ui/components/Modal';
 import { Button } from '../../../ui/components/Button';
 import { useArticles } from '../hooks/useArticles';
 
+/**
+ * Modal con formulario para crear o editar un artículo
+ * 
+ * Este componente permite crear un nuevo artículo o editar uno existente.
+ * Se maneja el estado del formulario internamente a través del hook `useArticles`.
+ * 
+ * @param {Object} props
+ * @param {boolean} props.isOpen - Define si el modal está abierto
+ * @param {Function} props.onClose - Función para cerrar el modal
+ * @param {string|number} props.moduleId - ID del módulo al que pertenece el artículo
+ * @param {string|number|null} [props.articleId=null] - ID del artículo para edición (si aplica)
+ * @param {Function} props.onSuccess - Callback que se ejecuta tras guardar exitosamente
+ */
 export const ArticleFormModal = ({ 
   isOpen, 
   onClose, 
