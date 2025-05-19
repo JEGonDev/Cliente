@@ -3,7 +3,16 @@ import { Modal } from '../../../ui/components/Modal';
 import { Button } from '../../../ui/components/Button';
 import { useTags } from '../hooks/useTags';
 
-// Modal para crear etiqueta
+/**
+ * Modal para crear una nueva etiqueta
+ * 
+ * Valida duplicados localmente y utiliza `useTags` para creación.
+ * 
+ * @param {Object} props
+ * @param {boolean} props.isOpen - Controla visibilidad del modal
+ * @param {Function} props.onClose - Callback para cerrar
+ * @param {Function} props.onSuccess - Callback tras crear exitosamente
+ */
 export const CreateTagModal = ({ isOpen, onClose, onSuccess }) => {
   const {
     formData,
@@ -91,7 +100,17 @@ export const CreateTagModal = ({ isOpen, onClose, onSuccess }) => {
   );
 };
 
-// Modal para editar etiqueta
+/**
+ * Modal para editar una etiqueta existente
+ * 
+ * Carga datos iniciales y permite actualizar nombre, validando duplicados.
+ * 
+ * @param {Object} props
+ * @param {boolean} props.isOpen - Controla visibilidad del modal
+ * @param {Function} props.onClose - Callback para cerrar
+ * @param {{id: string|number, name: string}} props.tag - Etiqueta a editar
+ * @param {Function} props.onSuccess - Callback tras actualizar exitosamente
+ */
 export const EditTagModal = ({ isOpen, onClose, tag, onSuccess }) => {
   const {
     formData,
@@ -180,7 +199,17 @@ export const EditTagModal = ({ isOpen, onClose, tag, onSuccess }) => {
   );
 };
 
-// Modal para eliminar etiqueta(s)
+/**
+ * Modal para eliminar una o varias etiquetas
+ * 
+ * Muestra mensaje dinámico según cantidad y confirma borrado.
+ * 
+ * @param {Object} props
+ * @param {boolean} props.isOpen - Controla visibilidad del modal
+ * @param {Function} props.onClose - Callback para cerrar
+ * @param {Array|Object} props.tags - Etiquetas a eliminar (array o único objeto)
+ * @param {Function} props.onSuccess - Callback tras eliminar exitosamente
+ */
 export const DeleteTagModal = ({ isOpen, onClose, tags, onSuccess }) => {
   const { handleDeleteTag } = useTags();
   const [isDeleting, setIsDeleting] = useState(false);

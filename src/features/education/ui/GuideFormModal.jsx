@@ -3,6 +3,19 @@ import { Modal } from '../../../ui/components/Modal';
 import { Button } from '../../../ui/components/Button';
 import { useGuides } from '../hooks/useGuides';
 
+/**
+ * Modal con formulario para crear o editar una guía
+ * 
+ * Utiliza el hook `useGuides` para manejar los datos y la lógica de envío.
+ * Permite subir un archivo PDF al crear y solo muestra título y descripción al editar.
+ * 
+ * @param {Object} props
+ * @param {boolean} props.isOpen - Controla visibilidad del modal
+ * @param {Function} props.onClose - Callback para cerrar el modal
+ * @param {string|number} props.moduleId - ID del módulo asociado
+ * @param {string|number|null} [props.guideId=null] - ID de la guía para edición
+ * @param {Function} props.onSuccess - Callback tras guardar exitosamente
+ */
 export const GuideFormModal = ({ 
   isOpen, 
   onClose, 

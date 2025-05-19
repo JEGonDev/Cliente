@@ -1,6 +1,17 @@
 import PropTypes from 'prop-types';
 import { Button } from '../../../ui/components/Button';
 
+/**
+ * Aviso de modo edición
+ * 
+ * Indica al usuario que seleccione un módulo para editar y ofrece 
+ * botones para cancelar o proceder con la edición.
+ * 
+ * @param {Object} props
+ * @param {Function} props.onCancel - Callback para salir del modo edición
+ * @param {Function} props.onConfirm - Callback para confirmar edición de los seleccionados
+ * @param {boolean} [props.hasSelected=false] - Indica si hay al menos un módulo seleccionado
+ */
 export const EditModeNotice = ({
   onCancel,
   onConfirm,
