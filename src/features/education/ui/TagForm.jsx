@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../../../ui/components/Button';
 
+/**
+ * Formulario para crear o actualizar una etiqueta
+ * 
+ * Controla su propio estado y validaciones básicas.
+ * 
+ * @param {Object} props
+ * @param {{id: string|number|null, name: string}} props.initialData - Valores iniciales del formulario
+ * @param {Function} props.onSubmit - Callback con los datos validados al enviar
+ * @param {boolean} props.isSubmitting - Indicador de envío en curso
+ */
 export const TagForm = ({ 
   initialData = { id: null, name: '' }, 
   onSubmit, 
