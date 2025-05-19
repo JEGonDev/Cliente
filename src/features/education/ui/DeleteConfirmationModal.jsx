@@ -1,6 +1,20 @@
 import { Modal } from '../../../ui/components/Modal';
 import { Button } from '../../../ui/components/Button';
 
+/**
+ * Modal de confirmación de eliminación
+ * 
+ * Muestra un diálogo que requiere confirmación antes de eliminar un elemento.
+ * Incluye título, mensaje y botones para cancelar o confirmar.
+ * 
+ * @param {Object} props
+ * @param {boolean} props.isOpen - Controla si el modal está visible
+ * @param {Function} props.onClose - Callback para cerrar el modal
+ * @param {Function} props.onConfirm - Callback para confirmar la eliminación
+ * @param {string} [props.title="Confirmar eliminación"] - Título del modal
+ * @param {string} [props.message="¿Estás seguro de que deseas eliminar este elemento?"] - Mensaje descriptivo
+ * @param {boolean} [props.isDeleting=false] - Indicador de estado de eliminación en curso
+ */
 export const DeleteConfirmationModal = ({ 
   isOpen, 
   onClose, 
