@@ -1,4 +1,3 @@
-// src/features/education/ui/AdminControlPanel.jsx
 import PropTypes from 'prop-types';
 import { Button } from '../../../ui/components/Button';
 
