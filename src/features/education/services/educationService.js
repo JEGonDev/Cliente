@@ -307,6 +307,12 @@ export const educationService = {
       const response = await API.get('/tags');
       return response.data;
     } catch (error) {
+      // Manejo personalizado para el error 404
+      if (error.response && error.response.status === 404) {
+        console.info('No hay etiquetas disponibles para mostrar');
+        // En lugar de propagar el error, devolvemos un array vacío
+        return { data: [] };
+      }
       console.error('Error obteniendo etiquetas:', error);
       throw error;
     }
