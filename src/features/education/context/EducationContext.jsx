@@ -1049,12 +1049,3 @@ const fetchVideosByModuleId = async (moduleId, forceReload = false) => {
     </EducationContext.Provider>
   );
 };
-
-// Hook personalizado para acceder al contexto de educación
-export const useEducation = () => {
-  const context = useContext(EducationContext);
-  if (!context) {
-    throw new Error('useEducation debe ser usado dentro de un EducationProvider');
-  }
-  return context;
-};
