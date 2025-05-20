@@ -1,7 +1,16 @@
-// src/features/education/ui/AdminControlPanel.jsx
 import PropTypes from 'prop-types';
 import { Button } from '../../../ui/components/Button';
 
+/**
+ * Panel de control administrativo para módulos educativos
+ * 
+ * Este componente muestra tres botones para crear, modificar o eliminar un módulo.
+ * 
+ * @param {Object} props
+ * @param {Function} props.onCreateClick - Función que se ejecuta al hacer clic en "Crear módulo"
+ * @param {Function} props.onEditClick - Función que se ejecuta al hacer clic en "Modificar módulo"
+ * @param {Function} props.onDeleteClick - Función que se ejecuta al hacer clic en "Eliminar módulo"
+ */
 export const AdminControlPanel = ({
   onCreateClick,
   onEditClick,

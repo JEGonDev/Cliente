@@ -3,6 +3,23 @@ import { Header } from '../../../ui/layouts/Header';
 import { SidebarLayout } from './SidebarLayout ';
 import { SearchFilterBar } from '../ui/SearchFilterBar';
 
+/**
+ * Layout principal para las páginas del módulo educativo
+ * 
+ * Este componente proporciona una estructura consistente para todas las vistas
+ * del módulo educativo, incluyendo la barra lateral, encabezados y búsqueda.
+ * 
+ * @param {Object} props - Propiedades del componente
+ * @param {React.ReactNode} props.children - Contenido principal a mostrar
+ * @param {string} props.activeIcon - Icono activo en la barra lateral
+ * @param {Function} props.onIconClick - Función para manejar clics en iconos
+ * @param {Array} props.tags - Lista de etiquetas disponibles
+ * @param {Array} props.activeTags - Lista de etiquetas activas
+ * @param {Function} props.onTagClick - Función para manejar clics en etiquetas
+ * @param {boolean} props.isAdmin - Si el usuario es administrador
+ * @param {string} props.searchValue - Valor actual de búsqueda
+ * @param {Function} props.onSearchChange - Función para manejar cambios en búsqueda
+ */
 export const EducationLayout = ({
   children,
   activeIcon = 'none',

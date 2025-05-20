@@ -3,6 +3,18 @@ import { Modal } from '../../../ui/components/Modal';
 import { Button } from '../../../ui/components/Button';
 import { useVideos } from '../hooks/useVideos';
 
+/**
+ * Modal con formulario para crear o editar un video
+ * 
+ * Genera vista previa embebida de YouTube o Vimeo.
+ * 
+ * @param {Object} props
+ * @param {boolean} props.isOpen - Controla visibilidad del modal
+ * @param {Function} props.onClose - Callback para cerrar el modal
+ * @param {string|number} props.moduleId - ID del módulo asociado
+ * @param {string|number|null} [props.videoId=null] - ID del video para edición
+ * @param {Function} props.onSuccess - Callback tras guardar exitosamente
+ */
 export const VideoFormModal = ({ 
   isOpen, 
   onClose, 

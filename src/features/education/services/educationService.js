@@ -1,14 +1,34 @@
 import { API } from '../../../common/config/api';
 
 /**
- * Servicio para la gestión de funcionalidades del modulo educativo
+ * Servicio centralizado para todas las operaciones del módulo educativo
+ * 
+ * Este servicio implementa el patrón Facade, proporcionando una interfaz
+ * unificada para todas las operaciones del módulo educativo y encapsulando
+ * la lógica de comunicación con la API.
+ * 
+ * DECISIÓN TÉCNICA: Agrupamos todas las operaciones en un objeto para:
+ * 1. Facilitar la importación (una sola importación para todas las funciones)
+ * 2. Mantener un espacio de nombres limpio
+ * 3. Facilitar la sustitución por mocks en pruebas unitarias
+ * 4. Centralizar el manejo de errores
+ * 
+ * NOTA SOBRE ERRORES: Implementamos un manejo de errores consistente en todas
+ * las operaciones, con tratamiento especial para errores 404 en operaciones GET
+ * para devolver arrays vacíos en lugar de propagar errores.
  */
 export const educationService = {
   // ==================== Operaciones para los módulos especificos ====================
 
   /**
    * Obtiene todos los módulos disponibles
-   * @returns {Promise} Lista de módulos
+   * 
+   * NOTA TÉCNICA: Para operaciones GET que devuelven listas, manejamos especialmente
+   * el caso 404 devolviendo un array vacío en lugar de propagar el error. Esto
+   * simplifica el código del cliente y evita mostrar errores innecesarios al usuario
+   * cuando simplemente no hay datos disponibles.
+   * 
+   * @returns {Promise<{data: Array}>} Lista de módulos
    */
   getAllModules: async () => {
     try {
@@ -89,8 +109,13 @@ export const educationService = {
 
   /**
    * Filtra módulos por etiquetas
-   * @param {Array} tagIds - Lista de IDs de etiquetas
-   * @returns {Promise} Lista de módulos filtrados
+   * 
+   * IMPORTANTE: La conversión de array a string con join permite
+   * enviar múltiples IDs en una sola petición HTTP, optimizando
+   * el rendimiento y reduciendo el tráfico de red.
+   * 
+   * @param {Array<number|string>} tagIds - Lista de IDs de etiquetas
+   * @returns {Promise<{data: Array}>} Lista de módulos filtrados
    */
   filterModulesByTags: async (tagIds) => {
     try {
@@ -307,6 +332,12 @@ export const educationService = {
       const response = await API.get('/tags');
       return response.data;
     } catch (error) {
+      // Manejo personalizado para el error 404
+      if (error.response && error.response.status === 404) {
+        console.info('No hay etiquetas disponibles para mostrar');
+        // En lugar de propagar el error, devolvemos un array vacío
+        return { data: [] };
+      }
       console.error('Error obteniendo etiquetas:', error);
       throw error;
     }

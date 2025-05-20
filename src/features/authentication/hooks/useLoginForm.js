@@ -9,6 +9,7 @@ import { AuthContext } from '../context/AuthContext';
  * - Estados del formulario (credenciales)
  * - Estado de UI (mostrar/ocultar contraseña, errores)
  * - Handlers para cambios en inputs y envío de formulario
+ * - Manejo detallado de errores para mejor feedback al usuario
  * 
  * @returns {Object} Propiedades y métodos para el formulario de login
  */
@@ -34,6 +35,8 @@ export const useLoginForm = () => {
    */
   const handleChange = e => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
+    // Limpiar error cuando el usuario comienza a escribir de nuevo
+    if (error) setError('');
   };
 
   /**
@@ -43,6 +46,17 @@ export const useLoginForm = () => {
   const handleSubmit = async e => {
     e.preventDefault();
     
+    // Validación básica antes de enviar
+    if (!credentials.username.trim()) {
+      setError('Por favor ingresa tu nombre de usuario');
+      return;
+    }
+    
+    if (!credentials.password) {
+      setError('Por favor ingresa tu contraseña');
+      return;
+    }
+    
     try {
       // Intentamos hacer login con las credenciales proporcionadas
       await login(credentials);
@@ -50,8 +64,30 @@ export const useLoginForm = () => {
       // Si todo sale bien, redirigimos al usuario a la pestania de comunidad
       navigate('/comunity');
     } catch (err) {
-      // En caso de error, mostramos el mensaje
-      setError(err.response?.data?.message || 'Credenciales inválidas');
+      console.error('Error en login:', err);
+      
+      // Manejar tipos específicos de errores
+      if (err.response) {
+        // El servidor respondió con un código de error
+        const statusCode = err.response.status;
+        
+        if (statusCode === 401) {
+          setError('Usuario o contraseña incorrectos');
+        } else if (statusCode === 404) {
+          setError('El usuario no existe');
+        } else if (statusCode === 403) {
+          setError('Tu cuenta está bloqueada. Contacta con soporte');
+        } else {
+          // Obtener mensaje del servidor si está disponible
+          setError(err.response.data?.message || 'Error al iniciar sesión');
+        }
+      } else if (err.request) {
+        // La petición fue hecha pero no se recibió respuesta
+        setError('No pudimos conectar con el servidor. Verifica tu conexión a internet');
+      } else {
+        // Error en configuración de la petición
+        setError('Ocurrió un error inesperado. Inténtalo de nuevo más tarde');
+      }
     }
   };
 

@@ -20,10 +20,12 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 
 /**
- * Página que muestra los detalles completos de un módulo educativo
- * Permite ver, crear, editar y eliminar artículos, guías y videos
+ * Página de detalle de un módulo educativo
  * 
- * @returns {JSX.Element} Página de detalles del módulo
+ * Esta página implementa el patrón Container Component, centralizando
+ * toda la lógica en un hook personalizado (useModuleDetails) y delegando
+ * la presentación a componentes especializados.
+ * 
  */
 export const OpenModulePage = () => {
   // Usamos el hook personalizado que encapsula toda la lógica

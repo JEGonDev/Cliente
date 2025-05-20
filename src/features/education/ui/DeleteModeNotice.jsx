@@ -1,6 +1,17 @@
 import PropTypes from 'prop-types';
 import { Button } from '../../../ui/components/Button';
 
+/**
+ * Aviso de modo eliminación
+ * 
+ * Muestra instrucciones para seleccionar módulos a eliminar y botones 
+ * para cancelar o confirmar la acción en lote.
+ * 
+ * @param {Object} props
+ * @param {Function} props.onCancel - Callback para salir del modo eliminación
+ * @param {Function} props.onConfirm - Callback para confirmar eliminación de los seleccionados
+ * @param {boolean} [props.hasSelected=false] - Indica si hay al menos un módulo seleccionado
+ */
 export const DeleteModeNotice = ({
   onCancel,
   onConfirm,
