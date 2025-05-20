@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { alertService } from '../services/alertService';
+import { cropService } from '../services/cropService'
 
 /**
  * Hook personalizado para la gestión de alertas
@@ -20,7 +20,7 @@ export const useAlerts = () => {
     setError(null);
     
     try {
-      const response = await alertService.getUserAlerts();
+      const response = await cropService.getUserAlerts();
       setAlerts(response.data || []);
     } catch (err) {
       console.error('Error al obtener alertas del usuario:', err);
@@ -42,7 +42,7 @@ export const useAlerts = () => {
     setError(null);
     
     try {
-      const response = await alertService.getAlertsByCropId(cropId);
+      const response = await cropService.getAlertsByCropId(cropId);
       setAlerts(response.data || []);
     } catch (err) {
       console.error(`Error al obtener alertas del cultivo ${cropId}:`, err);
@@ -64,7 +64,7 @@ export const useAlerts = () => {
     setError(null);
     
     try {
-      const response = await alertService.getAlertById(alertId);
+      const response = await cropService.getAlertById(alertId);
       setSelectedAlert(response.data || null);
     } catch (err) {
       console.error(`Error al obtener alerta ${alertId}:`, err);
@@ -87,7 +87,7 @@ export const useAlerts = () => {
     setError(null);
     
     try {
-      await alertService.deleteAlert(alertId);
+      await cropService.deleteAlert(alertId);
       // Actualizar la lista de alertas
       setAlerts(prevAlerts => prevAlerts.filter(alert => alert.id !== alertId));
       
