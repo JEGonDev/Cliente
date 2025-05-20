@@ -1,393 +1,246 @@
 import { API } from '../../../common/config/api';
 
-/**
- * Servicio para la gestión de funcionalidades de comunidad
- */
+// Centralización de endpoints de la API
+const ENDPOINTS = {
+  POSTS: '/posts',
+  POST_BY_ID: (id) => `/posts/${id}`,
+  MESSAGES: '/messages',
+  MESSAGE_BY_ID: (id) => `/messages/${id}`,
+  GROUPS: '/groups',
+  GROUP_BY_ID: (id) => `/groups/${id}`,
+  THREADS: '/threads',
+  THREAD_BY_ID: (id) => `/threads/${id}`,
+  REACTIONS: '/reactions',
+  REACTION_BY_ID: (id) => `/reactions/${id}`,
+};
+
+// Manejo centralizado de errores
+const handleError = (error, context) => {
+  console.error(`Error en ${context}:`, error);
+  throw error;
+};
+
 export const communityService = {
-
-  // ====================Peticiones para posts=======================
-
-  /**
-   * Crea un nuevo post
-   * @param {Object} postData - Datos del post (postType, content, multimediaContent, groupId, threadId, file)
-   * @returns {Promise} Resultado de la operación
-   */
-  createPost: async (postData) => {
+  // ==================== Peticiones para posts ====================
+createPost: async (postData) => {
     try {
-      // Si hay archivo adjunto, usamos FormData
-      if (postData.file) {
-        const formData = new FormData();
-        // Añadimos todos los campos al FormData
-        Object.keys(postData).forEach(key => {
-          if (key === 'file') {
-            formData.append('file', postData.file);
-          } else if (postData[key] !== null && postData[key] !== undefined) {
-            formData.append(key, postData[key]);
-          }
-        });
+      let response;
 
-        const response = await API.post('/posts', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+      // Cambia 'file' por 'multimediaContent'
+      if (postData instanceof FormData || postData.multimediaContent) {
+        // Permite que le pases directamente un FormData
+        const formData = postData instanceof FormData ? postData : new FormData();
+        if (!(postData instanceof FormData)) {
+          Object.keys(postData).forEach((key) => {
+            if (postData[key] !== null && postData[key] !== undefined) {
+              formData.append(key, postData[key]);
+            }
+          });
+        }
+        response = await API.post(ENDPOINTS.POSTS, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
         });
-        return response.data;
       } else {
-        // Si no hay archivo, enviamos JSON normal
-        const response = await API.post('/posts', postData);
-        return response.data;
+        response = await API.post(ENDPOINTS.POSTS, postData);
       }
+
+      return response.data;
     } catch (error) {
-      console.error('Error creando post:', error);
+      handleError(error, 'crear post');
       throw error;
     }
   },
+ 
 
-  /**
-   * Obtiene un post por su ID
-   * @param {number} id - ID del post
-   * @returns {Promise} Post encontrado
-   */
   getPostById: async (id) => {
     try {
-      const response = await API.get(`/posts/${id}`);
+      const response = await API.get(ENDPOINTS.POST_BY_ID(id));
       return response.data;
     } catch (error) {
-      console.error(`Error obteniendo post ${id}:`, error);
-      throw error;
+      handleError(error, `obtener post con ID ${id}`);
     }
   },
 
-  /**
-   * Obtiene todos los posts
-   * @returns {Promise} Lista de posts
-   */
   getAllPosts: async () => {
     try {
-      const response = await API.get('/posts');
+      const response = await API.get(ENDPOINTS.POSTS);
       return response.data;
     } catch (error) {
-      console.error('Error obteniendo posts:', error);
-      throw error;
+      handleError(error, 'obtener todos los posts');
     }
   },
 
-  /**
-   * Actualiza un post existente
-   * @param {number} id - ID del post a actualizar
-   * @param {Object} updateData - Datos a actualizar
-   * @returns {Promise} Post actualizado
-   */
   updatePost: async (id, updateData) => {
     try {
-      const response = await API.put(`/posts/${id}`, updateData);
+      const response = await API.put(ENDPOINTS.POST_BY_ID(id), updateData);
       return response.data;
     } catch (error) {
-      console.error(`Error actualizando post ${id}:`, error);
-      throw error;
+      handleError(error, `actualizar post con ID ${id}`);
     }
   },
 
-  /**
-   * Elimina un post
-   * @param {number} id - ID del post a eliminar
-   * @returns {Promise} Resultado de la operación
-   */
   deletePost: async (id) => {
     try {
-      const response = await API.delete(`/posts/${id}`);
+      const response = await API.delete(ENDPOINTS.POST_BY_ID(id));
       return response.data;
     } catch (error) {
-      console.error(`Error eliminando post ${id}:`, error);
-      throw error;
+      handleError(error, `eliminar post con ID ${id}`);
     }
   },
 
   // ==================== Peticiones para mensajes ====================
-
-  /**
-   * Crea un nuevo mensaje
-   * @param {Object} messageData - Datos del mensaje (postId, content, threadId, groupId)
-   * @returns {Promise} Resultado de la operación
-   */
   createMessage: async (messageData) => {
     try {
-      const response = await API.post('/messages', messageData);
+      const response = await API.post(ENDPOINTS.MESSAGES, messageData);
       return response.data;
     } catch (error) {
-      console.error('Error creando mensaje:', error);
-      throw error;
+      handleError(error, 'crear mensaje');
     }
   },
 
-  /**
-   * Obtiene un mensaje por su ID
-   * @param {number} id - ID del mensaje
-   * @returns {Promise} Mensaje encontrado
-   */
-  getMessageById: async (id) => {
-    try {
-      const response = await API.get(`/messages/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error(`Error obteniendo mensaje ${id}:`, error);
-      throw error;
-    }
-  },
-
-  /**
-   * Obtiene todos los mensajes
-   * @returns {Promise} Lista de mensajes
-   */
   getAllMessages: async () => {
     try {
-      const response = await API.get('/messages');
+      const response = await API.get(ENDPOINTS.MESSAGES);
       return response.data;
     } catch (error) {
-      console.error('Error obteniendo mensajes:', error);
-      throw error;
+      handleError(error, 'obtener todos los mensajes');
+    }
+  },
+
+  // ==================== Peticiones para grupos ====================
+  createGroup: async (groupData) => {
+    try {
+      const response = await API.post(ENDPOINTS.GROUPS, groupData);
+      return response.data;
+    } catch (error) {
+      handleError(error, 'crear grupo');
+    }
+  },
+
+  getGroupById: async (id) => {
+    try {
+      const response = await API.get(ENDPOINTS.GROUP_BY_ID(id));
+      return response.data;
+    } catch (error) {
+      handleError(error, `obtener grupo con ID ${id}`);
+    }
+  },
+
+  getAllGroups: async () => {
+    try {
+      const response = await API.get(ENDPOINTS.GROUPS);
+      return response.data;
+    } catch (error) {
+      handleError(error, 'obtener todos los grupos');
+    }
+  },
+
+  updateGroup: async (id, updateData) => {
+    try {
+      const response = await API.put(ENDPOINTS.GROUP_BY_ID(id), updateData);
+      return response.data;
+    } catch (error) {
+      handleError(error, `actualizar grupo con ID ${id}`);
+    }
+  },
+
+  deleteGroup: async (id) => {
+    try {
+      const response = await API.delete(ENDPOINTS.GROUP_BY_ID(id));
+      return response.data;
+    } catch (error) {
+      handleError(error, `eliminar grupo con ID ${id}`);
     }
   },
 
   /**
-   * Elimina un mensaje
-   * @param {number} id - ID del mensaje a eliminar
-   * @returns {Promise} Resultado de la operación
+   * Hace que el usuario autenticado se una a un grupo.
+   * @param {number|string} groupId - ID del grupo al que el usuario se quiere unir.
+   * @returns {Promise<any>} - Respuesta del servidor.
    */
-  deleteMessage: async (id) => {
+  joinGroup: async (groupId) => {
     try {
-      const response = await API.delete(`/messages/${id}`);
+      const response = await API.post(`${ENDPOINTS.GROUP_BY_ID(groupId)}/join`);
       return response.data;
     } catch (error) {
-      console.error(`Error eliminando mensaje ${id}:`, error);
+      handleError(error, `unirse al grupo con ID ${groupId}`);
       throw error;
+    }
+  },
+
+  // ==================== Peticiones para hilos ====================
+  createThread: async (threadData) => {
+    try {
+      const response = await API.post(ENDPOINTS.THREADS, threadData);
+      return response.data;
+    } catch (error) {
+      handleError(error, 'crear hilo');
+    }
+  },
+
+  getThreadById: async (id) => {
+    try {
+      const response = await API.get(ENDPOINTS.THREAD_BY_ID(id));
+      return response.data;
+    } catch (error) {
+      handleError(error, `obtener hilo con ID ${id}`);
+    }
+  },
+
+  getAllThreads: async () => {
+  try {
+    const response = await API.get(ENDPOINTS.THREADS);
+    console.log("Respuesta de la API de hilos:", response?.data);
+    // Validación profesional: asegúrate de que response.data.data sea un array
+    if (
+      response?.data &&
+      Array.isArray(response.data.data)
+    ) {
+      return response.data.data; // Devuelve solo el array de hilos
+    } else {
+      console.warn("La respuesta de la API de hilos no contiene un array válido en data:", response?.data);
+      return []; // Siempre retorna un array, aunque esté vacío
+    }
+  } catch (error) {
+    handleError(error, 'obtener todos los hilos');
+    return []; // Previene que el componente falle por error de red o formato
+  }
+},
+
+  updateThread: async (id, updateData) => {
+    try {
+      const response = await API.put(ENDPOINTS.THREAD_BY_ID(id), updateData);
+      return response.data;
+    } catch (error) {
+      handleError(error, `actualizar hilo con ID ${id}`);
+    }
+  },
+
+  deleteThread: async (id) => {
+    try {
+      const response = await API.delete(ENDPOINTS.THREAD_BY_ID(id));
+      return response.data;
+    } catch (error) {
+      handleError(error, `eliminar hilo con ID ${id}`);
     }
   },
 
   // ==================== Peticiones para reacciones ====================
-  /**
-   * Crea una nueva reacción
-   * @param {Object} reactionData - Datos de la reacción (postId, reactionType)
-   * @returns {Promise} Resultado de la operación
-   */
-  createReaction: async (reactionData) => {
+  toggleReaction: async (reactionData) => {
     try {
-      const response = await API.post('/reactions', reactionData);
+      const response = await API.post(ENDPOINTS.REACTIONS, reactionData);
       return response.data;
     } catch (error) {
-      console.error('Error creando reacción:', error);
-      throw error;
+      handleError(error, 'crear o eliminar reacción');
     }
   },
 
-  /**
-   * Obtiene una reacción por su ID
-   * @param {number} id - ID de la reacción
-   * @returns {Promise} Reacción encontrada
-   */
-  getReactionById: async (id) => {
-    try {
-      const response = await API.get(`/reactions/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error(`Error obteniendo reacción ${id}:`, error);
-      throw error;
-    }
-  },
-
-  /**
-   * Obtiene todas las reacciones
-   * @returns {Promise} Lista de reacciones
-   */
   getAllReactions: async () => {
     try {
-      const response = await API.get('/reactions');
+      const response = await API.get(ENDPOINTS.REACTIONS);
       return response.data;
     } catch (error) {
-      console.error('Error obteniendo reacciones:', error);
-      throw error;
+      handleError(error, 'obtener todas las reacciones');
     }
   },
-
-  /**
-   * Elimina una reacción
-   * @param {number} id - ID de la reacción a eliminar
-   * @returns {Promise} Resultado de la operación
-   */
-  deleteReaction: async (id) => {
-    try {
-      const response = await API.delete(`/reactions/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error(`Error eliminando reacción ${id}:`, error);
-      throw error;
-    }
-  },
-
-  // ==================== Peticiones de grupos ====================
-  /**
-   * Crea un nuevo grupo
-   * @param {Object} groupData - Datos del grupo (name, description)
-   * @returns {Promise} Resultado de la operación
-   */
-  createGroup: async (groupData) => {
-    try {
-      const response = await API.post('/groups', groupData);
-      return response.data;
-    } catch (error) {
-      console.error('Error creando grupo:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Obtiene un grupo por su ID
-   * @param {number} id - ID del grupo
-   * @returns {Promise} Grupo encontrado
-   */
-  getGroupById: async (id) => {
-    try {
-      const response = await API.get(`/groups/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error(`Error obteniendo grupo ${id}:`, error);
-      throw error;
-    }
-  },
-
-  /**
-   * Obtiene todos los grupos
-   * @returns {Promise} Lista de grupos
-   */
-  getAllGroups: async () => {
-    try {
-      const response = await API.get('/groups');
-      return response.data;
-    } catch (error) {
-      console.error('Error obteniendo grupos:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Actualiza un grupo existente
-   * @param {number} id - ID del grupo a actualizar
-   * @param {Object} updateData - Datos a actualizar
-   * @returns {Promise} Grupo actualizado
-   */
-  updateGroup: async (id, updateData) => {
-    try {
-      const response = await API.put(`/groups/${id}`, updateData);
-      return response.data;
-    } catch (error) {
-      console.error(`Error actualizando grupo ${id}:`, error);
-      throw error;
-    }
-  },
-
-  /**
-   * Elimina un grupo
-   * @param {number} id - ID del grupo a eliminar
-   * @returns {Promise} Resultado de la operación
-   */
-  deleteGroup: async (id) => {
-    try {
-      const response = await API.delete(`/groups/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error(`Error eliminando grupo ${id}:`, error);
-      throw error;
-    }
-  },
-
-  /**
-   * Permite al usuario unirse a un grupo
-   * @param {number} groupId - ID del grupo al que unirse
-   * @returns {Promise} Resultado de la operación
-   */
-  joinGroup: async (groupId) => {
-    try {
-      const response = await API.post(`/groups/${groupId}/join`);
-      return response.data;
-    } catch (error) {
-      console.error(`Error uniéndose al grupo ${groupId}:`, error);
-      throw error;
-    }
-  },
-
-  // ==================== Peticiones de hilos ====================
-  /**
-   * Crea un nuevo hilo
-   * @param {Object} threadData - Datos del hilo (groupId, title, content)
-   * @returns {Promise} Resultado de la operación
-   */
-  createThread: async (threadData) => {
-    try {
-      const response = await API.post('/threads', threadData);
-      return response.data;
-    } catch (error) {
-      console.error('Error creando hilo:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Obtiene un hilo por su ID
-   * @param {number} id - ID del hilo
-   * @returns {Promise} Hilo encontrado
-   */
-  getThreadById: async (id) => {
-    try {
-      const response = await API.get(`/threads/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error(`Error obteniendo hilo ${id}:`, error);
-      throw error;
-    }
-  },
-
-  /**
-   * Obtiene todos los hilos
-   * @returns {Promise} Lista de hilos
-   */
-  getAllThreads: async () => {
-    try {
-      const response = await API.get('/threads');
-      return response.data;
-    } catch (error) {
-      console.error('Error obteniendo hilos:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Actualiza un hilo existente
-   * @param {number} id - ID del hilo a actualizar
-   * @param {Object} updateData - Datos a actualizar
-   * @returns {Promise} Hilo actualizado
-   */
-  updateThread: async (id, updateData) => {
-    try {
-      const response = await API.put(`/threads/${id}`, updateData);
-      return response.data;
-    } catch (error) {
-      console.error(`Error actualizando hilo ${id}:`, error);
-      throw error;
-    }
-  },
-
-  /**
-   * Elimina un hilo
-   * @param {number} id - ID del hilo a eliminar
-   * @returns {Promise} Resultado de la operación
-   */
-  deleteThread: async (id) => {
-    try {
-      const response = await API.delete(`/threads/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error(`Error eliminando hilo ${id}:`, error);
-      throw error;
-    }
-  }
 };

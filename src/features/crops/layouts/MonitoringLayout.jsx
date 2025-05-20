@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { Header } from '../../../ui/layouts/Header';
+// import { Header } from '../../../ui/layouts/Header';
 import { MonitoringSidebar } from './MonitoringSidebar';
 
 /**
@@ -16,7 +16,7 @@ export const MonitoringLayout = ({
 }) => {
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
+      {/* <Header /> */}
       
       <div className="flex flex-1">
         {/* Barra lateral de navegación */}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Header } from '../../../ui/layouts/Header';
+// import { Header } from '../../../ui/layouts/Header';
 import { ProfileTabs } from '../ui/ProfileTabs';
 import { ProfileForm } from '../ui/ProfileForm';
 import { ProfileSecurityForm } from '../ui/ProfileSecurityForm';
@@ -31,7 +31,7 @@ export const ProfileEditPage = () => {
   
   return (
     <>
-      <Header />
+      {/* <Header /> */}
       <div className="flex justify-center min-h-screen bg-gray-100 p-4 pt-8">
         <div className="w-full max-w-3xl bg-white shadow-md rounded-md p-6">
           {/* Cabecera del perfil */}

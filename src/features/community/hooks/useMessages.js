@@ -1,21 +1,21 @@
 import { useContext, useState } from 'react';
-import { ThreadContext } from '../context/ThreadContext';
+import { MessageContext } from '../context/MessageContext';
 
 /**
- * Hook personalizado para manejar la lógica de hilos.
+ * Hook personalizado para manejar la lógica de mensajes.
  * Este hook encapsula:
- * - Estados de carga y errores relacionados con los hilos.
- * - Handlers para crear, actualizar y eliminar hilos.
+ * - Estados de carga y errores relacionados con los mensajes.
+ * - Handlers para crear y eliminar mensajes.
  */
-export const useThreads = () => {
-  const { threads, loading, error, fetchThreads } = useContext(ThreadContext);
-  const [formData, setFormData] = useState({ groupId: null, title: '', content: '' });
+export const useMessages = () => {
+  const { messages, loading, error, fetchMessages } = useContext(MessageContext);
+  const [formData, setFormData] = useState({ postId: null, content: '', threadId: null, groupId: null });
   const [formErrors, setFormErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
 
   const validateForm = () => {
     const errors = {};
-    if (!formData.title.trim()) errors.title = 'El título es obligatorio';
+    if (!formData.postId) errors.postId = 'El ID del post es obligatorio';
     if (!formData.content.trim()) errors.content = 'El contenido es obligatorio';
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -27,32 +27,32 @@ export const useThreads = () => {
   };
 
   const resetForm = () => {
-    setFormData({ groupId: null, title: '', content: '' });
+    setFormData({ postId: null, content: '', threadId: null, groupId: null });
     setFormErrors({});
   };
 
-  const handleCreateThread = async () => {
+  const handleCreateMessage = async () => {
     setSuccessMessage('');
     if (!validateForm()) return null;
     try {
       // Aquí llamaría a una función que interactúe con la API (communityService)
-      setSuccessMessage('Hilo creado correctamente');
+      setSuccessMessage('Mensaje enviado correctamente');
       resetForm();
     } catch (error) {
-      setFormErrors({ general: error.message || 'Error al crear el hilo' });
+      setFormErrors({ general: error.message || 'Error al enviar el mensaje' });
     }
   };
 
   return {
-    threads,
+    messages,
     loading,
     error,
     formData,
     formErrors,
     successMessage,
-    fetchThreads,
+    fetchMessages,
     handleChange,
     resetForm,
-    handleCreateThread,
+    handleCreateMessage,
   };
 };

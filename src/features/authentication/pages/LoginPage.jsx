@@ -1,5 +1,5 @@
 import { AuthFormCard } from "../../../ui/components/AuthFormCard";
-import { Header } from "../../../ui/layouts/Header";
+// import { Header } from "../../../ui/layouts/Header";
 import { LoginForm } from "../../authentication/layouts/LoginForm";
 import { useLoginForm } from "../hooks/useLoginForm";
 
@@ -14,7 +14,7 @@ export const LoginPage = () => {
 
   return (
     <>
-      <Header />
+      {/* <Header /> */}
       <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
         <AuthFormCard
           title="Iniciar Sesión"

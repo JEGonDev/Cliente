@@ -2,7 +2,7 @@ import { EducationProvider } from '../features/education/context/EducationContex
 import { ProfileProvider } from '../features/profile/context/ProfileContext';
 import { AuthProvider } from './../features/authentication/context/AuthContext';
 import { CommunityProvider } from './../features/community/context/CommunityContext';
-import { ContentProvider } from './../features/community/context/ContentContext';
+
 
 /**
  * Componente que envuelve TODOS los providers de contexto de la app.
@@ -14,9 +14,9 @@ export function AppProviders({ children }) {
       <ProfileProvider>
         <CommunityProvider>
           <EducationProvider>
-            <ContentProvider>
+            
               {children}
-            </ContentProvider>
+            
           </EducationProvider>
         </CommunityProvider>
       </ProfileProvider>

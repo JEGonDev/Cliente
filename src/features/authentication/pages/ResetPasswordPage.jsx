@@ -1,7 +1,7 @@
 import { AuthFormCard } from '../../../ui/components/AuthFormCard';
 import { ResetPasswordForm } from '../layouts/ResetPasswordForm';
 import { useResetPasswordForm } from '../hooks/useResetPasswordForm';
-import { Header } from '../../../ui/layouts/Header';
+// import { Header } from '../../../ui/layouts/Header';
 
 /**
  * Página de reinicio de contraseña
@@ -14,7 +14,7 @@ export const ResetPasswordPage = () => {
 
   return (
     <>
-    <Header />
+    {/* <Header /> */}
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
       <AuthFormCard 
         title="Restablecer Contraseña" 

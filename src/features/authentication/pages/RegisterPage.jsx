@@ -1,5 +1,5 @@
 import { AuthFormCard } from '../../../ui/components/AuthFormCard';
-import { Header } from '../../../ui/layouts/Header';
+// import { Header } from '../../../ui/layouts/Header';
 import { RegisterForm } from '../../authentication/layouts/RegisterForm';
 import { useRegisterForm } from '../hooks/useRegisterForm';
 
@@ -14,7 +14,7 @@ export const RegisterPage = () => {
 
   return (
     <>
-    <Header />
+    {/* <Header /> */}
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
       <AuthFormCard 
         title="Registro de Usuario" 

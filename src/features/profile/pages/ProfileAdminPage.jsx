@@ -1,6 +1,6 @@
 // src/features/profile/pages/ProfileAdminPage.jsx
 
-import { Header } from '../../../ui/layouts/Header';
+// import { Header } from '../../../ui/layouts/Header';
 import { ProfileLayout } from '../layouts/ProfileLayout';
 import { ProfileAdminList } from '../ui/ProfileAdminList';
 
@@ -13,7 +13,7 @@ import { ProfileAdminList } from '../ui/ProfileAdminList';
 export const ProfileAdminPage = () => {
   return (
     <>
-      <Header />
+      {/* <Header /> */}
       <ProfileLayout 
         title="Administración de Perfiles"
         description="Gestiona los perfiles de usuarios en el sistema"

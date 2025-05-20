@@ -1,7 +1,7 @@
 import { AuthFormCard } from '../../../ui/components/AuthFormCard';
 import { ForgotPasswordForm } from '../layouts/ForgotPasswordForm';
 import { useForgotPasswordForm } from '../hooks/useForgotPasswordForm';
-import { Header } from '../../../ui/layouts/Header';
+
 
 /**
  * Página de recuperación de contraseña
@@ -14,7 +14,7 @@ export const ForgotPasswordPage = () => {
 
   return (
     <>
-    <Header />
+    
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
       <AuthFormCard 
         title="Recuperación de Contraseña" 

@@ -1,5 +1,5 @@
 import { ModuleDetailLayout } from '../layouts/ModuleDetailLayout';
-import { Header } from '../../../ui/layouts/Header';
+// import { Header } from '../../../ui/layouts/Header';
 import { ModuleHeader } from '../ui/ModuleHeader';
 
 // Componentes modales
@@ -90,7 +90,7 @@ export const OpenModulePage = () => {
 
   return (
     <>
-      <Header />
+      {/* <Header /> */}
       
       <ModuleDetailLayout>
 
