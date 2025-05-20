@@ -110,7 +110,7 @@ export const useRegisterForm = () => {
       await register(userData);
       
       // Si todo sale bien, redirigimos al usuario a la pestaña de comunidad
-      navigate('/community');
+      navigate('/comunity');
     } catch (err) {
       console.error('Error en el registro:', err);
       
