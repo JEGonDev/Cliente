@@ -2,7 +2,7 @@ import { useState, useContext } from 'react';
 import { AuthContext } from '../../authentication/context/AuthContext';
 import { communityService } from '../services/communityService';
 
-export const usePost = () => {
+export const usePosts = () => {
   // Estados para manejar los posts
   const [posts, setPosts] = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
