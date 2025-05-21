@@ -278,7 +278,6 @@ export const PostFormModal = ({
               rows="4"
               placeholder="¿Qué quieres compartir?"
               disabled={loading}
-              required
             ></textarea>
             {formErrors.content && (
               <p className="mt-1 text-sm text-red-600">{formErrors.content}</p>
