@@ -43,27 +43,23 @@ export const communityService = {
     }
   },
 
+  /**
+   * Crea una nueva publicación
+   * @param {Object|FormData} postData - Datos del post (objeto normal o FormData)
+   * @returns {Promise<Object>} Respuesta del servidor
+   */
   createPost: async (postData) => {
     try {
-      let response;
+      // Detectar si estamos enviando FormData
+      const isFormData = postData instanceof FormData;
 
-      // Cambia 'file' por 'multimediaContent'
-      if (postData instanceof FormData || postData.multimediaContent) {
-        // Permite que le pases directamente un FormData
-        const formData = postData instanceof FormData ? postData : new FormData();
-        if (!(postData instanceof FormData)) {
-          Object.keys(postData).forEach((key) => {
-            if (postData[key] !== null && postData[key] !== undefined) {
-              formData.append(key, postData[key]);
-            }
-          });
-        }
-        response = await API.post(ENDPOINTS.POSTS, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-      } else {
-        response = await API.post(ENDPOINTS.POSTS, postData);
-      }
+      // Configurar headers correctamente según el tipo de datos
+      const config = isFormData ? {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      } : undefined;
+
+      // Realizar la petición con la configuración adecuada
+      const response = await API.post(ENDPOINTS.POSTS, postData, config);
 
       return response.data;
     } catch (error) {
@@ -71,7 +67,6 @@ export const communityService = {
       throw error;
     }
   },
-
 
   getPostById: async (id) => {
     try {
