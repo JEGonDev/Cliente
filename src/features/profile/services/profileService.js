@@ -4,6 +4,29 @@ import { API } from '../../../common/config/api';
  * Servicio para la gestión del perfil de usuario
  */
 export const profileService = {
+
+  /**
+   * Obtiene información de un usuario por su ID
+   * @param {number} userId - ID del usuario a consultar
+   * @returns {Promise<Object>} Datos del usuario
+   */
+  getUserById: async (userId) => {
+    try {
+      // Basado en el controlador que has compartido, la URL debería ser:
+      const response = await API.get(`/users/${userId}`);
+      
+      // El controlador devuelve un ApiResponseDTO que contiene el campo 'data'
+      if (response.data && response.data.data) {
+        return response.data.data;
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error(`Error al obtener datos del usuario ${userId}:`, error);
+      throw error;
+    }
+  },  
+  
   /**
    * Obtiene la información de un usuario por su nombre de usuario
    * @param {string} username - Nombre de usuario a buscar

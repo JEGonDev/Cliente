@@ -220,53 +220,33 @@ export const usePost = () => {
     setLoading(true);
 
     try {
-      // Preparar los datos para enviar
-      let postData;
+      // Siempre usamos FormData para mantener consistencia
+      const postData = new FormData();
 
+      // 1. Agregar postType (OBLIGATORIO)
+      postData.append('postType', formData.postType);
+
+      // 2. Agregar content (OBLIGATORIO)
+      postData.append('content', formData.content);
+
+      // 3. Agregar el archivo si existe
       if (formData.file) {
-        // Si hay un archivo, usar FormData
-        postData = new FormData();
-
-        // 1. Agregar postType (OBLIGATORIO)
-        postData.append('postType', formData.postType);
-
-        // 2. Agregar content (OBLIGATORIO)
-        postData.append('content', formData.content);
-
-        // 3. Agregar el archivo como 'file', NO como 'multimediaContent'
         postData.append('file', formData.file);
+      }
 
-        // 4. Agregar groupId si existe (como Integer)
-        if (formData.groupId) {
-          postData.append('groupId', Number(formData.groupId));
-        }
+      // 4. Agregar groupId si existe (como Integer)
+      if (formData.groupId) {
+        postData.append('groupId', Number(formData.groupId));
+      }
 
-        // 5. Agregar threadId si existe (como Integer)
-        if (formData.threadId) {
-          postData.append('threadId', Number(formData.threadId));
-        }
-
-        // Importante: NO agregamos un campo 'multimediaContent', ese lo generará el backend
-      } else {
-        // Si no hay archivo, enviamos un objeto JSON
-        postData = {
-          postType: formData.postType,
-          content: formData.content
-        };
-
-        // Agregar campos opcionales solo si tienen valor
-        if (formData.groupId) {
-          postData.groupId = Number(formData.groupId);
-        }
-
-        if (formData.threadId) {
-          postData.threadId = Number(formData.threadId);
-        }
+      // 5. Agregar threadId si existe (como Integer)
+      if (formData.threadId) {
+        postData.append('threadId', Number(formData.threadId));
       }
 
       // Mostrar en consola lo que estamos enviando (para depuración)
       console.log('Enviando datos al servidor:',
-        formData.file ? 'FormData con archivo' : postData
+        formData.file ? 'FormData con archivo' : 'FormData sin archivo'
       );
 
       // Llamar al servicio para crear la publicación

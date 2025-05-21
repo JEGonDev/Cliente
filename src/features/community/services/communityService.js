@@ -34,12 +34,21 @@ export const communityService = {
 
   getPostsByUser: async (userId = null) => {
     try {
+      // Si no se proporciona userId, el backend usará el usuario autenticado
       const url = userId ? `/posts/by-user?userId=${userId}` : '/posts/by-user';
       const response = await API.get(url);
-      return response.data;
+
+      // Procesamos la respuesta según el formato del API
+      if (response.data && response.data.data) {
+        return response.data.data;
+      } else if (Array.isArray(response.data)) {
+        return response.data;
+      }
+
+      return [];
     } catch (error) {
       handleError(error, 'obtener publicaciones del usuario');
-      throw error;
+      return [];
     }
   },
 
