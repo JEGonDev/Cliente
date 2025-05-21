@@ -1,60 +1,88 @@
-import React, { useState } from "react";
-import { PlusCircle } from "lucide-react";
+import { useState, useEffect } from "react";
 import { SearchBar } from "../ui/SearchBar";
+import { PostList } from "../ui/PostList";
+import { CreatePostButton } from "../ui/CreatePostButton";
 import { usePost } from "../hooks/usePost";
-import { PostList } from "../ui/PostList"; // Componente existente según mencionas
-import { CreatePostForm } from "../ui/CreatePostForm"; // Componente existente según mencionas
 
+/**
+ * Página principal de la comunidad que muestra el feed de publicaciones
+ */
 export const HomeComunity = () => {
-  const { posts, loading: postsLoading } = usePost();
+  // Usamos el hook personalizado para manejar publicaciones
+  const { 
+    posts, 
+    loading, 
+    error, 
+    fetchAllPosts 
+  } = usePost();
+  
+  // Estado para el término de búsqueda
   const [searchTerm, setSearchTerm] = useState("");
-  const [showCreateForm, setShowCreateForm] = useState(false);
-
-  // Filtrar posts por término de búsqueda
-  const filteredPosts = posts.filter(post => 
-    post.content && post.content.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Manejar la actualización del término de búsqueda
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
+  
+  // Definir el contexto para la creación - Es el muro principal (general)
+  const createContext = { type: 'general' };
+  
+  // Cargar publicaciones al montar el componente
+  useEffect(() => {
+    fetchAllPosts();
+  }, []);
+  
+  // Filtrar publicaciones según el término de búsqueda
+  const filteredPosts = searchTerm 
+    ? posts.filter(post => 
+        post.content?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.postType?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : posts;
+  
+  // Manejar cambio en la búsqueda
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+  };
+  
+  // Manejar la creación exitosa de una publicación
+  const handlePostCreated = () => {
+    // Actualizar la lista de publicaciones
+    fetchAllPosts();
   };
 
   return (
-    <div className="max-w-xl mx-auto">
-      {/* Barra de búsqueda */}
-      <div className="mb-4">
-        <SearchBar 
-          value={searchTerm}
-          onChange={handleSearchChange}
-          placeholder="Buscar publicaciones"
+    <div className="max-w-3xl mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-6 text-gray-800">Feed de la Comunidad</h1>
+      
+      {/* Barra de búsqueda y botón de crear publicación */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex-grow">
+          <SearchBar 
+            value={searchTerm}
+            onChange={handleSearchChange}
+            placeholder="Buscar publicaciones..."
+          />
+        </div>
+        
+        <CreatePostButton 
+          onPostCreated={handlePostCreated}
+          variant="primary"
+          className="w-full sm:w-auto"
+          context={createContext}
         />
       </div>
-
-      {/* Botón para mostrar/ocultar formulario de creación */}
-      <div className="mb-4">
-        <button
-          onClick={() => setShowCreateForm(!showCreateForm)}
-          className="w-full flex items-center justify-center bg-primary text-white p-3 rounded-md hover:bg-green-700 transition-colors"
-        >
-          <PlusCircle className="mr-2 h-5 w-5" />
-          <span>{showCreateForm ? "Cancelar" : "Crear nueva publicación"}</span>
-        </button>
-      </div>
-
-      {/* Formulario de creación de posts (condicional) */}
-      {showCreateForm && (
-        <div className="mb-4">
-          <CreatePostForm onPostCreated={() => setShowCreateForm(false)} />
+      
+      {/* Mensaje de error si existe */}
+      {error && (
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6">
+          <p>{error}</p>
         </div>
       )}
-
-      {/* Lista de posts */}
+      
+      {/* Lista de publicaciones */}
       <PostList 
-        posts={filteredPosts} 
-        isLoading={postsLoading} 
+        posts={filteredPosts}
+        isLoading={loading}
         searchTerm={searchTerm}
-        onCreatePost={() => setShowCreateForm(true)}
+        onCreatePost={() => document.querySelector('button[aria-label="Crear publicación"]').click()}
+        onRefresh={fetchAllPosts}
+        context={createContext}
       />
     </div>
   );
