@@ -1,26 +1,33 @@
-import { useState, useEffect } from "react";
-import { ThumbsUp, MessageSquare, Share2, MoreVertical, Calendar, Image, Film } from "lucide-react";
+import { useState, useEffect, useContext } from "react";
+import { ThumbsUp, MessageSquare, Share2, MoreVertical, Calendar, Image, Film, Pencil, Trash } from "lucide-react";
 import { usePost } from "../hooks/usePost";
 import PropTypes from "prop-types";
 import { profileService } from "../../profile/services/profileService";
+import { AuthContext } from "../../authentication/context/AuthContext";
+import { DeletePostModal } from "./DeletePostModal";
+import { EditPostModal } from "./EditPostModal";
 
 /**
  * Componente para mostrar una publicación en forma de tarjeta
  */
 export const PostCard = ({ post, onRefresh }) => {
+  // Obtener contexto de autenticación para verificar permisos
+  const { user, isAdmin, isModerator } = useContext(AuthContext);
+  
   // Usar hook para lógica de publicaciones
   const { handleDeletePost } = usePost();
   
-  // Estado para el menú de opciones
+  // Estados UI
   const [showOptions, setShowOptions] = useState(false);
-  
-  // Estado para almacenar el nombre de usuario real
   const [userName, setUserName] = useState(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
-  
-  // Estado para manejar errores de carga multimedia
   const [mediaError, setMediaError] = useState(false);
   const [isVideo, setIsVideo] = useState(false);
+  
+  // Estados para modales
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Identificadores normalizados
   const postId = post.id || post.post_id;
@@ -29,6 +36,10 @@ export const PostCard = ({ post, onRefresh }) => {
   const postDate = post.postDate || post.creation_date || post.post_date || new Date().toISOString();
   const content = post.content || "";
   const imageUrl = post.multimediaContent || post.multimedia_content;
+  
+  // Verificar si el usuario actual puede editar/eliminar esta publicación
+  const isCurrentUserPost = user && (user.id === userId || user.userId === userId);
+  const canManagePost = isAdmin || isModerator || isCurrentUserPost;
   
   // Determinar si el contenido multimedia es un video
   useEffect(() => {
@@ -43,7 +54,6 @@ export const PostCard = ({ post, onRefresh }) => {
         imageUrl.includes('.webm?');
       
       setIsVideo(isVideoContent);
-      console.log(`Contenido multimedia detectado como: ${isVideoContent ? 'Video' : 'Imagen'}`);
     }
   }, [imageUrl]);
   
@@ -97,13 +107,18 @@ export const PostCard = ({ post, onRefresh }) => {
   
   // Manejar eliminación de publicación
   const handleDelete = async () => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta publicación?')) {
+    setIsDeleting(true);
+    try {
       const success = await handleDeletePost(postId);
       if (success && onRefresh) {
         onRefresh();
       }
+    } catch (error) {
+      console.error("Error al eliminar publicación:", error);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
     }
-    setShowOptions(false);
   };
 
   // Función para formatear el tipo de publicación para visualización
@@ -122,6 +137,14 @@ export const PostCard = ({ post, onRefresh }) => {
   const handleMediaError = (e) => {
     console.error("Error al cargar contenido multimedia:", e);
     setMediaError(true);
+  };
+  
+  // Manejar edición exitosa
+  const handleEditSuccess = () => {
+    // Refrescar la lista de publicaciones
+    if (onRefresh) {
+      onRefresh();
+    }
   };
 
   return (
@@ -142,27 +165,46 @@ export const PostCard = ({ post, onRefresh }) => {
           </div>
         </div>
         
-        {/* Menú de opciones (tres puntos verticales) */}
-        <div className="relative">
-          <button 
-            className="p-1 rounded-full hover:bg-gray-100"
-            onClick={() => setShowOptions(!showOptions)}
-          >
-            <MoreVertical className="w-5 h-5 text-gray-500" />
-          </button>
-          
-          {/* Menú desplegable con opciones */}
-          {showOptions && (
-            <div className="absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-              <button
-                onClick={handleDelete}
-                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-              >
-                Eliminar publicación
-              </button>
-            </div>
-          )}
-        </div>
+        {/* Menú de opciones (tres puntos verticales) - Solo visible si puede gestionar el post */}
+        {canManagePost && (
+          <div className="relative">
+            <button 
+              className="p-1 rounded-full hover:bg-gray-100"
+              onClick={() => setShowOptions(!showOptions)}
+            >
+              <MoreVertical className="w-5 h-5 text-gray-500" />
+            </button>
+            
+            {/* Menú desplegable con opciones */}
+            {showOptions && (
+              <div className="absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                {/* Opción de editar */}
+                <button
+                  onClick={() => {
+                    setShowOptions(false);
+                    setShowEditModal(true);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                >
+                  <Pencil className="w-4 h-4 mr-2" />
+                  Editar publicación
+                </button>
+                
+                {/* Opción de eliminar */}
+                <button
+                  onClick={() => {
+                    setShowOptions(false);
+                    setShowDeleteModal(true);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
+                >
+                  <Trash className="w-4 h-4 mr-2" />
+                  Eliminar publicación
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       
       {/* Contenido de la publicación */}
@@ -266,6 +308,23 @@ export const PostCard = ({ post, onRefresh }) => {
           </button>
         </div>
       </div>
+      
+      {/* Modal para confirmar eliminación */}
+      <DeletePostModal 
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        post={post}
+        isDeleting={isDeleting}
+      />
+      
+      {/* Modal para editar publicación */}
+      <EditPostModal 
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onSuccess={handleEditSuccess}
+        post={post}
+      />
     </div>
   );
 };
