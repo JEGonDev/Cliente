@@ -23,7 +23,8 @@ export const usePost = () => {
     postType: 'general',
     content: '',
     file: null,
-    groupId: null
+    groupId: null,
+    threadId: null
   });
 
   // Estados de UI
@@ -39,8 +40,9 @@ export const usePost = () => {
   const validateForm = () => {
     const errors = {};
 
-    if (!formData.content.trim()) {
-      errors.content = 'El contenido es obligatorio';
+    // Permitir si hay texto O archivo
+    if (!formData.content.trim() && !formData.file) {
+      errors.content = 'Debes ingresar contenido o adjuntar una imagen/video';
     }
 
     if (!formData.postType) {
@@ -49,16 +51,20 @@ export const usePost = () => {
 
     // Si hay un archivo, validar tamaño y tipo
     if (formData.file) {
-      const maxSize = 5 * 1024 * 1024; // 5MB
-      if (formData.file.size > maxSize) {
-        errors.file = 'El archivo no debe ser mayor a 5MB';
-      }
-
-      // Validar que sea imagen o video
       const fileType = formData.file.type;
-      const isValidType = fileType.startsWith('image/') || fileType.startsWith('video/');
-      if (!isValidType) {
+      const isImage = fileType.startsWith('image/');
+      const isVideo = fileType.startsWith('video/');
+
+      if (!isImage && !isVideo) {
         errors.file = 'El archivo debe ser una imagen o video';
+      } else {
+        // Tamaño máximo: 10MB para imágenes, 1GB para videos
+        const maxSize = isImage ? 10 * 1024 * 1024 : 1024 * 1024 * 1024;
+        if (formData.file.size > maxSize) {
+          errors.file = isImage
+            ? 'La imagen no debe ser mayor a 10MB'
+            : 'El video no debe ser mayor a 1GB';
+        }
       }
     }
 
@@ -79,7 +85,7 @@ export const usePost = () => {
         ...formData,
         file: files[0]
       });
-    } else if (name === 'groupId') {
+    } else if (name === 'groupId' || name === 'threadId') {
       // Convertir a número o null si está vacío
       setFormData({
         ...formData,
@@ -110,7 +116,8 @@ export const usePost = () => {
       postType: 'general',
       content: '',
       file: null,
-      groupId: null
+      groupId: null,
+      threadId: null
     });
     setFormErrors({});
   };

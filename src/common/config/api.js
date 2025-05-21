@@ -7,7 +7,7 @@ import { Storage } from '../../storage/Storage';
 //    - headers: headers por defecto para todas las peticiones
 export const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
-  timeout: 8000,
+  timeout: 600000,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'

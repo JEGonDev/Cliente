@@ -109,7 +109,7 @@ export const PostFormModal = ({
 
     // Definimos los tipos permitidos
     const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    const validVideoTypes = ['video/mp4', 'video/webm', 'video/mkv'];
+    const validVideoTypes = ['video/mp4', 'video/webm', 'video/mkv', 'video/x-matroska'];
 
     // Determinamos el tamaño máximo según el tipo
     let maxSize;
@@ -278,38 +278,11 @@ export const PostFormModal = ({
               rows="4"
               placeholder="¿Qué quieres compartir?"
               disabled={loading}
-              required
             ></textarea>
             {formErrors.content && (
               <p className="mt-1 text-sm text-red-600">{formErrors.content}</p>
             )}
           </div>
-
-          {/* Selector de grupo (solo visible en contexto general) */}
-          {context.type === 'general' && (
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Grupo (opcional)
-              </label>
-              <select
-                name="groupId"
-                value={formData.groupId || ""}
-                onChange={handleChange}
-                className="w-full border rounded-md p-2 focus:ring-primary focus:border-primary"
-                disabled={loading}
-              >
-                <option value="">Ninguno</option>
-                {groups.map(group => (
-                  <option
-                    key={group.id || group.group_id}
-                    value={group.id || group.group_id}
-                  >
-                    {group.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
 
           {/* Archivo multimedia */}
           <div className="mb-4">
@@ -319,7 +292,7 @@ export const PostFormModal = ({
             <input
               type="file"
               name="file"
-              accept="image/*,video/*"
+              accept="image/*,video/*, .mkv, .webm, video/x-matroska"
               onChange={handleFileChange}
               className="w-full border rounded-md p-2 focus:ring-primary focus:border-primary"
               disabled={loading}
