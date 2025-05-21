@@ -109,7 +109,7 @@ export const PostFormModal = ({
 
     // Definimos los tipos permitidos
     const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    const validVideoTypes = ['video/mp4', 'video/webm', 'video/mkv'];
+    const validVideoTypes = ['video/mp4', 'video/webm', 'video/mkv', 'video/x-matroska'];
 
     // Determinamos el tamaño máximo según el tipo
     let maxSize;
@@ -293,7 +293,7 @@ export const PostFormModal = ({
             <input
               type="file"
               name="file"
-              accept="image/*,video/*"
+              accept="image/*,video/*, .mkv, .webm, video/x-matroska"
               onChange={handleFileChange}
               className="w-full border rounded-md p-2 focus:ring-primary focus:border-primary"
               disabled={loading}
