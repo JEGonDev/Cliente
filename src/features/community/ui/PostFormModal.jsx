@@ -285,32 +285,6 @@ export const PostFormModal = ({
             )}
           </div>
 
-          {/* Selector de grupo (solo visible en contexto general) */}
-          {context.type === 'general' && (
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Grupo (opcional)
-              </label>
-              <select
-                name="groupId"
-                value={formData.groupId || ""}
-                onChange={handleChange}
-                className="w-full border rounded-md p-2 focus:ring-primary focus:border-primary"
-                disabled={loading}
-              >
-                <option value="">Ninguno</option>
-                {groups.map(group => (
-                  <option
-                    key={group.id || group.group_id}
-                    value={group.id || group.group_id}
-                  >
-                    {group.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
           {/* Archivo multimedia */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
