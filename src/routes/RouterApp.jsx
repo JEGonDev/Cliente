@@ -42,6 +42,18 @@ export const RouterApp = () => {
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="*" element={<NotFoundPage />} />
 
+        {/* Rutas del modulo de comunidad */}
+        <Route path="/comunity" element={<CommunityLayout />}>
+          {/* Redirige por defecto a /comunity/posts */}
+          <Route index element={<Navigate to="/comunity/posts" replace />} />
+          {/* Subrutas del módulo de comunidad */}
+          <Route path="posts" element={<PostListView />} />
+          <Route path="groups" element={<GroupListView />} />
+          <Route path="groups/:groupId" element={<GroupDetailsView />} />
+          <Route path="ThreadForum" element={<ThreadForumView />} />
+          <Route path="admin" element={<AdminCommunityView />} />
+        </Route>
+
       {/* Rutas protegidas: */}
       <Route element={<ProtectedRoutes />}>
         {/* Rutas del modulo educativo */}
@@ -55,17 +67,7 @@ export const RouterApp = () => {
           element={<ModuleFormPage />}
         />
 
-        {/* Rutas del modulo de comunidad */}
-        <Route path="/comunity" element={<CommunityLayout />}>
-          {/* Redirige por defecto a /comunity/posts */}
-          <Route index element={<Navigate to="/comunity/posts" replace />} />
-          {/* Subrutas del módulo de comunidad */}
-          <Route path="posts" element={<PostListView />} />
-          <Route path="groups" element={<GroupListView />} />
-          <Route path="groups/:groupId" element={<GroupDetailsView />} />
-          <Route path="ThreadForum" element={<ThreadForumView />} />
-          <Route path="admin" element={<AdminCommunityView />} />
-        </Route>
+      
           
        
 

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { usePosts } from "../hooks/usePost"; // Usar el hook centralizado
 import { communityService } from "../services/communityService";
+import PropTypes from "prop-types";
 
 export const PostFormModal = ({ onClose, onPostCreated }) => {
   const [content, setContent] = useState("");
@@ -10,31 +11,29 @@ export const PostFormModal = ({ onClose, onPostCreated }) => {
   const [groups, setGroups] = useState([]);
   const [error, setError] = useState("");
 
-   
-
   // Hook customizado para lógica de posts
   const { handleCreatePost, formErrors } = usePosts();
 
-   // Cargar grupos disponibles al montar el componente
+  // Cargar grupos disponibles al montar el componente
   useEffect(() => {
-  const fetchGroups = async () => {
-    try {
-      const result = await communityService.getAllGroups();
-      // Si la respuesta es { data: [...] }
-      if (Array.isArray(result)) {
-        setGroups(result);
-      } else if (result?.data && Array.isArray(result.data)) {
-        setGroups(result.data);
-      } else {
-        setGroups([]); // fallback a array vacío
+    const fetchGroups = async () => {
+      try {
+        const result = await communityService.getAllGroups();
+        // Si la respuesta es { data: [...] }
+        if (Array.isArray(result)) {
+          setGroups(result);
+        } else if (result?.data && Array.isArray(result.data)) {
+          setGroups(result.data);
+        } else {
+          setGroups([]); // fallback a array vacío
+        }
+      } catch (error) {
+        console.error("Error al cargar los grupos:", error);
+        setGroups([]);
       }
-    } catch (error) {
-      console.error("Error al cargar los grupos:", error);
-      setGroups([]);
-    }
-  };
-  fetchGroups();
-}, []);  
+    };
+    fetchGroups();
+  }, []);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -78,7 +77,10 @@ export const PostFormModal = ({ onClose, onPostCreated }) => {
       if (onPostCreated) onPostCreated(createdPost?.data || createdPost);
       onClose();
     } catch (error) {
-      console.error("Error al crear el post:", error?.response?.data || error?.message);
+      console.error(
+        "Error al crear el post:",
+        error?.response?.data || error?.message
+      );
 
       if (error?.response?.data?.message) {
         setError(error.response.data.message);
@@ -123,22 +125,22 @@ export const PostFormModal = ({ onClose, onPostCreated }) => {
           </div>
 
           <div className="mb-4">
-           <label className="block text-sm font-medium text-gray-700">
-            Grupo (opcional)
-           </label>
+            <label className="block text-sm font-medium text-gray-700">
+              Grupo (opcional)
+            </label>
             <select
-            className="w-full border rounded-md p-2 mt-1 text-sm"
-            value={groupId || ""}
-            onChange={(e) => setGroupId(e.target.value || null)}
-          >
-             <option value="">Seleccionar grupo</option>
-             {groups.map((group) => (
-               <option key={group.id} value={group.id}>
-                 {group.name}
-               </option>
-            ))}
-          </select>
-         </div>
+              className="w-full border rounded-md p-2 mt-1 text-sm"
+              value={groupId || ""}
+              onChange={(e) => setGroupId(e.target.value || null)}
+            >
+              <option value="">Seleccionar grupo</option>
+              {groups.map((group) => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {/* <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700">
@@ -179,13 +181,22 @@ export const PostFormModal = ({ onClose, onPostCreated }) => {
             <button
               type="button"
               onClick={onClose}
-              className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md mr-2"
+              className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md mr-2 
+             transition duration-300 transform hover:scale-105 hover:bg-red-400 hover:text-white"
             >
               Cancelar
             </button>
+
             <button
               type="submit"
-              className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+              className={`bg-gray-200 text-gray-700 px-4 py-2 rounded-md 
+              transition duration-300 transform hover:scale-105 
+              hover:bg-green-600 hover:text-white 
+              ${
+                !!error || !!formErrors?.general
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
               disabled={!!error || !!formErrors?.general}
             >
               Crear
@@ -196,7 +207,6 @@ export const PostFormModal = ({ onClose, onPostCreated }) => {
     </div>
   );
 };
-
 
 // import React, { useState, useEffect } from "react";
 // import { communityService } from "../services/communityService";
@@ -358,3 +368,7 @@ export const PostFormModal = ({ onClose, onPostCreated }) => {
 //     </div>
 //   );
 // };
+PostFormModal.propTypes = {
+  onClose: PropTypes.func.isRequired,
+  onPostCreated: PropTypes.func.isRequired,
+};
