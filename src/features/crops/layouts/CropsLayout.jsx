@@ -114,13 +114,13 @@ export const CropsLayout = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Cultivos</h1>
         
-        <button
-          onClick={handleAddCrop}
-          className="inline-flex items-center bg- bg-primary px-4 py-2 bg-green-800 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Nuevo cultivo
-        </button>
+       <button
+  onClick={handleAddCrop}
+  className="inline-flex items-center bg-primary px-4 py-2 bg-green-800 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
+>
+  <Plus className="h-5 w-5 mr-2" />
+  Nuevo cultivo
+</button>
       </div>
 
       {/* Lista de cultivos */}

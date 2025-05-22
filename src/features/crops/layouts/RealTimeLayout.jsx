@@ -4,6 +4,7 @@ import { RealTimeIndicator } from "../ui/RealTimeIndicator";
 import { RealTimeChart } from "../ui/RealTimeChart";
 import { TimeSelector } from "../ui/TimeSelector";
 import { GlobalThresholdsEditor } from "../ui/GlobalThresholdsEditor";
+import { Link } from 'react-router-dom';
 
 // Valores por defecto para umbrales
 const defaultThresholds = {
@@ -48,6 +49,15 @@ export const RealTimeLayout = ({ data = {} }) => {
     data?.humidity?.current !== undefined &&
     data?.ec?.current !== undefined;
 
+{/* Botón para volver a cultivos */}
+<div className="mb-4">
+  <Link
+    to="/monitoring/crops" // Asegúrate de que esta ruta sea correcta según tus rutas
+    className="inline-block bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 transition"
+  >
+    ← Volver a cultivos
+  </Link>
+</div>
   const displayData = isValidData ? data : demoData;
 
   const [thresholds, setThresholds] = useState(defaultThresholds);
@@ -83,9 +93,19 @@ export const RealTimeLayout = ({ data = {} }) => {
     }
   };
 
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Monitoreo en tiempo real</h1>
+return (
+  <div className="p-6">
+    {/* Agrega aquí */}
+    <div className="mb-4">
+      <Link
+        to="/monitoring/crops"
+        className="inline-block bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 transition"
+      >
+        ← Volver a cultivos
+      </Link>
+    </div>
+
+    <h1 className="text-2xl font-bold mb-6">Monitoreo en tiempo real</h1>
 
       {/* Indicadores en tiempo real */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">

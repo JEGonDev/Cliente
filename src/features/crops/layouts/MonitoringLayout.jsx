@@ -15,7 +15,7 @@ export const MonitoringLayout = ({
   activeSection = 'monitoreo'
 }) => {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex-1 overflow-auto px-6">
       {/* <Header /> */}
       
       <div className="flex flex-1">

@@ -51,7 +51,7 @@ export const RealTimeIndicator = ({
   const trendConfig = trendComponents[trendDirection] || trendComponents.stable;
   
   return (
-    <div className="bg-white p-4 rounded-lg shadow-sm">
+    <div className="bg-white p-4 rounded-lg shadow-md border text-center">
       <div className="flex items-center mb-3">
         {selectedIcon}
         <h3 className="ml-2 text-gray-600">{label}</h3>
