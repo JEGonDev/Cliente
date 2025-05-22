@@ -4,17 +4,17 @@ import { Button } from '../../../ui/components/Button';
 import { communityService } from '../services/communityService';
 import { Film, Image, Upload, X } from 'lucide-react';
 
-export const EditPostModal = ({ 
-  isOpen, 
-  onClose, 
-  onSuccess, 
+export const EditPostModal = ({
+  isOpen,
+  onClose,
+  onSuccess,
   post
 }) => {
   const [formData, setFormData] = useState({
     postType: 'general',
     content: ''
   });
-  
+
   const [file, setFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [keepExistingMedia, setKeepExistingMedia] = useState(true);
@@ -24,9 +24,9 @@ export const EditPostModal = ({
 
   // Determinar si el contenido multimedia original es un video
   const isOriginalVideo = post && post.multimediaContent && (
-    post.multimediaContent.endsWith('.mkv') || 
-    post.multimediaContent.endsWith('.mp4') || 
-    post.multimediaContent.endsWith('.webm') || 
+    post.multimediaContent.endsWith('.mkv') ||
+    post.multimediaContent.endsWith('.mp4') ||
+    post.multimediaContent.endsWith('.webm') ||
     post.multimediaContent.includes('video') ||
     post.multimediaContent.includes('.mkv?') ||
     post.multimediaContent.includes('.mp4?') ||
@@ -40,11 +40,11 @@ export const EditPostModal = ({
         postType: post.postType || post.post_type || 'general',
         content: post.content || ''
       });
-      
+
       setKeepExistingMedia(!!post.multimediaContent);
       setIsVideo(isOriginalVideo);
     }
-    
+
     // Limpiar al cerrar el modal
     return () => {
       if (filePreview) {
@@ -60,29 +60,29 @@ export const EditPostModal = ({
       [name]: value
     }));
   };
-  
+
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
-    
+
     // Limpiar preview anterior
     if (filePreview) {
       URL.revokeObjectURL(filePreview);
     }
-    
+
     // Verificar si el archivo es un video
-    const isVideoFile = 
+    const isVideoFile =
       selectedFile.type.startsWith('video/') ||
       selectedFile.name.endsWith('.mkv') ||
       selectedFile.name.endsWith('.mp4') ||
       selectedFile.name.endsWith('.webm');
-    
+
     setFile(selectedFile);
     setFilePreview(URL.createObjectURL(selectedFile));
     setIsVideo(isVideoFile);
     setKeepExistingMedia(false);
   };
-  
+
   const handleRemoveFile = () => {
     if (filePreview) {
       URL.revokeObjectURL(filePreview);
@@ -91,10 +91,10 @@ export const EditPostModal = ({
     setFilePreview(null);
     setKeepExistingMedia(false);
   };
-  
+
   const toggleKeepExistingMedia = () => {
     setKeepExistingMedia(!keepExistingMedia);
-    
+
     // Si quitamos el contenido existente, limpiar también cualquier nuevo archivo
     if (keepExistingMedia) {
       handleRemoveFile();
@@ -108,21 +108,21 @@ export const EditPostModal = ({
 
     try {
       let payload;
-      
+
       // Si hay un nuevo archivo o si queremos quitar el contenido multimedia
       if (file || !keepExistingMedia) {
         // Usar FormData para poder enviar archivos
         payload = new FormData();
-        
+
         // Añadir los datos básicos
         payload.append('postType', formData.postType);
         payload.append('content', formData.content);
-        
+
         // Añadir el archivo si existe uno nuevo
         if (file) {
           payload.append('file', file);
         }
-        
+
         // Si queremos eliminar el contenido, enviar un campo especial
         // (Esto depende de cómo esté implementado el backend)
         if (!keepExistingMedia && !file) {
@@ -135,14 +135,33 @@ export const EditPostModal = ({
           content: formData.content
         };
       }
-      
+
       // Actualizar la publicación a través del servicio
-      const updatedPost = await communityService.updatePost(post.id || post.post_id, payload);
-      
-      if (updatedPost) {
+      const response = await communityService.updatePost(post.id || post.post_id, payload);
+
+      // Preparamos el post actualizado para actualización optimista
+      const updatedPost = response?.data || response;
+
+      // Si no recibimos un objeto completo del backend, construimos uno con lo que tenemos
+      if (updatedPost && !updatedPost.id && !updatedPost.post_id) {
+        // Creamos un post actualizado a partir del original y los cambios
+        const completeUpdatedPost = {
+          ...post,
+          postType: formData.postType || post.postType || post.post_type,
+          post_type: formData.postType || post.postType || post.post_type, // Para compatibilidad
+          content: formData.content,
+          multimediaContent: file ? URL.createObjectURL(file) : (keepExistingMedia ? post.multimediaContent : null),
+          multimedia_content: file ? URL.createObjectURL(file) : (keepExistingMedia ? post.multimedia_content : null) // Para compatibilidad
+        };
+
+        // Pasamos el post actualizado al callback
+        onSuccess(completeUpdatedPost);
+      } else if (updatedPost) {
+        // Si el backend devuelve un objeto completo, lo pasamos directamente
         onSuccess(updatedPost);
-        onClose();
       }
+
+      onClose();
     } catch (err) {
       console.error('Error al actualizar publicación:', err);
       setError(err.response?.data?.message || 'No se pudo actualizar la publicación');
@@ -158,7 +177,7 @@ export const EditPostModal = ({
           {error}
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -177,7 +196,7 @@ export const EditPostModal = ({
             <option value="tutorial">Tutorial</option>
           </select>
         </div>
-        
+
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Contenido
@@ -192,13 +211,13 @@ export const EditPostModal = ({
             required
           ></textarea>
         </div>
-        
+
         {/* Sección de contenido multimedia */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Contenido multimedia
           </label>
-          
+
           {/* Mostrar el contenido multimedia existente */}
           {post?.multimediaContent && (
             <div className="mb-4">
@@ -214,7 +233,7 @@ export const EditPostModal = ({
                   Mantener contenido multimedia existente
                 </span>
               </label>
-              
+
               {keepExistingMedia && (
                 <div className="border border-gray-200 rounded-md p-2 bg-gray-50">
                   <div className="flex items-center">
@@ -226,10 +245,10 @@ export const EditPostModal = ({
                     <span className="text-sm text-gray-600 truncate flex-1">
                       {isOriginalVideo ? 'Video actual' : 'Imagen actual'}
                     </span>
-                    <a 
-                      href={post.multimediaContent} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
+                    <a
+                      href={post.multimediaContent}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="text-primary text-sm hover:underline ml-2"
                     >
                       Ver
@@ -239,7 +258,7 @@ export const EditPostModal = ({
               )}
             </div>
           )}
-          
+
           {/* Input para nuevo archivo si no mantenemos el existente o si no hay uno */}
           {(!keepExistingMedia || !post?.multimediaContent) && (
             <div className="space-y-3">
@@ -282,20 +301,20 @@ export const EditPostModal = ({
                       <X size={18} />
                     </button>
                   </div>
-                  
+
                   {/* Vista previa del archivo */}
                   {filePreview && (
                     <div className="mt-2 border rounded overflow-hidden max-h-40">
                       {isVideo ? (
-                        <video 
-                          src={filePreview} 
-                          controls 
+                        <video
+                          src={filePreview}
+                          controls
                           className="w-full h-40 object-cover"
                         />
                       ) : (
-                        <img 
-                          src={filePreview} 
-                          alt="Vista previa" 
+                        <img
+                          src={filePreview}
+                          alt="Vista previa"
                           className="w-full h-40 object-cover"
                         />
                       )}
@@ -303,11 +322,11 @@ export const EditPostModal = ({
                   )}
                 </div>
               )}
-              
+
               <p className="text-xs text-gray-500 italic">
-                {!file && !post?.multimediaContent ? 
+                {!file && !post?.multimediaContent ?
                   "No se enviará ningún contenido multimedia con esta publicación." :
-                  file ? 
+                  file ?
                     "Se reemplazará el contenido multimedia existente con este nuevo archivo." :
                     "Se eliminará el contenido multimedia existente."
                 }
@@ -315,11 +334,11 @@ export const EditPostModal = ({
             </div>
           )}
         </div>
-        
+
         <div className="flex justify-end gap-2">
-          <Button 
-            variant="white" 
-            onClick={onClose} 
+          <Button
+            variant="white"
+            onClick={onClose}
             disabled={isSubmitting}
             type="button"
           >

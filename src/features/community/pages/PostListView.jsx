@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useCallback } from "react";
 import { PostCard } from "../ui/PostCard";
 import { SearchBar } from "../ui/SearchBar";
 import { PostFormModal } from "../ui/PostFormModal";
@@ -17,7 +17,7 @@ export const PostListView = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   // Filtrado por usuario
   const [showOnlyUserPosts, setShowOnlyUserPosts] = useState(false);
 
@@ -25,24 +25,24 @@ export const PostListView = () => {
   const fetchAllPosts = async () => {
     setIsLoading(true);
     setLoadError(null);
-    
+
     try {
       const response = await communityService.getAllPosts();
-      
+
       // Verificamos que la respuesta sea un array
-      const postsArray = Array.isArray(response) 
-        ? response 
-        : Array.isArray(response?.data) 
-          ? response.data 
+      const postsArray = Array.isArray(response)
+        ? response
+        : Array.isArray(response?.data)
+          ? response.data
           : [];
-      
+
       // Ordenamos posts del más reciente al más antiguo
       const sortedPosts = sortPostsByDateDesc(postsArray);
-      
+
       setPosts(sortedPosts);
       // Aplicamos cualquier filtro de búsqueda existente
       applyFilters(sortedPosts);
-      
+
       // Desactivamos filtro de usuario si estábamos en ese modo
       setShowOnlyUserPosts(false);
     } catch (error) {
@@ -54,25 +54,25 @@ export const PostListView = () => {
       setIsLoading(false);
     }
   };
-  
+
   // Función para cargar solo las publicaciones del usuario autenticado
   const fetchUserPosts = async () => {
     setIsLoading(true);
     setLoadError(null);
-    
+
     try {
       const response = await communityService.getPostsByUser();
-      
+
       // Verificamos que la respuesta sea un array
-      const postsArray = Array.isArray(response) 
-        ? response 
-        : Array.isArray(response?.data) 
-          ? response.data 
+      const postsArray = Array.isArray(response)
+        ? response
+        : Array.isArray(response?.data)
+          ? response.data
           : [];
-      
+
       // Ordenamos posts del más reciente al más antiguo
       const sortedPosts = sortPostsByDateDesc(postsArray);
-      
+
       setPosts(sortedPosts);
       // Aplicamos cualquier filtro de búsqueda existente
       applyFilters(sortedPosts);
@@ -85,7 +85,7 @@ export const PostListView = () => {
       setIsLoading(false);
     }
   };
-  
+
   // Ordenar por fecha (más reciente primero)
   const sortPostsByDateDesc = (posts) => {
     return [...posts].sort((a, b) => {
@@ -94,47 +94,47 @@ export const PostListView = () => {
       return dateB - dateA;
     });
   };
-  
+
   // Aplicar filtros de búsqueda
-  const applyFilters = (postsToFilter) => {
+  const applyFilters = useCallback((postsToFilter) => {
     if (!searchTerm.trim()) {
       setFilteredPosts(postsToFilter);
       return;
     }
-    
+
     const term = searchTerm.toLowerCase();
-    
+
     const filtered = postsToFilter.filter(post => {
       // 1. Filtrar por contenido
-      const contentMatch = post.content && 
-                          post.content.toLowerCase().includes(term);
-      
+      const contentMatch = post.content &&
+        post.content.toLowerCase().includes(term);
+
       // 2. Filtrar por autor 
       // Nota: Esto funciona si ya hemos cargado los nombres de usuario en las cards
       const userName = post.userName || post.user_name || post.author || "";
       const userMatch = userName.toLowerCase().includes(term);
-      
+
       // También busca por userId si el término parece ser un número
-      const userIdMatch = !isNaN(term) && 
-                         (post.userId?.toString() === term || 
-                          post.user_id?.toString() === term);
-      
+      const userIdMatch = !isNaN(term) &&
+        (post.userId?.toString() === term ||
+          post.user_id?.toString() === term);
+
       // 3. Filtrar por tipo de publicación
       const postType = post.postType || post.post_type || "";
       const typeMatch = postType.toLowerCase().includes(term);
-      
+
       return contentMatch || userMatch || userIdMatch || typeMatch;
     });
-    
+
     setFilteredPosts(filtered);
-  };
-  
+  }, [searchTerm]);
+
   // Manejar cambios en la búsqueda
   const handleSearch = (query) => {
     setSearchTerm(query);
     applyFilters(posts);
   };
-  
+
   // Alternar entre todas las publicaciones y solo las del usuario
   const toggleUserPostsFilter = () => {
     if (showOnlyUserPosts) {
@@ -146,52 +146,76 @@ export const PostListView = () => {
       fetchUserPosts();
     }
   };
-  
+
   // Cargamos las publicaciones al montar el componente
   useEffect(() => {
     fetchAllPosts();
   }, []);
-  
+
   // Actualizamos los filtros cuando cambia el término de búsqueda
   useEffect(() => {
     applyFilters(posts);
-  }, [searchTerm]);
+  }, [searchTerm, applyFilters]);
+
+  // Funciones para manejar actualizaciones optimistas
 
   // Función para manejar la creación de una nueva publicación
   const handlePostCreated = (newPost) => {
     // Cerramos el modal
     setIsModalOpen(false);
-    
-    // Refrescamos la lista de publicaciones según el modo actual
-    if (showOnlyUserPosts) {
-      fetchUserPosts();
-    } else {
-      fetchAllPosts();
-    }
+
+    // Optimistic update: Actualizamos el estado local sin hacer refetch
+    const updatedPosts = [newPost, ...posts];
+    const sortedPosts = sortPostsByDateDesc(updatedPosts);
+    setPosts(sortedPosts);
+    applyFilters(sortedPosts);
+  };
+
+  // Función para manejar la actualización de una publicación
+  const handlePostUpdated = (updatedPost) => {
+    // Actualizamos localmente el post sin hacer refetch
+    const postId = updatedPost.id || updatedPost.post_id;
+    const updatedPosts = posts.map(post =>
+      (post.id === postId || post.post_id === postId) ? updatedPost : post
+    );
+
+    setPosts(updatedPosts);
+    applyFilters(updatedPosts);
+  };
+
+  // Función para manejar la eliminación de una publicación
+  const handlePostDeleted = (postId) => {
+    // Eliminamos localmente el post sin hacer refetch
+    const updatedPosts = posts.filter(post =>
+      post.id !== postId && post.post_id !== postId
+    );
+
+    setPosts(updatedPosts);
+    applyFilters(updatedPosts);
   };
 
   return (
     <div className="p-4 max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Publicaciones de la comunidad</h1>
-      
+
       {/* Barra de búsqueda y filtros */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="flex-grow">
-          <SearchBar 
-            onSearch={handleSearch} 
-            className="w-full" 
-            placeholder="Buscar por contenido, autor o tipo..." 
+          <SearchBar
+            onSearch={handleSearch}
+            className="w-full"
+            placeholder="Buscar por contenido, autor o tipo..."
           />
         </div>
-        
+
         <div className="flex gap-2">
           {/* Botón para alternar entre todas/mis publicaciones */}
           <button
             onClick={toggleUserPostsFilter}
             className={`flex items-center px-3 py-2 rounded-md border 
-                      ${showOnlyUserPosts 
-                        ? 'bg-primary text-white border-primary' 
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                      ${showOnlyUserPosts
+                ? 'bg-primary text-white border-primary'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
             title={showOnlyUserPosts ? "Mostrar todas las publicaciones" : "Mostrar solo mis publicaciones"}
           >
             <UserIcon className="h-5 w-5 mr-1" />
@@ -199,7 +223,7 @@ export const PostListView = () => {
               {showOnlyUserPosts ? "Mis publicaciones" : "Filtrar por mis publicaciones"}
             </span>
           </button>
-          
+
           {/* Botón para refrescar */}
           <button
             onClick={showOnlyUserPosts ? fetchUserPosts : fetchAllPosts}
@@ -231,7 +255,7 @@ export const PostListView = () => {
             <Filter className="w-5 h-5 mr-2" />
             <span>Mostrando solo tus publicaciones</span>
           </div>
-          <button 
+          <button
             onClick={fetchAllPosts}
             className="text-sm underline hover:text-blue-900"
           >
@@ -252,7 +276,7 @@ export const PostListView = () => {
       {loadError && !isLoading && (
         <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-4">
           <p>{loadError}</p>
-          <button 
+          <button
             onClick={showOnlyUserPosts ? fetchUserPosts : fetchAllPosts}
             className="mt-2 text-sm underline hover:text-red-800"
           >
@@ -266,19 +290,21 @@ export const PostListView = () => {
         <div className="grid grid-cols-1 gap-6">
           {filteredPosts.length > 0 ? (
             filteredPosts.map((post) => (
-              <PostCard 
-                key={post.id || post.post_id} 
-                post={post} 
-                onRefresh={showOnlyUserPosts ? fetchUserPosts : fetchAllPosts} 
+              <PostCard
+                key={post.id || post.post_id}
+                post={post}
+                onRefresh={showOnlyUserPosts ? fetchUserPosts : fetchAllPosts}
+                onUpdate={handlePostUpdated}
+                onDelete={handlePostDeleted}
               />
             ))
           ) : (
             <div className="bg-gray-50 text-center py-8 rounded-lg">
               <p className="text-gray-500">
-                {searchTerm 
-                  ? `No se encontraron publicaciones para "${searchTerm}"` 
-                  : showOnlyUserPosts 
-                    ? "Aún no has creado publicaciones." 
+                {searchTerm
+                  ? `No se encontraron publicaciones para "${searchTerm}"`
+                  : showOnlyUserPosts
+                    ? "Aún no has creado publicaciones."
                     : "No hay publicaciones disponibles."}
               </p>
               <button

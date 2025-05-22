@@ -132,7 +132,7 @@ export const PostFormModal = ({
     }
 
     // Verificar si el archivo es un video
-    const isVideoFile = 
+    const isVideoFile =
       selectedFile.type.startsWith('video/') ||
       selectedFile.name.endsWith('.mkv') ||
       selectedFile.name.endsWith('.mp4') ||
@@ -192,9 +192,36 @@ export const PostFormModal = ({
           URL.revokeObjectURL(filePreview);
         }
 
-        // Notificar al componente padre
-        if (onPostCreated) {
-          onPostCreated(result);
+        // Preparar el post para actualización optimista
+        const postData = result?.data || result;
+
+        // Asegurarnos de que el post tenga toda la información necesaria para la UI
+        if (postData) {
+          // Si el backend no devuelve un post completo, enriquecemos la respuesta
+          if (!postData.id && !postData.post_id && postData.postId) {
+            postData.id = postData.postId; // Normalizar ID
+          }
+
+          // Asegurarnos de que tenga fecha para ordenamiento
+          if (!postData.postDate && !postData.creation_date && !postData.post_date) {
+            postData.postDate = new Date().toISOString();
+          }
+
+          // Notificar al componente padre con el post enriquecido
+          if (onPostCreated) {
+            onPostCreated(postData);
+          }
+        } else {
+          // Fallback si no tenemos datos del post
+          if (onPostCreated) {
+            onPostCreated({
+              id: Date.now(), // ID temporal
+              postType: formData.postType,
+              content: formData.content,
+              postDate: new Date().toISOString(),
+              multimediaContent: filePreview
+            });
+          }
         }
 
         // Cerrar el modal
@@ -224,10 +251,10 @@ export const PostFormModal = ({
   };
 
   return (
-    <Modal 
-      isOpen={true} 
-      onClose={onClose} 
-      title={getContextTitle()} 
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title={getContextTitle()}
       size="md"
     >
       {/* Mensajes de estado - éxito y error */}
@@ -236,7 +263,7 @@ export const PostFormModal = ({
           {successMessage}
         </div>
       )}
-      
+
       {(error || formErrors.general) && (
         <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-3 mb-4 rounded">
           {error || formErrors.general}
@@ -356,15 +383,15 @@ export const PostFormModal = ({
                 {filePreview && (
                   <div className="mt-2 border rounded overflow-hidden max-h-40">
                     {isVideo ? (
-                      <video 
-                        src={filePreview} 
-                        controls 
+                      <video
+                        src={filePreview}
+                        controls
                         className="w-full h-40 object-cover"
                       />
                     ) : (
-                      <img 
-                        src={filePreview} 
-                        alt="Vista previa" 
+                      <img
+                        src={filePreview}
+                        alt="Vista previa"
                         className="w-full h-40 object-cover"
                       />
                     )}
@@ -375,7 +402,7 @@ export const PostFormModal = ({
 
             {/* Texto informativo sobre el estado del archivo */}
             <p className="text-xs text-gray-500 italic">
-              {!file ? 
+              {!file ?
                 "No se enviará ningún contenido multimedia con esta publicación." :
                 "Se incluirá este archivo con la publicación."
               }
@@ -413,9 +440,9 @@ export const PostFormModal = ({
 
         {/* Botones de acción del formulario */}
         <div className="flex justify-end gap-2">
-          <Button 
-            variant="white" 
-            onClick={onClose} 
+          <Button
+            variant="white"
+            onClick={onClose}
             disabled={isSubmitting}
             type="button"
           >

@@ -12,14 +12,14 @@ import { ReactionButtonGroup, ReactionSummary, LikeButton } from "./ReactionButt
 /**
  * Componente para mostrar una publicación en forma de tarjeta con reacciones integradas
  */
-export const PostCard = ({ post, onRefresh }) => {
+export const PostCard = ({ post, onRefresh, onUpdate, onDelete }) => {
   // Contextos
   const { user, isAuthenticated, isAdmin, isModerator } = useContext(AuthContext);
-  
+
   // Hooks
   const { handleDeletePost } = usePost();
   const { fetchAllReactions } = useReactions();
-  
+
   // Estados UI
   const [showOptions, setShowOptions] = useState(false);
   const [showAllReactions, setShowAllReactions] = useState(false);
@@ -28,12 +28,12 @@ export const PostCard = ({ post, onRefresh }) => {
   const [postOwnerUsername, setPostOwnerUsername] = useState(null);
   const [mediaError, setMediaError] = useState(false);
   const [isVideo, setIsVideo] = useState(false);
-  
+
   // Estados para modales
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   // Identificadores normalizados
   const postId = post.id || post.post_id;
   const userId = post.userId || post.user_id;
@@ -41,36 +41,36 @@ export const PostCard = ({ post, onRefresh }) => {
   const postDate = post.postDate || post.creation_date || post.post_date || new Date().toISOString();
   const content = post.content || "";
   const imageUrl = post.multimediaContent || post.multimedia_content;
-  
+
   // Verificación de permisos
   const isCurrentUserPost = user && postOwnerUsername && (
     user.username === postOwnerUsername
   );
   const canManagePost = isAdmin || isModerator || isCurrentUserPost;
-  
+
   // Cargar reacciones al montar el componente
   useEffect(() => {
     if (isAuthenticated) {
       fetchAllReactions();
     }
   }, [isAuthenticated, fetchAllReactions]);
-  
+
   // Determinar si el contenido multimedia es un video
   useEffect(() => {
     if (imageUrl) {
-      const isVideoContent = 
-        imageUrl.endsWith('.mkv') || 
-        imageUrl.endsWith('.mp4') || 
-        imageUrl.endsWith('.webm') || 
+      const isVideoContent =
+        imageUrl.endsWith('.mkv') ||
+        imageUrl.endsWith('.mp4') ||
+        imageUrl.endsWith('.webm') ||
         imageUrl.includes('video') ||
         imageUrl.includes('.mkv?') ||
         imageUrl.includes('.mp4?') ||
         imageUrl.includes('.webm?');
-      
+
       setIsVideo(isVideoContent);
     }
   }, [imageUrl]);
-  
+
   // Cargar información del usuario
   useEffect(() => {
     const fetchUserName = async () => {
@@ -79,22 +79,22 @@ export const PostCard = ({ post, onRefresh }) => {
         setIsLoadingUser(false);
         return;
       }
-      
+
       try {
         const userData = await profileService.getUserById(userId);
-        
+
         if (userData) {
-          const displayName = userData.username ||  
-                              (userData.firstName && userData.lastName && 
-                               `${userData.firstName} ${userData.lastName}`) ||
-                              userData.email;
-                              
+          const displayName = userData.username ||
+            (userData.firstName && userData.lastName &&
+              `${userData.firstName} ${userData.lastName}`) ||
+            userData.email;
+
           if (displayName) {
             setUserName(displayName);
           } else {
             setUserName(`Usuario #${userId}`);
           }
-          
+
           setPostOwnerUsername(userData.username || userData.userName);
         } else {
           setUserName(`Usuario #${userId}`);
@@ -106,10 +106,10 @@ export const PostCard = ({ post, onRefresh }) => {
         setIsLoadingUser(false);
       }
     };
-    
+
     fetchUserName();
   }, [userId]);
-  
+
   // Formatear fecha
   const formattedDate = new Date(postDate).toLocaleDateString('es-ES', {
     year: 'numeric',
@@ -118,14 +118,21 @@ export const PostCard = ({ post, onRefresh }) => {
     hour: '2-digit',
     minute: '2-digit'
   });
-  
+
   // Manejar eliminación de publicación
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
       const success = await handleDeletePost(postId);
-      if (success && onRefresh) {
-        onRefresh();
+      if (success) {
+        // Primero usamos las actualizaciones optimistas si están disponibles
+        if (onDelete) {
+          onDelete(postId);
+        }
+        // Como fallback, usamos el método anterior de actualización
+        else if (onRefresh) {
+          onRefresh();
+        }
       }
     } catch (error) {
       console.error("Error al eliminar publicación:", error);
@@ -143,7 +150,7 @@ export const PostCard = ({ post, onRefresh }) => {
       'resource': 'Recurso',
       'tutorial': 'Tutorial'
     };
-    
+
     return types[type.toLowerCase()] || type;
   };
 
@@ -152,10 +159,15 @@ export const PostCard = ({ post, onRefresh }) => {
     console.error("Error al cargar contenido multimedia:", e);
     setMediaError(true);
   };
-  
+
   // Manejar edición exitosa
-  const handleEditSuccess = () => {
-    if (onRefresh) {
+  const handleEditSuccess = (editedPost) => {
+    // Primero usamos las actualizaciones optimistas si están disponibles
+    if (onUpdate) {
+      onUpdate(editedPost);
+    }
+    // Como fallback, usamos el método anterior de actualización
+    else if (onRefresh) {
       onRefresh();
     }
   };
@@ -177,17 +189,17 @@ export const PostCard = ({ post, onRefresh }) => {
             </div>
           </div>
         </div>
-        
+
         {/* Menú de opciones */}
         {canManagePost && (
           <div className="relative">
-            <button 
+            <button
               className="p-1 rounded-full hover:bg-gray-100"
               onClick={() => setShowOptions(!showOptions)}
             >
               <MoreVertical className="w-5 h-5 text-gray-500" />
             </button>
-            
+
             {showOptions && (
               <div className="absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg z-10 border border-gray-200">
                 <button
@@ -200,7 +212,7 @@ export const PostCard = ({ post, onRefresh }) => {
                   <Pencil className="w-4 h-4 mr-2" />
                   Editar publicación
                 </button>
-                
+
                 <button
                   onClick={() => {
                     setShowOptions(false);
@@ -216,23 +228,23 @@ export const PostCard = ({ post, onRefresh }) => {
           </div>
         )}
       </div>
-      
+
       {/* Contenido de la publicación */}
       <div className="p-4">
         {/* Tipo de publicación */}
         <div className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full mb-2">
           {formatPostType(postType)}
         </div>
-        
+
         <p className="text-gray-800 mb-4 whitespace-pre-line">{content}</p>
-        
+
         {/* Contenido multimedia */}
         {imageUrl && !mediaError && (
           <div className="mb-4 rounded-md overflow-hidden border border-gray-200">
             {isVideo ? (
               <div className="relative">
-                <video 
-                  controls 
+                <video
+                  controls
                   className="w-full max-h-96"
                   onError={handleMediaError}
                 >
@@ -248,9 +260,9 @@ export const PostCard = ({ post, onRefresh }) => {
               </div>
             ) : (
               <div className="relative">
-                <img 
-                  src={imageUrl} 
-                  alt="Contenido multimedia" 
+                <img
+                  src={imageUrl}
+                  alt="Contenido multimedia"
                   className="w-full object-contain max-h-96"
                   onError={handleMediaError}
                 />
@@ -262,19 +274,19 @@ export const PostCard = ({ post, onRefresh }) => {
             )}
           </div>
         )}
-        
+
         {/* Mensaje de error para contenido multimedia */}
         {imageUrl && mediaError && (
           <div className="mb-4 rounded-md overflow-hidden">
-            <div className="bg-gray-100 border border-gray-200 p-4 text-center text-gray-600 rounded flex flex-col items-center justify-center" style={{minHeight: "120px"}}>
+            <div className="bg-gray-100 border border-gray-200 p-4 text-center text-gray-600 rounded flex flex-col items-center justify-center" style={{ minHeight: "120px" }}>
               {isVideo ? (
                 <>
                   <Film className="w-8 h-8 mb-2 text-gray-400" />
                   <p>No se pudo cargar el video</p>
-                  <a 
-                    href={imageUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
+                  <a
+                    href={imageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-primary text-sm mt-2 hover:underline"
                   >
                     Abrir video en nueva pestaña
@@ -284,10 +296,10 @@ export const PostCard = ({ post, onRefresh }) => {
                 <>
                   <Image className="w-8 h-8 mb-2 text-gray-400" />
                   <p>No se pudo cargar la imagen</p>
-                  <a 
-                    href={imageUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
+                  <a
+                    href={imageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-primary text-sm mt-2 hover:underline"
                   >
                     Abrir imagen en nueva pestaña
@@ -297,17 +309,17 @@ export const PostCard = ({ post, onRefresh }) => {
             </div>
           </div>
         )}
-        
+
         {/* Resumen de reacciones */}
         <ReactionSummary postId={postId} className="mb-3" />
-        
+
         {/* Barra de reacciones */}
         <div className="border-t border-gray-100 pt-3 mt-4">
           {/* Sección de reacciones principales */}
           <div className="flex items-center justify-between mb-3">
             {/* Botón de "Me gusta" principal */}
             <LikeButton postId={postId} size="md" />
-            
+
             {/* Botón para mostrar más reacciones */}
             <button
               onClick={() => setShowAllReactions(!showAllReactions)}
@@ -316,12 +328,12 @@ export const PostCard = ({ post, onRefresh }) => {
               {showAllReactions ? 'Menos reacciones' : 'Más reacciones'}
             </button>
           </div>
-          
+
           {/* Panel de todas las reacciones (desplegable) */}
           {showAllReactions && (
             <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
               <p className="text-sm text-gray-600 mb-2">Reacciona a esta publicación:</p>
-              <ReactionButtonGroup 
+              <ReactionButtonGroup
                 postId={postId}
                 size="sm"
                 showLabels={false}
@@ -331,17 +343,17 @@ export const PostCard = ({ post, onRefresh }) => {
           )}
         </div>
       </div>
-      
+
       {/* Modales */}
-      <DeletePostModal 
+      <DeletePostModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDelete}
         post={post}
         isDeleting={isDeleting}
       />
-      
-      <EditPostModal 
+
+      <EditPostModal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         onSuccess={handleEditSuccess}
@@ -353,5 +365,7 @@ export const PostCard = ({ post, onRefresh }) => {
 
 PostCard.propTypes = {
   post: PropTypes.object.isRequired,
-  onRefresh: PropTypes.func
+  onRefresh: PropTypes.func,
+  onUpdate: PropTypes.func,
+  onDelete: PropTypes.func
 };
