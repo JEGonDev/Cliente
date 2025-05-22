@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import { MessageSquare, Share2, MoreVertical, Calendar, Image, Film, Pencil, Trash } from "lucide-react";
+import { MoreVertical, Calendar, Image, Film, Pencil, Trash } from "lucide-react";
 import { usePost } from "../hooks/usePost";
 import { useReactions } from "../hooks/useReactions";
 import PropTypes from "prop-types";
@@ -301,29 +301,17 @@ export const PostCard = ({ post, onRefresh }) => {
         {/* Resumen de reacciones */}
         <ReactionSummary postId={postId} className="mb-3" />
         
-        {/* Barra de interacciones */}
+        {/* Barra de reacciones */}
         <div className="border-t border-gray-100 pt-3 mt-4">
-          {/* Botones de acción principales */}
+          {/* Sección de reacciones principales */}
           <div className="flex items-center justify-between mb-3">
             {/* Botón de "Me gusta" principal */}
             <LikeButton postId={postId} size="md" />
             
-            {/* Botón de comentarios */}
-            <button className="flex items-center text-gray-600 hover:text-green-500 transition-colors">
-              <MessageSquare className="w-5 h-5 mr-1" />
-              <span>Comentar</span>
-            </button>
-            
-            {/* Botón de compartir */}
-            <button className="flex items-center text-gray-600 hover:text-purple-500 transition-colors">
-              <Share2 className="w-5 h-5 mr-1" />
-              <span>Compartir</span>
-            </button>
-            
             {/* Botón para mostrar más reacciones */}
             <button
               onClick={() => setShowAllReactions(!showAllReactions)}
-              className="text-gray-500 hover:text-gray-700 text-sm transition-colors"
+              className="text-gray-500 hover:text-gray-700 text-sm transition-colors px-3 py-1 rounded-md hover:bg-gray-100"
             >
               {showAllReactions ? 'Menos reacciones' : 'Más reacciones'}
             </button>
