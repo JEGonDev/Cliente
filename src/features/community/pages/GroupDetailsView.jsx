@@ -10,31 +10,6 @@ export const GroupDetailsView = () => {
   const [group, setGroup] = useState(null);
   const { handleJoinGroup, successMessage, formErrors } = useGroup();
 
-  // Datos de ejemplo para los hilos
-  const exampleThreads = [
-    {
-      id: 1,
-      authorName: "Santiago Ramirez",
-      createdAt: "2024-04-27T13:09:00",
-      content:
-        "¡Hola a todos! Estoy comenzando con hidroponía y quiero saber qué tipo de sistema es mejor para cultivos de lechuga. ¿Alguna recomendación?",
-    },
-    {
-      id: 2,
-      authorName: "Yeiron Manyoma",
-      createdAt: "2024-05-04T16:16:00",
-      content:
-        "Hola, Para lechugas, el sistema NFT (Nutrient Film Technique) es una excelente opción. Es eficiente y fácil de manejar.",
-    },
-    {
-      id: 3,
-      authorName: "Carlos Nael",
-      createdAt: "2024-05-29T13:09:00",
-      content:
-        "¡Hola a todos! Estoy comenzando con hidroponía y quiero saber qué tipo de sistema es mejor para cultivos de lechuga. ¿Alguna recomendación?",
-    },
-  ];
-
   useEffect(() => {
     const fetchGroupDetails = async () => {
       try {
@@ -51,20 +26,20 @@ export const GroupDetailsView = () => {
     return <p className="text-gray-500">Cargando detalles del grupo...</p>;
 
   return (
-    <div className="max-w-3xl mx-auto my-8 p-4 bg-white rounded shadow">
+    <div className="max-w-5xl mx-auto my-8 p-4 bg-white rounded shadow">
       {/* Header con icono numeral y nombre */}
-      <div className="flex items-center gap-2 mb-6">
-        <FaHashtag className="text-2xl text-gray-700" />
-        <h1 className="text-2xl font-bold">{group.name}</h1>
+      <div className="flex items-center gap-2 mb-6 bg-gray-300 rounded px-2 py-2 sm:py-2 md:py-2 min-h-[40px] sm:min-h-[60px] md:min-h-[80px]">
+        <FaHashtag className="text-3xl text-gray-700" />
+        <h1 className="text-3xl font-bold">{group.name}</h1>
       </div>
 
       {/* Mensaje de bienvenida */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold">
+        <h2 className="text-4xl font-bold">
           ¡Te damos la bienvenida a{" "}
           <span className="text-primary"># {group.name}!</span>
         </h2>
-        <p className="text-lg text-gray-800 mt-2">
+        <p className="text-lg font-bold mt-2">
           Un espacio para aprender, compartir experiencias sobre hidroponía.
         </p>
       </div>
@@ -88,8 +63,10 @@ export const GroupDetailsView = () => {
 
       {/* Botón para unirse */}
       <div className="mb-8">
-        <button className="bg-primary text-white px-4 py-2 rounded-md hover:bg-green-600"
-         onClick={() => handleJoinGroup(group.id)}>
+        <button
+          className="bg-primary text-white px-4 py-2 rounded-md hover:bg-green-600"
+          onClick={() => handleJoinGroup(group.id)}
+        >
           Unirse al grupo
         </button>
         {successMessage && <p className="text-green-600">{successMessage}</p>}
@@ -100,11 +77,114 @@ export const GroupDetailsView = () => {
 
       {/* Sección de hilos */}
       <div>
-        <ThreadList threads={exampleThreads} />
+        <ThreadList groupId={groupId} />
       </div>
     </div>
   );
 };
+
+// import React, { useEffect, useState } from "react";
+// import { useParams } from "react-router-dom";
+// import { FaHashtag } from "react-icons/fa";
+// import { communityService } from "../services/communityService";
+// import { ThreadList } from "../ui/ThreadList";
+// import { useGroup } from "../hooks/useGroup";
+// import { useThread } from "../hooks/useThread";
+
+// export const GroupDetailsView = () => {
+//   const { groupId } = useParams();
+//   const [group, setGroup] = useState(null);
+//   const { handleJoinGroup, successMessage, formErrors } = useGroup();
+//   //  hook obtener hilos grupo
+//   const { threads, loading, error, fetchThreadsByGroup } = useThread();
+
+ 
+
+//   useEffect(() => {
+//     const fetchGroupDetails = async () => {
+//       try {
+//         const data = await communityService.getGroupById(groupId);
+//         setGroup(data.data); // Ajusta según la respuesta real de tu API
+//       } catch (error) {
+//         setGroup(null);
+//       }
+//     };
+//     fetchGroupDetails();
+//   }, [groupId]);
+
+//   // Carga los hilos del grupo cada vez que el groupId cambie
+//   useEffect(() => {
+//     if (groupId) {
+//       fetchThreadsByGroup(groupId);
+//     }
+//   }, [groupId]);
+
+//   if (!group)
+//     return <p className="text-gray-500">Cargando detalles del grupo...</p>;
+
+//   return (
+//     <div className="max-w-5xl mx-auto my-8 p-4 bg-white rounded shadow">
+//       {/* Header con icono numeral y nombre */}
+//       <div className="flex items-center gap-2 mb-6 bg-gray-300 rounded px-2 py-2 sm:py-2 md:py-2 min-h-[40px] sm:min-h-[60px] md:min-h-[80px]">
+//         <FaHashtag className="text-3xl text-gray-700" />
+//         <h1 className="text-3xl font-bold">{group.name}</h1>
+//       </div>
+
+//       {/* Mensaje de bienvenida */}
+//       <div className="mb-6">
+//         <h2 className="text-4xl font-bold">
+//           ¡Te damos la bienvenida a{" "}
+//           <span className="text-primary"># {group.name}!</span>
+//         </h2>
+//         <p className="text-lg font-bold mt-2">
+//           Un espacio para aprender, compartir experiencias sobre hidroponía.
+//         </p>
+//       </div>
+
+//       {/* Descripción y fecha */}
+//       <div className="mb-6">
+//         <div className="text-gray-700 mb-1">
+//           <strong>Descripción:</strong> {group.description}
+//         </div>
+//         <div className="text-gray-500 text-sm">
+//           <strong>Fecha de creación:</strong>{" "}
+//           {group.creationDate
+//             ? new Date(group.creationDate).toLocaleDateString("es-ES", {
+//                 year: "numeric",
+//                 month: "long",
+//                 day: "numeric",
+//               })
+//             : "Sin fecha"}
+//         </div>
+//       </div>
+
+//       {/* Botón para unirse */}
+//       <div className="mb-8">
+//         <button
+//           className="bg-primary text-white px-4 py-2 rounded-md hover:bg-green-600"
+//           onClick={() => handleJoinGroup(group.id)}
+//         >
+//           Unirse al grupo
+//         </button>
+//         {successMessage && <p className="text-green-600">{successMessage}</p>}
+//         {formErrors.general && (
+//           <p className="text-red-600">{formErrors.general}</p>
+//         )}
+//       </div>
+
+//       {/* Sección de hilos */}
+//       <div>
+//         {loading ? (
+//           <p className="text-gray-500">Cargando hilos...</p>
+//         ) : error ? (
+//           <p className="text-red-500">{error}</p>
+//         ) : (
+//           <ThreadList threads={threads} />
+//         )}
+//       </div>
+//     </div>
+//   );
+// };
 
 // import React, { useEffect, useState } from "react";
 // import { useParams } from "react-router-dom";

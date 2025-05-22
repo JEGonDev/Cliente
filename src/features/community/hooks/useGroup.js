@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { GroupContext } from '../context/GroupContext';
 import { communityService } from '../services/communityService';
 
@@ -13,6 +13,15 @@ export const useGroup = () => {
   const [formData, setFormData] = useState({ name: '', description: '' });
   const [formErrors, setFormErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
+
+  useEffect(() => {
+    if (fetchGroups) {
+      fetchGroups();
+    }
+    // Solo queremos que se ejecute una vez al montar
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchGroups]);
+
 
   const validateForm = () => {
     const errors = {};
