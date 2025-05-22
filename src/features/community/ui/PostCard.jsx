@@ -1,27 +1,31 @@
 import { useState, useEffect, useContext } from "react";
-import { ThumbsUp, MessageSquare, Share2, MoreVertical, Calendar, Image, Film, Pencil, Trash } from "lucide-react";
+import { MessageSquare, Share2, MoreVertical, Calendar, Image, Film, Pencil, Trash } from "lucide-react";
 import { usePost } from "../hooks/usePost";
+import { useReactions } from "../hooks/useReactions";
 import PropTypes from "prop-types";
 import { profileService } from "../../profile/services/profileService";
 import { AuthContext } from "../../authentication/context/AuthContext";
 import { DeletePostModal } from "./DeletePostModal";
 import { EditPostModal } from "./EditPostModal";
+import { ReactionButtonGroup, ReactionSummary, LikeButton } from "./ReactionButton";
 
 /**
- * Componente para mostrar una publicación en forma de tarjeta
+ * Componente para mostrar una publicación en forma de tarjeta con reacciones integradas
  */
 export const PostCard = ({ post, onRefresh }) => {
-  // Obtener contexto de autenticación para verificar permisos
-  const { user, isAdmin, isModerator } = useContext(AuthContext);
+  // Contextos
+  const { user, isAuthenticated, isAdmin, isModerator } = useContext(AuthContext);
   
-  // Usar hook para lógica de publicaciones
+  // Hooks
   const { handleDeletePost } = usePost();
+  const { fetchAllReactions } = useReactions();
   
   // Estados UI
   const [showOptions, setShowOptions] = useState(false);
+  const [showAllReactions, setShowAllReactions] = useState(false);
   const [userName, setUserName] = useState(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
-  const [postOwnerUsername, setPostOwnerUsername] = useState(null); // ✅ NUEVO: username del propietario
+  const [postOwnerUsername, setPostOwnerUsername] = useState(null);
   const [mediaError, setMediaError] = useState(false);
   const [isVideo, setIsVideo] = useState(false);
   
@@ -38,11 +42,18 @@ export const PostCard = ({ post, onRefresh }) => {
   const content = post.content || "";
   const imageUrl = post.multimediaContent || post.multimedia_content;
   
-  //   Verificación de permisos usando username
+  // Verificación de permisos
   const isCurrentUserPost = user && postOwnerUsername && (
     user.username === postOwnerUsername
   );
   const canManagePost = isAdmin || isModerator || isCurrentUserPost;
+  
+  // Cargar reacciones al montar el componente
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchAllReactions();
+    }
+  }, [isAuthenticated, fetchAllReactions]);
   
   // Determinar si el contenido multimedia es un video
   useEffect(() => {
@@ -60,7 +71,7 @@ export const PostCard = ({ post, onRefresh }) => {
     }
   }, [imageUrl]);
   
-  // ✅ MODIFICADO: Cargar el nombre de usuario real Y el username del propietario
+  // Cargar información del usuario
   useEffect(() => {
     const fetchUserName = async () => {
       if (!userId) {
@@ -72,7 +83,6 @@ export const PostCard = ({ post, onRefresh }) => {
       try {
         const userData = await profileService.getUserById(userId);
         
-        // Intentamos obtener el nombre del usuario de los diferentes posibles campos
         if (userData) {
           const displayName = userData.username ||  
                               (userData.firstName && userData.lastName && 
@@ -85,7 +95,6 @@ export const PostCard = ({ post, onRefresh }) => {
             setUserName(`Usuario #${userId}`);
           }
           
-          // ✅ NUEVO: Guardar el username del propietario para comparación
           setPostOwnerUsername(userData.username || userData.userName);
         } else {
           setUserName(`Usuario #${userId}`);
@@ -101,7 +110,7 @@ export const PostCard = ({ post, onRefresh }) => {
     fetchUserName();
   }, [userId]);
   
-  // Formatear fecha correctamente
+  // Formatear fecha
   const formattedDate = new Date(postDate).toLocaleDateString('es-ES', {
     year: 'numeric',
     month: 'long',
@@ -126,7 +135,7 @@ export const PostCard = ({ post, onRefresh }) => {
     }
   };
 
-  // Función para formatear el tipo de publicación para visualización
+  // Formatear tipo de publicación
   const formatPostType = (type) => {
     const types = {
       'general': 'General',
@@ -146,22 +155,10 @@ export const PostCard = ({ post, onRefresh }) => {
   
   // Manejar edición exitosa
   const handleEditSuccess = () => {
-    // Refrescar la lista de publicaciones
     if (onRefresh) {
       onRefresh();
     }
   };
-
-  // ✅ NUEVO: Debug para verificar funcionamiento (puedes removerlo después)
-  console.log('PostCard Debug con Username:', {
-    postUserId: userId,
-    currentUsername: user?.username,
-    postOwnerUsername,
-    isCurrentUserPost,
-    canManagePost,
-    isAdmin,
-    isModerator
-  });
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100">
@@ -181,7 +178,7 @@ export const PostCard = ({ post, onRefresh }) => {
           </div>
         </div>
         
-        {/* Menú de opciones (tres puntos verticales) - Solo visible si puede gestionar el post */}
+        {/* Menú de opciones */}
         {canManagePost && (
           <div className="relative">
             <button 
@@ -191,10 +188,8 @@ export const PostCard = ({ post, onRefresh }) => {
               <MoreVertical className="w-5 h-5 text-gray-500" />
             </button>
             
-            {/* Menú desplegable con opciones */}
             {showOptions && (
               <div className="absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-                {/* Opción de editar */}
                 <button
                   onClick={() => {
                     setShowOptions(false);
@@ -206,7 +201,6 @@ export const PostCard = ({ post, onRefresh }) => {
                   Editar publicación
                 </button>
                 
-                {/* Opción de eliminar */}
                 <button
                   onClick={() => {
                     setShowOptions(false);
@@ -232,11 +226,10 @@ export const PostCard = ({ post, onRefresh }) => {
         
         <p className="text-gray-800 mb-4 whitespace-pre-line">{content}</p>
         
-        {/* Imagen o video adjunto si existe */}
+        {/* Contenido multimedia */}
         {imageUrl && !mediaError && (
           <div className="mb-4 rounded-md overflow-hidden border border-gray-200">
             {isVideo ? (
-              // Contenido de video
               <div className="relative">
                 <video 
                   controls 
@@ -254,7 +247,6 @@ export const PostCard = ({ post, onRefresh }) => {
                 </div>
               </div>
             ) : (
-              // Contenido de imagen
               <div className="relative">
                 <img 
                   src={imageUrl} 
@@ -306,26 +298,53 @@ export const PostCard = ({ post, onRefresh }) => {
           </div>
         )}
         
-        {/* Barra de interacciones (me gusta, comentarios, compartir) */}
-        <div className="flex items-center justify-between border-t border-gray-100 pt-3 mt-2">
-          <button className="flex items-center text-gray-600 hover:text-blue-500">
-            <ThumbsUp className="w-5 h-5 mr-1" />
-            <span>Me gusta</span>
-          </button>
+        {/* Resumen de reacciones */}
+        <ReactionSummary postId={postId} className="mb-3" />
+        
+        {/* Barra de interacciones */}
+        <div className="border-t border-gray-100 pt-3 mt-4">
+          {/* Botones de acción principales */}
+          <div className="flex items-center justify-between mb-3">
+            {/* Botón de "Me gusta" principal */}
+            <LikeButton postId={postId} size="md" />
+            
+            {/* Botón de comentarios */}
+            <button className="flex items-center text-gray-600 hover:text-green-500 transition-colors">
+              <MessageSquare className="w-5 h-5 mr-1" />
+              <span>Comentar</span>
+            </button>
+            
+            {/* Botón de compartir */}
+            <button className="flex items-center text-gray-600 hover:text-purple-500 transition-colors">
+              <Share2 className="w-5 h-5 mr-1" />
+              <span>Compartir</span>
+            </button>
+            
+            {/* Botón para mostrar más reacciones */}
+            <button
+              onClick={() => setShowAllReactions(!showAllReactions)}
+              className="text-gray-500 hover:text-gray-700 text-sm transition-colors"
+            >
+              {showAllReactions ? 'Menos reacciones' : 'Más reacciones'}
+            </button>
+          </div>
           
-          <button className="flex items-center text-gray-600 hover:text-green-500">
-            <MessageSquare className="w-5 h-5 mr-1" />
-            <span>Comentar</span>
-          </button>
-          
-          <button className="flex items-center text-gray-600 hover:text-purple-500">
-            <Share2 className="w-5 h-5 mr-1" />
-            <span>Compartir</span>
-          </button>
+          {/* Panel de todas las reacciones (desplegable) */}
+          {showAllReactions && (
+            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+              <p className="text-sm text-gray-600 mb-2">Reacciona a esta publicación:</p>
+              <ReactionButtonGroup 
+                postId={postId}
+                size="sm"
+                showLabels={false}
+                className="justify-start"
+              />
+            </div>
+          )}
         </div>
       </div>
       
-      {/* Modal para confirmar eliminación */}
+      {/* Modales */}
       <DeletePostModal 
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
@@ -334,7 +353,6 @@ export const PostCard = ({ post, onRefresh }) => {
         isDeleting={isDeleting}
       />
       
-      {/* Modal para editar publicación */}
       <EditPostModal 
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
