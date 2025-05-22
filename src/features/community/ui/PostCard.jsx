@@ -21,6 +21,7 @@ export const PostCard = ({ post, onRefresh }) => {
   const [showOptions, setShowOptions] = useState(false);
   const [userName, setUserName] = useState(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
+  const [postOwnerUsername, setPostOwnerUsername] = useState(null); // ✅ NUEVO: username del propietario
   const [mediaError, setMediaError] = useState(false);
   const [isVideo, setIsVideo] = useState(false);
   
@@ -37,8 +38,10 @@ export const PostCard = ({ post, onRefresh }) => {
   const content = post.content || "";
   const imageUrl = post.multimediaContent || post.multimedia_content;
   
-  // Verificar si el usuario actual puede editar/eliminar esta publicación
-  const isCurrentUserPost = user && (user.id === userId || user.userId === userId);
+  //   Verificación de permisos usando username
+  const isCurrentUserPost = user && postOwnerUsername && (
+    user.username === postOwnerUsername
+  );
   const canManagePost = isAdmin || isModerator || isCurrentUserPost;
   
   // Determinar si el contenido multimedia es un video
@@ -57,7 +60,7 @@ export const PostCard = ({ post, onRefresh }) => {
     }
   }, [imageUrl]);
   
-  // Cargar el nombre de usuario real basado en userId
+  // ✅ MODIFICADO: Cargar el nombre de usuario real Y el username del propietario
   useEffect(() => {
     const fetchUserName = async () => {
       if (!userId) {
@@ -71,8 +74,7 @@ export const PostCard = ({ post, onRefresh }) => {
         
         // Intentamos obtener el nombre del usuario de los diferentes posibles campos
         if (userData) {
-          const displayName = userData.username || 
-                              userData.userName || 
+          const displayName = userData.username ||  
                               (userData.firstName && userData.lastName && 
                                `${userData.firstName} ${userData.lastName}`) ||
                               userData.email;
@@ -82,6 +84,9 @@ export const PostCard = ({ post, onRefresh }) => {
           } else {
             setUserName(`Usuario #${userId}`);
           }
+          
+          // ✅ NUEVO: Guardar el username del propietario para comparación
+          setPostOwnerUsername(userData.username || userData.userName);
         } else {
           setUserName(`Usuario #${userId}`);
         }
@@ -146,6 +151,17 @@ export const PostCard = ({ post, onRefresh }) => {
       onRefresh();
     }
   };
+
+  // ✅ NUEVO: Debug para verificar funcionamiento (puedes removerlo después)
+  console.log('PostCard Debug con Username:', {
+    postUserId: userId,
+    currentUsername: user?.username,
+    postOwnerUsername,
+    isCurrentUserPost,
+    canManagePost,
+    isAdmin,
+    isModerator
+  });
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100">
