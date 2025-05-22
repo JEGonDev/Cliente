@@ -97,7 +97,16 @@ export const communityService = {
 
   updatePost: async (id, updateData) => {
     try {
-      const response = await API.put(ENDPOINTS.POST_BY_ID(id), updateData);
+      // Detectar si estamos enviando FormData
+      const isFormData = updateData instanceof FormData;
+
+      // Configurar headers correctamente según el tipo de datos
+      const config = isFormData ? {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      } : undefined;
+
+      // Realizar la petición con la configuración adecuada
+      const response = await API.put(`${ENDPOINTS.POST_BY_ID(id)}`, updateData, config);
       return response.data;
     } catch (error) {
       handleError(error, `actualizar post con ID ${id}`);
