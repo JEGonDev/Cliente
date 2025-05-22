@@ -2,7 +2,7 @@ import { ChevronRight, Droplets, Thermometer } from 'lucide-react';
 import PropTypes from 'prop-types';
 import { CropStatusBadge } from './CropStatusBadge';
 
-export const CropCard = ({ crop, onClick }) => (
+export const  CropCard = ({ crop, onClick }) => (
  <div
   className="w-full bg-white rounded-lg shadow-md p-6 cursor-pointer transform transition-transform duration-200 hover:scale-[1.02]"
   onClick={() => onClick(crop)}

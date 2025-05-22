@@ -40,12 +40,7 @@ export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
       icon: <BarChart2 size={18} />,
       path: '/monitoring/history'
     },
-    {
-      id: 'tiempo-real',
-      label: 'Monitoreo en tiempo real',
-      icon: <Clock size={18} />,
-      path: '/monitoring/real-time'
-    }
+   
   ];
 
   return (

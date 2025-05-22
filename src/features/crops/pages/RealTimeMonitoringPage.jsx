@@ -1,13 +1,13 @@
 import { MonitoringLayout } from '../layouts/MonitoringLayout';
 import { RealTimeLayout } from '../layouts/RealTimeLayout';
 
-/**
- * Página dedicada a mostrar monitoreo en tiempo real
- */
 export const RealTimeMonitoringPage = () => {
+  // cultivoId estático para pruebas temporales
+  const cultivoId = "12345";
+
   return (
     <MonitoringLayout activeSection="tiempo-real">
-      <RealTimeLayout />
+      <RealTimeLayout cultivoId={cultivoId} />
     </MonitoringLayout>
   );
 };
