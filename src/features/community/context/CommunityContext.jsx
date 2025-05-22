@@ -3,7 +3,6 @@ import { PostProvider } from './PostContext';
 import { GroupProvider } from './GroupContext';
 import { ThreadProvider } from './ThreadContext';
 import { MessageProvider } from './MessageContext';
-import { ReactionProvider } from './ReactionContext';
 
 // Contexto global de la comunidad (puedes usarlo si necesitas datos globales de la comunidad)
 export const CommunityGlobalContext = createContext();
@@ -20,9 +19,7 @@ export const CommunityProvider = ({ children }) => {
         <GroupProvider>
           <ThreadProvider>
             <MessageProvider>
-              <ReactionProvider>
                 {children}
-              </ReactionProvider>
             </MessageProvider>
           </ThreadProvider>
         </GroupProvider>
