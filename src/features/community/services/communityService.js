@@ -291,21 +291,96 @@ export const communityService = {
   },
 
   // ==================== Peticiones para reacciones ====================
-  toggleReaction: async (reactionData) => {
+  // Agregar estos métodos al objeto communityService existente
+
+  // ==================== Peticiones para reacciones ====================
+
+  /**
+   * Crea una nueva reacción en una publicación
+   * @param {Object} reactionData - Datos de la reacción {postId, reactionType}
+   * @returns {Promise<Object>} Respuesta del servidor con la reacción creada
+   */
+  createReaction: async (reactionData) => {
     try {
-      const response = await API.post(ENDPOINTS.REACTIONS, reactionData);
+      const response = await API.post('/reactions', reactionData);
       return response.data;
     } catch (error) {
-      handleError(error, 'crear o eliminar reacción');
+      handleError(error, 'crear reacción');
+      throw error;
     }
   },
 
-  getAllReactions: async () => {
+  /**
+   * Obtiene una reacción por su ID
+   * @param {number} id - ID de la reacción
+   * @returns {Promise<Object>} Datos de la reacción
+   */
+  getReactionById: async (id) => {
     try {
-      const response = await API.get(ENDPOINTS.REACTIONS);
+      const response = await API.get(`/reactions/${id}`);
       return response.data;
     } catch (error) {
+      handleError(error, `obtener reacción con ID ${id}`);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene todas las reacciones del sistema
+   * @returns {Promise<Array>} Lista de todas las reacciones
+   */
+  getAllReactions: async () => {
+    try {
+      const response = await API.get('/reactions');
+
+      // Procesamos la respuesta según el formato del API
+      if (response.data && response.data.data) {
+        return response.data.data;
+      } else if (Array.isArray(response.data)) {
+        return response.data;
+      }
+
+      return [];
+    } catch (error) {
       handleError(error, 'obtener todas las reacciones');
+      return [];
+    }
+  },
+
+  /**
+   * Elimina una reacción
+   * @param {number} id - ID de la reacción a eliminar
+   * @returns {Promise<Object>} Respuesta del servidor
+   */
+  deleteReaction: async (id) => {
+    try {
+      const response = await API.delete(`/reactions/${id}`);
+      return response.data;
+    } catch (error) {
+      handleError(error, `eliminar reacción con ID ${id}`);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene las reacciones de una publicación específica
+   * @param {number} postId - ID de la publicación
+   * @returns {Promise<Array>} Lista de reacciones de la publicación
+   */
+  getReactionsByPost: async (postId) => {
+    try {
+      const response = await API.get(`/reactions/by-post/${postId}`);
+
+      if (response.data && response.data.data) {
+        return response.data.data;
+      } else if (Array.isArray(response.data)) {
+        return response.data;
+      }
+
+      return [];
+    } catch (error) {
+      handleError(error, `obtener reacciones de la publicación ${postId}`);
+      return [];
     }
   },
 };
