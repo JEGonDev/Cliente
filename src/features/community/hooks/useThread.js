@@ -120,19 +120,6 @@ export const useThread = () => {
 
 // Función para obtener hilos de un grupo específico
 const fetchThreadsByGroup = async (groupId) => {
-  // Validación: no llamar al backend si el groupId es inválido
-  if (
-    groupId === undefined ||
-    groupId === null ||
-    groupId === "" ||
-    groupId === "undefined" ||
-    groupId === "null" ||
-    Number.isNaN(groupId)
-  ) {
-    setError("ID de grupo inválido.");
-    setThreads([]);
-    return;
-  }
 
   setLoading(true);
   setError(null);

@@ -210,14 +210,54 @@ export const communityService = {
     }
   },
 
+  /**
+   * Elimina un grupo
+   * @param {number} id - ID del grupo a eliminar
+   * @returns {Promise} Resultado de la operación
+   */
   deleteGroup: async (id) => {
     try {
-      const response = await API.delete(ENDPOINTS.GROUP_BY_ID(id));
+      console.log(`🗑️ Intentando eliminar grupo ${id}...`);
+      const response = await API.delete(`/groups/${id}`);
+      console.log('✅ Grupo eliminado exitosamente:', response.data);
       return response.data;
     } catch (error) {
-      handleError(error, `eliminar grupo con ID ${id}`);
+      console.error(`❌ Error eliminando grupo ${id}:`, error);
+      
+      // Mejorar el manejo de errores específicos
+      if (error.response) {
+        const { status, data } = error.response;
+        console.error(`Status: ${status}`, data);
+        
+        switch (status) {
+          case 401:
+            throw new Error('No tienes autorización para eliminar grupos. Inicia sesión nuevamente.');
+          case 403:
+            throw new Error('No tienes permisos de administrador para eliminar grupos.');
+          case 404:
+            throw new Error('El grupo no existe o ya fue eliminado.');
+          case 409:
+            throw new Error('No se puede eliminar el grupo porque tiene hilos o miembros asociados.');
+          default:
+            throw new Error(data?.message || `Error del servidor (${status})`);
+        }
+      } else if (error.request) {
+        throw new Error('No se pudo conectar con el servidor. Verifica tu conexión.');
+      } else {
+        throw new Error('Error inesperado al eliminar el grupo.');
+      }
     }
   },
+
+
+  // deleteGroup: async (id) => {
+  //   try {
+  //     const response = await API.delete(ENDPOINTS.GROUP_BY_ID(id));
+  //     return response.data;
+  //   } catch (error) {
+  //     handleError(error, `eliminar grupo con ID ${id}`);
+  //   }
+  // },
 
   /**
    * Hace que el usuario autenticado se una a un grupo.
@@ -238,7 +278,7 @@ export const communityService = {
   getThreadsByGroup: async (groupId) => {
     try {
       const response = await API.get(`/threads/by-group/${groupId}`);
-      console.log("Respuesta de la API de hilos:", response?.data);
+      
 
       return response.data;
     } catch (error) {
