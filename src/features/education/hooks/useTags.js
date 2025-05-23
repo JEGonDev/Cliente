@@ -119,7 +119,10 @@ export const useTags = () => {
     if (!validateForm()) return null;
 
     try {
-      const newTag = await contextCreateTag(formData.name);
+      // Remover el símbolo "#" del inicio del nombre si existe
+      const cleanTagName = formData.name.trim().replace(/^#/, '');
+
+      const newTag = await contextCreateTag(cleanTagName);
 
       if (newTag) {
         setSuccessMessage('Etiqueta creada correctamente');
@@ -143,46 +146,46 @@ export const useTags = () => {
       setFormErrors({ auth: 'Debes iniciar sesión para realizar esta acción' });
       return null;
     }
-    
+
     // Sólo los administradores pueden actualizar etiquetas
     if (!isAdmin) {
       setFormErrors({ permission: 'No tienes permisos para actualizar etiquetas' });
       return null;
     }
-    
+
     // Verificar que tenemos los datos necesarios
     if (!tagData || !tagData.id || !tagData.name) {
       setFormErrors({ data: 'Datos de etiqueta incompletos' });
       return null;
     }
-    
+
     // Limpiar mensajes previos
     setSuccessMessage('');
-    
+
     try {
       // Asegurarse de que estamos enviando los datos correctos
       const updateData = {
         id: tagData.id,
         name: tagData.name.trim()
       };
-      
+
       console.log('Datos enviados para actualización:', updateData);
-      
+
       const updatedTag = await contextUpdateTag(updateData);
-      
+
       if (updatedTag) {
         setSuccessMessage('Etiqueta actualizada correctamente');
-        
+
         // Actualizar el contexto llamando a fetchAllTags para refrescar la lista completa
         await fetchAllTags();
-        
+
         return updatedTag;
       }
       return null;
     } catch (error) {
       console.error(`Error actualizando etiqueta ${tagData.id}:`, error);
-      setFormErrors({ 
-        api: error.response?.data?.message || 'Error al actualizar la etiqueta' 
+      setFormErrors({
+        api: error.response?.data?.message || 'Error al actualizar la etiqueta'
       });
       return null;
     }
