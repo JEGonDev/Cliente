@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { usePost } from "../hooks/usePost";
 import { communityService } from "../services/communityService";
+import { Modal } from '../../../ui/components/Modal';
+import { Button } from '../../../ui/components/Button';
+import { Film, Image, Upload, X } from 'lucide-react';
 import PropTypes from "prop-types";
 
 /**
  * Modal para crear/editar publicaciones adaptado a diferentes contextos
+ * Mantiene la misma interfaz gráfica que EditPostModal para consistencia visual
  * 
  * @param {Object} props - Propiedades del componente
  * @param {Function} props.onClose - Función para cerrar el modal
@@ -34,9 +38,12 @@ export const PostFormModal = ({
     successMessage
   } = usePost();
 
-  // Estados locales
+  // Estados locales para manejo de grupos y archivos
   const [groups, setGroups] = useState([]);
+  const [file, setFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
+  const [isVideo, setIsVideo] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Establecer el contexto inicial al montar el componente
   useEffect(() => {
@@ -84,9 +91,22 @@ export const PostFormModal = ({
   // Si hay un post para editar, cargar sus datos
   useEffect(() => {
     if (postToEdit) {
-      // Aquí se cargarían los datos del post a editar, manteniendo el contexto
+      // Cargar los datos del post a editar, manteniendo el contexto
+      setFormData({
+        postType: postToEdit.postType || postToEdit.post_type || 'general',
+        content: postToEdit.content || ''
+      });
     }
-  }, [postToEdit]);
+  }, [postToEdit, setFormData]);
+
+  // Limpiar recursos al desmontar el componente
+  useEffect(() => {
+    return () => {
+      if (filePreview) {
+        URL.revokeObjectURL(filePreview);
+      }
+    };
+  }, [filePreview]);
 
   // Sobreescribir el manejador de cambios para mantener el contexto
   const handleChange = (e) => {
@@ -101,252 +121,320 @@ export const PostFormModal = ({
     originalHandleChange(e);
   };
 
-  // Manejador personalizado para archivos con vista previa
+  // Manejador para archivos con vista previa
   const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
+    const selectedFile = e.target.files[0];
+    if (!selectedFile) return;
 
-    if (!file) return;
-
-    // Definimos los tipos permitidos
-    const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    const validVideoTypes = ['video/mp4', 'video/webm', 'video/mkv', 'video/x-matroska'];
-
-    // Determinamos el tamaño máximo según el tipo
-    let maxSize;
-    let typeLabel;
-    if (validImageTypes.includes(file.type)) {
-      maxSize = 10 * 1024 * 1024;    // 10 MB
-      typeLabel = 'imagen';
-    } else if (validVideoTypes.includes(file.type)) {
-      maxSize = 1024 * 1024 * 1024;  // 1 GB
-      typeLabel = 'video';
-    } else {
-      alert("Solo se permiten imágenes (JPG, PNG, GIF, WEBP) o vídeos (MP4, WEBM).");
-      e.target.value = null;
-      return;
+    // Limpiar preview anterior si existe
+    if (filePreview) {
+      URL.revokeObjectURL(filePreview);
     }
 
-    // Comprobamos el tamaño
-    if (file.size > maxSize) {
-      alert(`El ${typeLabel} es demasiado grande. Tamaño máximo: ${typeLabel === 'imagen' ? '10 MB' : '1 GB'}.`);
-      e.target.value = null;
-      return;
-    }
+    // Verificar si el archivo es un video
+    const isVideoFile = 
+      selectedFile.type.startsWith('video/') ||
+      selectedFile.name.endsWith('.mkv') ||
+      selectedFile.name.endsWith('.mp4') ||
+      selectedFile.name.endsWith('.webm');
 
-    // Creamos la vista previa
-    const previewUrl = URL.createObjectURL(file);
-    setFilePreview(previewUrl);
+    // Establecer estados del archivo
+    setFile(selectedFile);
+    setFilePreview(URL.createObjectURL(selectedFile));
+    setIsVideo(isVideoFile);
 
-    // Disparamos el cambio al hook original
+    // Disparar el cambio al hook original
     const syntheticEvent = {
       target: {
         name: 'file',
         type: 'file',
-        files: [file],
+        files: [selectedFile],
       },
     };
     originalHandleChange(syntheticEvent);
   };
 
+  // Función para eliminar el archivo seleccionado
+  const handleRemoveFile = () => {
+    if (filePreview) {
+      URL.revokeObjectURL(filePreview);
+    }
+    setFile(null);
+    setFilePreview(null);
+    setIsVideo(false);
+
+    // Limpiar el input de archivo
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) fileInput.value = '';
+  };
 
   // Manejador para enviar el formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
-    // Realizar validaciones adicionales según el contexto
+    try {
+      // Realizar validaciones adicionales según el contexto
 
-    let result;
-    if (postToEdit) {
-      // Si estamos editando un post
-      result = await handleUpdatePost(postToEdit.id, e);
-    } else {
-      // Si estamos creando un post nuevo
-      result = await handleCreatePost(e);
-    }
-
-    // Si se creó/editó correctamente
-    if (result) {
-      // Limpiar la vista previa
-      if (filePreview) {
-        URL.revokeObjectURL(filePreview);
+      let result;
+      if (postToEdit) {
+        // Si estamos editando un post
+        result = await handleUpdatePost(postToEdit.id, e);
+      } else {
+        // Si estamos creando un post nuevo
+        result = await handleCreatePost(e);
       }
 
-      // Notificar al componente padre
-      if (onPostCreated) {
-        onPostCreated(result);
-      }
+      // Si se creó/editó correctamente
+      if (result) {
+        // Limpiar la vista previa
+        if (filePreview) {
+          URL.revokeObjectURL(filePreview);
+        }
 
-      // Si fue exitoso, cerramos después de un breve delay
-      setTimeout(() => {
+        // Notificar al componente padre
+        if (onPostCreated) {
+          onPostCreated(result);
+        }
+
+        // Cerrar el modal
         onClose();
-      }, 1500);
+      }
+    } catch (err) {
+      console.error('Error al procesar publicación:', err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   // Obtener el título según el contexto
   const getContextTitle = () => {
     if (postToEdit) {
-      return "Editar publicación";
+      return "Editar Publicación";
     }
 
     switch (context.type) {
       case 'group':
-        return `Publicar en grupo: ${context.name || 'Grupo'}`;
+        return `Nueva Publicación en ${context.name || 'Grupo'}`;
       case 'thread':
-        return `Publicar en hilo: ${context.name || 'Hilo'}`;
+        return `Nueva Publicación en ${context.name || 'Hilo'}`;
       default:
-        return "Crear nueva publicación";
+        return "Crear Nueva Publicación";
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">
-            {getContextTitle()}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+    <Modal 
+      isOpen={true} 
+      onClose={onClose} 
+      title={getContextTitle()} 
+      size="md"
+    >
+      {/* Mensajes de estado - éxito y error */}
+      {successMessage && (
+        <div className="bg-green-50 border-l-4 border-green-500 text-green-700 p-3 mb-4 rounded">
+          {successMessage}
+        </div>
+      )}
+      
+      {(error || formErrors.general) && (
+        <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-3 mb-4 rounded">
+          {error || formErrors.general}
+        </div>
+      )}
+
+      {/* Contexto visual (solo visible si no es general) */}
+      {context.type !== 'general' && (
+        <div className="mb-4 bg-blue-50 p-3 rounded-md flex items-center">
+          <div className="w-8 h-8 bg-primary text-white flex items-center justify-center rounded-full mr-2">
+            {context.type === 'group' ? 'G' : 'T'}
+          </div>
+          <div>
+            <p className="text-sm font-medium">{context.name || (context.type === 'group' ? 'Grupo' : 'Hilo')}</p>
+            <p className="text-xs text-gray-500">
+              Tu publicación será visible para todos los miembros de este {context.type === 'group' ? 'grupo' : 'hilo'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        {/* Campo: Tipo de publicación */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Tipo de publicación
+          </label>
+          <select
+            name="postType"
+            value={formData.postType}
+            onChange={handleChange}
+            className="w-full p-2 border border-gray-300 rounded focus:ring-primary focus:border-primary"
+            disabled={isSubmitting}
           >
-            &times;
-          </button>
+            <option value="general">General</option>
+            <option value="question">Pregunta</option>
+            <option value="resource">Recurso</option>
+            <option value="tutorial">Tutorial</option>
+          </select>
+          {formErrors.postType && (
+            <p className="mt-1 text-sm text-red-600">{formErrors.postType}</p>
+          )}
         </div>
 
-        {/* Contexto visual (solo visible si no es general) */}
-        {context.type !== 'general' && (
-          <div className="mb-4 bg-gray-100 p-3 rounded-md flex items-center">
-            <div className="w-8 h-8 bg-primary text-white flex items-center justify-center rounded-full mr-2">
-              {context.type === 'group' ? 'G' : 'T'}
-            </div>
-            <div>
-              <p className="text-sm font-medium">{context.name || (context.type === 'group' ? 'Grupo' : 'Hilo')}</p>
-              <p className="text-xs text-gray-500">
-                Tu publicación será visible para todos los miembros de este {context.type === 'group' ? 'grupo' : 'hilo'}
-              </p>
-            </div>
-          </div>
-        )}
+        {/* Campo: Contenido de la publicación */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Contenido
+          </label>
+          <textarea
+            name="content"
+            value={formData.content}
+            onChange={handleChange}
+            className="w-full p-2 border border-gray-300 rounded focus:ring-primary focus:border-primary"
+            rows="4"
+            placeholder="¿Qué quieres compartir?"
+            disabled={isSubmitting}
+            required
+          ></textarea>
+          {formErrors.content && (
+            <p className="mt-1 text-sm text-red-600">{formErrors.content}</p>
+          )}
+        </div>
 
-        {/* Mensajes de éxito/error */}
-        {successMessage && (
-          <div className="mb-4 bg-green-100 border border-green-300 text-green-700 px-4 py-3 rounded">
-            {successMessage}
-          </div>
-        )}
+        {/* Sección de contenido multimedia */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Contenido multimedia
+          </label>
 
-        {(error || formErrors.general) && (
-          <div className="mb-4 bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded">
-            {error || formErrors.general}
-          </div>
-        )}
+          {/* Input para nuevo archivo si no hay uno seleccionado */}
+          <div className="space-y-3">
+            {!file ? (
+              <div className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center">
+                <label className="cursor-pointer flex flex-col items-center">
+                  <Upload className="mb-2 text-gray-400" size={24} />
+                  <span className="text-sm text-gray-600 mb-1">
+                    Haz clic para subir una imagen o video
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Formatos: JPG, PNG, GIF, MP4, MKV, WEBM
+                  </span>
+                  <input
+                    type="file"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    accept="image/*,video/*,.mkv,.webm"
+                    disabled={isSubmitting}
+                  />
+                </label>
+              </div>
+            ) : (
+              /* Mostrar archivo seleccionado con vista previa */
+              <div className="relative border border-gray-200 rounded-md p-3 bg-gray-50">
+                <div className="flex items-center">
+                  {/* Icono según tipo de archivo */}
+                  {isVideo ? (
+                    <Film className="text-gray-500 mr-2" size={18} />
+                  ) : (
+                    <Image className="text-gray-500 mr-2" size={18} />
+                  )}
+                  <span className="text-sm text-gray-600 truncate flex-1">
+                    {file.name}
+                  </span>
+                  {/* Botón para eliminar archivo */}
+                  <button
+                    type="button"
+                    onClick={handleRemoveFile}
+                    className="text-gray-500 hover:text-red-500"
+                    disabled={isSubmitting}
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
 
-        <form onSubmit={handleSubmit} encType="multipart/form-data">
-          {/* Tipo de publicación */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tipo de publicación
-            </label>
-            <select
-              name="postType"
-              value={formData.postType}
-              onChange={handleChange}
-              className="w-full border rounded-md p-2 focus:ring-primary focus:border-primary"
-              disabled={loading}
-            >
-              <option value="general">General</option>
-              <option value="question">Pregunta</option>
-              <option value="resource">Recurso</option>
-              <option value="tutorial">Tutorial</option>
-            </select>
-            {formErrors.postType && (
-              <p className="mt-1 text-sm text-red-600">{formErrors.postType}</p>
-            )}
-          </div>
-
-          {/* Contenido */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Contenido
-            </label>
-            <textarea
-              name="content"
-              value={formData.content}
-              onChange={handleChange}
-              className="w-full border rounded-md p-2 focus:ring-primary focus:border-primary"
-              rows="4"
-              placeholder="¿Qué quieres compartir?"
-              disabled={loading}
-            ></textarea>
-            {formErrors.content && (
-              <p className="mt-1 text-sm text-red-600">{formErrors.content}</p>
-            )}
-          </div>
-
-          {/* Archivo multimedia */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Imagen o video (opcional)
-            </label>
-            <input
-              type="file"
-              name="file"
-              accept="image/*,video/*, .mkv, .webm, video/x-matroska"
-              onChange={handleFileChange}
-              className="w-full border rounded-md p-2 focus:ring-primary focus:border-primary"
-              disabled={loading}
-            />
-            {formErrors.file && (
-              <p className="mt-1 text-sm text-red-600">{formErrors.file}</p>
-            )}
-
-            {/* Vista previa del archivo */}
-            {filePreview && (
-              <div className="mt-2">
-                <p className="text-sm text-gray-600 mb-1">Vista previa:</p>
-                <img
-                  src={filePreview}
-                  alt="Vista previa"
-                  className="max-h-40 rounded-md"
-                />
+                {/* Vista previa del archivo seleccionado */}
+                {filePreview && (
+                  <div className="mt-2 border rounded overflow-hidden max-h-40">
+                    {isVideo ? (
+                      <video 
+                        src={filePreview} 
+                        controls 
+                        className="w-full h-40 object-cover"
+                      />
+                    ) : (
+                      <img 
+                        src={filePreview} 
+                        alt="Vista previa" 
+                        className="w-full h-40 object-cover"
+                      />
+                    )}
+                  </div>
+                )}
               </div>
             )}
+
+            {/* Texto informativo sobre el estado del archivo */}
+            <p className="text-xs text-gray-500 italic">
+              {!file ? 
+                "No se enviará ningún contenido multimedia con esta publicación." :
+                "Se incluirá este archivo con la publicación."
+              }
+            </p>
           </div>
 
-          {/* Botones de acción */}
-          <div className="flex justify-end gap-2 mt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-              disabled={loading}
-            >
-              Cancelar
-            </button>
+          {/* Mostrar errores de archivo si existen */}
+          {formErrors.file && (
+            <p className="mt-1 text-sm text-red-600">{formErrors.file}</p>
+          )}
+        </div>
 
-            <button
-              type="submit"
-              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-green-700 flex items-center"
-              disabled={loading}
+        {/* Campo: Selector de grupo (solo para contexto general) */}
+        {context.type === 'general' && groups.length > 0 && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Publicar en grupo (opcional)
+            </label>
+            <select
+              name="groupId"
+              value={formData.groupId || ""}
+              onChange={handleChange}
+              className="w-full p-2 border border-gray-300 rounded focus:ring-primary focus:border-primary"
+              disabled={isSubmitting}
             >
-              {loading ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Procesando...
-                </>
-              ) : postToEdit ? "Actualizar" : "Publicar"}
-            </button>
+              <option value="">Publicación general</option>
+              {groups.map(group => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ))}
+            </select>
           </div>
-        </form>
-      </div>
-    </div>
+        )}
+
+        {/* Botones de acción del formulario */}
+        <div className="flex justify-end gap-2">
+          <Button 
+            variant="white" 
+            onClick={onClose} 
+            disabled={isSubmitting}
+            type="button"
+          >
+            Cancelar
+          </Button>
+          <Button
+            variant="primary"
+            type="submit"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Procesando...' : postToEdit ? 'Guardar cambios' : 'Publicar'}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 };
 
+// Validación de propiedades con PropTypes
 PostFormModal.propTypes = {
   onClose: PropTypes.func.isRequired,
   onPostCreated: PropTypes.func,

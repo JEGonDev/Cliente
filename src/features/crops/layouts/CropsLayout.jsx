@@ -1,7 +1,6 @@
-import { useState } from 'react';
-
-import { CropDetailModal } from '../ui/CropDetailModal';
 import { CropCard } from '../ui/CropCard';
+import { useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 
 // Simulación de cultivos
 const mockCrops = [
@@ -20,7 +19,7 @@ const mockCrops = [
     alerts: [
       { id: 'a1', type: 'warning', message: 'Alta temperatura detectada', timestamp: Date.now() - 1000000 }
     ]
-  },
+  },  
   {
     id: 2,
     name: 'Lechuga Romana',
@@ -95,33 +94,41 @@ const mockCrops = [
     },
     alerts: []
   }
-];
+]; 
 
 export const CropsLayout = () => {
-  const [selectedCrop, setSelectedCrop] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleCardClick = (crop) => {
-    setSelectedCrop(crop);
-    setModalOpen(true);
+    navigate(`/monitoring/crops/${crop.id}/real-time`);
   };
 
-  const closeModal = () => {
-    setModalOpen(false);
-    setSelectedCrop(null);
+  const handleAddCrop = () => {
+    // Navegar a la página de crear cultivo
+    navigate('/monitoring/crops/create');
   };
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Cultivos</h1>
+      {/* Header con título y botón de agregar */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Cultivos</h1>
+        
+        <button
+          onClick={handleAddCrop}
+          className="inline-flex items-center bg- bg-primary px-4 py-2 bg-green-800 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
+        >
+          <Plus className="h-5 w-5 mr-2" />
+          Nuevo cultivo
+        </button>
+      </div>
 
+      {/* Lista de cultivos */}
       <div className="flex flex-col gap-4 w-full">
         {mockCrops.map((crop) => (
           <CropCard key={crop.id} crop={crop} onClick={handleCardClick} />
         ))}
       </div>
-
-      <CropDetailModal isOpen={modalOpen} crop={selectedCrop} onClose={closeModal} />
     </div>
   );
 };

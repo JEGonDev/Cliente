@@ -1,87 +1,296 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { PostCard } from "../ui/PostCard";
 import { SearchBar } from "../ui/SearchBar";
 import { PostFormModal } from "../ui/PostFormModal";
 import { communityService } from "../services/communityService";
+import { AuthContext } from "../../authentication/context/AuthContext";
+import { UserIcon, RefreshCw, Filter } from "lucide-react";
 
 export const PostListView = () => {
+  // Contexto de autenticación para obtener datos del usuario
+  const { user } = useContext(AuthContext);
+
+  // Estados para manejar las publicaciones
   const [posts, setPosts] = useState([]);
   const [filteredPosts, setFilteredPosts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  // Filtrado por usuario
+  const [showOnlyUserPosts, setShowOnlyUserPosts] = useState(false);
 
-  const defaultPost = [
-    {
-      post_id: 0,
-      user_name: "Usuario Ejemplo",
-      content: "Este es un ejemplo de post en la comunidad",
-      post_type: "general",
-      group_id: null,
-      multimedia_content: null,
-    },
-  ];
-
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const data = await communityService.getAllPosts();
-        if (Array.isArray(data) && data.length > 0) {
-          setPosts(data);
-          setFilteredPosts(data);
-        } else {
-          setPosts(defaultPost);
-          setFilteredPosts(defaultPost);
-        }
-      } catch (error) {
-        console.error("Error al obtener publicaciones:", error);
-        setPosts(defaultPost);
-        setFilteredPosts(defaultPost);
-      }
-    };
-
-    fetchPosts();
-  }, []);
-
-  const handleSearch = (query) => {
-    const filtered = posts.filter(
-      (post) =>
-        post.content.toLowerCase().includes(query.toLowerCase()) ||
-        post.user_name.toLowerCase().includes(query.toLowerCase())
-    );
+  // Función para cargar todas las publicaciones
+  const fetchAllPosts = async () => {
+    setIsLoading(true);
+    setLoadError(null);
+    
+    try {
+      const response = await communityService.getAllPosts();
+      
+      // Verificamos que la respuesta sea un array
+      const postsArray = Array.isArray(response) 
+        ? response 
+        : Array.isArray(response?.data) 
+          ? response.data 
+          : [];
+      
+      // Ordenamos posts del más reciente al más antiguo
+      const sortedPosts = sortPostsByDateDesc(postsArray);
+      
+      setPosts(sortedPosts);
+      // Aplicamos cualquier filtro de búsqueda existente
+      applyFilters(sortedPosts);
+      
+      // Desactivamos filtro de usuario si estábamos en ese modo
+      setShowOnlyUserPosts(false);
+    } catch (error) {
+      console.error("Error al obtener publicaciones:", error);
+      setLoadError("No se pudieron cargar las publicaciones. Intente nuevamente.");
+      setPosts([]);
+      setFilteredPosts([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Función para cargar solo las publicaciones del usuario autenticado
+  const fetchUserPosts = async () => {
+    setIsLoading(true);
+    setLoadError(null);
+    
+    try {
+      const response = await communityService.getPostsByUser();
+      
+      // Verificamos que la respuesta sea un array
+      const postsArray = Array.isArray(response) 
+        ? response 
+        : Array.isArray(response?.data) 
+          ? response.data 
+          : [];
+      
+      // Ordenamos posts del más reciente al más antiguo
+      const sortedPosts = sortPostsByDateDesc(postsArray);
+      
+      setPosts(sortedPosts);
+      // Aplicamos cualquier filtro de búsqueda existente
+      applyFilters(sortedPosts);
+    } catch (error) {
+      console.error("Error al obtener publicaciones del usuario:", error);
+      setLoadError("No se pudieron cargar tus publicaciones. Intente nuevamente.");
+      setPosts([]);
+      setFilteredPosts([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Ordenar por fecha (más reciente primero)
+  const sortPostsByDateDesc = (posts) => {
+    return [...posts].sort((a, b) => {
+      const dateA = new Date(a.postDate || a.creation_date || a.post_date || 0);
+      const dateB = new Date(b.postDate || b.creation_date || b.post_date || 0);
+      return dateB - dateA;
+    });
+  };
+  
+  // Aplicar filtros de búsqueda
+  const applyFilters = (postsToFilter) => {
+    if (!searchTerm.trim()) {
+      setFilteredPosts(postsToFilter);
+      return;
+    }
+    
+    const term = searchTerm.toLowerCase();
+    
+    const filtered = postsToFilter.filter(post => {
+      // 1. Filtrar por contenido
+      const contentMatch = post.content && 
+                          post.content.toLowerCase().includes(term);
+      
+      // 2. Filtrar por autor 
+      // Nota: Esto funciona si ya hemos cargado los nombres de usuario en las cards
+      const userName = post.userName || post.user_name || post.author || "";
+      const userMatch = userName.toLowerCase().includes(term);
+      
+      // También busca por userId si el término parece ser un número
+      const userIdMatch = !isNaN(term) && 
+                         (post.userId?.toString() === term || 
+                          post.user_id?.toString() === term);
+      
+      // 3. Filtrar por tipo de publicación
+      const postType = post.postType || post.post_type || "";
+      const typeMatch = postType.toLowerCase().includes(term);
+      
+      return contentMatch || userMatch || userIdMatch || typeMatch;
+    });
+    
     setFilteredPosts(filtered);
   };
+  
+  // Manejar cambios en la búsqueda
+  const handleSearch = (query) => {
+    setSearchTerm(query);
+    applyFilters(posts);
+  };
+  
+  // Alternar entre todas las publicaciones y solo las del usuario
+  const toggleUserPostsFilter = () => {
+    if (showOnlyUserPosts) {
+      // Si ya estamos mostrando solo las del usuario, volvemos a mostrar todas
+      fetchAllPosts();
+    } else {
+      // Si estamos mostrando todas, cambiamos a mostrar solo las del usuario
+      setShowOnlyUserPosts(true);
+      fetchUserPosts();
+    }
+  };
+  
+  // Cargamos las publicaciones al montar el componente
+  useEffect(() => {
+    fetchAllPosts();
+  }, []);
+  
+  // Actualizamos los filtros cuando cambia el término de búsqueda
+  useEffect(() => {
+    applyFilters(posts);
+  }, [searchTerm]);
 
+  // Función para manejar la creación de una nueva publicación
   const handlePostCreated = (newPost) => {
-    setPosts([newPost, ...posts]);
-    setFilteredPosts([newPost, ...filteredPosts]);
+    // Cerramos el modal
+    setIsModalOpen(false);
+    
+    // Refrescamos la lista de publicaciones según el modo actual
+    if (showOnlyUserPosts) {
+      fetchUserPosts();
+    } else {
+      fetchAllPosts();
+    }
   };
 
   return (
-    <div className="p-4">
-      {/* Barra de búsqueda ocupa todo el ancho */}
-      <div className="mb-4">
-        <SearchBar onSearch={handleSearch} className="w-full" />
+    <div className="p-4 max-w-3xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Publicaciones de la comunidad</h1>
+      
+      {/* Barra de búsqueda y filtros */}
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="flex-grow">
+          <SearchBar 
+            onSearch={handleSearch} 
+            className="w-full" 
+            placeholder="Buscar por contenido, autor o tipo..." 
+          />
+        </div>
+        
+        <div className="flex gap-2">
+          {/* Botón para alternar entre todas/mis publicaciones */}
+          <button
+            onClick={toggleUserPostsFilter}
+            className={`flex items-center px-3 py-2 rounded-md border 
+                      ${showOnlyUserPosts 
+                        ? 'bg-primary text-white border-primary' 
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+            title={showOnlyUserPosts ? "Mostrar todas las publicaciones" : "Mostrar solo mis publicaciones"}
+          >
+            <UserIcon className="h-5 w-5 mr-1" />
+            <span className="hidden sm:inline">
+              {showOnlyUserPosts ? "Mis publicaciones" : "Filtrar por mis publicaciones"}
+            </span>
+          </button>
+          
+          {/* Botón para refrescar */}
+          <button
+            onClick={showOnlyUserPosts ? fetchUserPosts : fetchAllPosts}
+            className="flex items-center px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+            title="Refrescar publicaciones"
+          >
+            <RefreshCw className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
-      {/* Botón alineado a la derecha */}
+      {/* Botón para crear nueva publicación */}
       <div className="flex justify-end mb-4">
         <button
           onClick={() => setIsModalOpen(true)}
-          className="bg-primary text-white px-4 py-2 rounded-md hover:bg-green-600"
+          className="bg-primary text-white px-4 py-2 rounded-md hover:bg-green-600 flex items-center"
         >
-          Crear Nuevo Post
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Crear Publicación
         </button>
       </div>
 
+      {/* Mensaje sobre el modo de filtrado activo */}
+      {showOnlyUserPosts && (
+        <div className="bg-blue-50 text-blue-700 p-3 rounded mb-4 flex items-center justify-between">
+          <div className="flex items-center">
+            <Filter className="w-5 h-5 mr-2" />
+            <span>Mostrando solo tus publicaciones</span>
+          </div>
+          <button 
+            onClick={fetchAllPosts}
+            className="text-sm underline hover:text-blue-900"
+          >
+            Ver todas
+          </button>
+        </div>
+      )}
+
+      {/* Mensaje de carga */}
+      {isLoading && (
+        <div className="text-center py-8">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+          <p className="mt-2 text-gray-600">Cargando publicaciones...</p>
+        </div>
+      )}
+
+      {/* Mensaje de error */}
+      {loadError && !isLoading && (
+        <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-4">
+          <p>{loadError}</p>
+          <button 
+            onClick={showOnlyUserPosts ? fetchUserPosts : fetchAllPosts}
+            className="mt-2 text-sm underline hover:text-red-800"
+          >
+            Intentar nuevamente
+          </button>
+        </div>
+      )}
+
       {/* Lista de publicaciones */}
-      <div className="grid grid-cols-1 gap-6">
-        {filteredPosts.length > 0 ? (
-          filteredPosts.map((post) => (
-            <PostCard key={post.post_id} post={post} />
-          ))
-        ) : (
-          <p className="text-gray-500 text-center">No hay publicaciones disponibles.</p>
-        )}
-      </div>
+      {!isLoading && !loadError && (
+        <div className="grid grid-cols-1 gap-6">
+          {filteredPosts.length > 0 ? (
+            filteredPosts.map((post) => (
+              <PostCard 
+                key={post.id || post.post_id} 
+                post={post} 
+                onRefresh={showOnlyUserPosts ? fetchUserPosts : fetchAllPosts} 
+              />
+            ))
+          ) : (
+            <div className="bg-gray-50 text-center py-8 rounded-lg">
+              <p className="text-gray-500">
+                {searchTerm 
+                  ? `No se encontraron publicaciones para "${searchTerm}"` 
+                  : showOnlyUserPosts 
+                    ? "Aún no has creado publicaciones." 
+                    : "No hay publicaciones disponibles."}
+              </p>
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="mt-4 text-primary hover:underline"
+              >
+                ¡Crea la primera publicación!
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Modal para crear nueva publicación */}
       {isModalOpen && (
@@ -93,77 +302,3 @@ export const PostListView = () => {
     </div>
   );
 };
-
-
-// import React, { useEffect, useState } from "react";
-// import { PostCard } from "../ui/PostCard";
-// import { SearchBar } from "../ui/SearchBar";
-// import { PostFormModal } from "../ui/PostFormModal";
-// import { communityService } from "../services/communityService";
-
-// export const PostListView = () => {
-//   const [posts, setPosts] = useState([]);
-//   const [filteredPosts, setFilteredPosts] = useState([]);
-//   const [isModalOpen, setIsModalOpen] = useState(false);
-
-//   useEffect(() => {
-//     communityService
-//       .getAllPosts()
-//       .then((data) => {
-//         if (Array.isArray(data)) {
-//           setPosts(data);
-//           setFilteredPosts(data);
-//         } else {
-//           console.error("La API no devolvió un array:", data);
-//           setPosts([]);
-//           setFilteredPosts([]);
-//         }
-//       })
-//       .catch((error) => {
-//         console.error("Error al obtener publicaciones:", error);
-//         setPosts([]);
-//         setFilteredPosts([]);
-//       });
-//   }, []);
-
-//   const handleSearch = (query) => {
-//     const filtered = posts.filter(
-//       (post) =>
-//         post.content.toLowerCase().includes(query.toLowerCase()) ||
-//         post.user_name.toLowerCase().includes(query.toLowerCase())
-//     );
-//     setFilteredPosts(filtered);
-//   };
-
-//   const handlePostCreated = (newPost) => {
-//     setPosts([newPost, ...posts]);
-//     setFilteredPosts([newPost, ...filteredPosts]);
-//   };
-
-//   return (
-//     <div className="p-4">
-//       <div className="flex justify-between items-center mb-4">
-//         <SearchBar onSearch={handleSearch} />
-//         <button
-//           onClick={() => setIsModalOpen(true)}
-//           className="bg-primary text-white px-4 py-2 rounded-md hover:bg-green-600"
-//         >
-//           Crear Nuevo Post
-//         </button>
-//       </div>
-
-//       <div className="grid grid-cols-1 gap-6">
-//         {Array.isArray(filteredPosts) && filteredPosts.map((post) => (
-//           <PostCard key={post.post_id} post={post} />
-//         ))}
-//       </div>
-
-//       {isModalOpen && (
-//         <PostFormModal
-//           onClose={() => setIsModalOpen(false)}
-//           onPostCreated={handlePostCreated}
-//         />
-//       )}
-//     </div>
-//   );
-// };

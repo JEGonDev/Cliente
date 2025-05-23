@@ -2,6 +2,7 @@ import React from "react";
 import { FaUserCircle } from "react-icons/fa";
 
 export const ThreadCard = ({ thread }) => (
+  
   <div className="flex gap-3 items-start border rounded-lg p-4 shadow bg-white">
     <FaUserCircle className="text-3xl text-gray-400 mt-1" />
     <div className="flex-1">

@@ -1,29 +1,114 @@
-import { useState } from "react";
-import { ThumbsUp, MessageSquare, Share2, MoreVertical, Calendar } from "lucide-react";
+import { useState, useEffect, useContext } from "react";
+import { MoreVertical, Calendar, Image, Film, Pencil, Trash } from "lucide-react";
 import { usePost } from "../hooks/usePost";
+import { useReactions } from "../hooks/useReactions";
 import PropTypes from "prop-types";
+import { profileService } from "../../profile/services/profileService";
+import { AuthContext } from "../../authentication/context/AuthContext";
+import { DeletePostModal } from "./DeletePostModal";
+import { EditPostModal } from "./EditPostModal";
+import { ReactionButtonGroup, ReactionSummary, LikeButton } from "./ReactionButton";
 
 /**
- * Componente para mostrar una publicación en forma de tarjeta
- * 
- * @param {Object} props - Propiedades del componente 
- * @param {Object} props.post - Datos de la publicación
- * @param {Function} props.onRefresh - Función para actualizar publicaciones
+ * Componente para mostrar una publicación en forma de tarjeta con reacciones integradas
  */
 export const PostCard = ({ post, onRefresh }) => {
-  // Usar hook para lógica de publicaciones
-  const { handleDeletePost } = usePost();
+  // Contextos
+  const { user, isAuthenticated, isAdmin, isModerator } = useContext(AuthContext);
   
-  // Estado para el menú de opciones
+  // Hooks
+  const { handleDeletePost } = usePost();
+  const { fetchAllReactions } = useReactions();
+  
+  // Estados UI
   const [showOptions, setShowOptions] = useState(false);
+  const [showAllReactions, setShowAllReactions] = useState(false);
+  const [userName, setUserName] = useState(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
+  const [postOwnerUsername, setPostOwnerUsername] = useState(null);
+  const [mediaError, setMediaError] = useState(false);
+  const [isVideo, setIsVideo] = useState(false);
+  
+  // Estados para modales
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Identificadores normalizados
   const postId = post.id || post.post_id;
   const userId = post.userId || post.user_id;
-  const userName = post.userName || post.user_name || post.author || "Usuario";
-  const postDate = post.createdAt || post.creation_date || post.post_date || new Date();
+  const postType = post.postType || post.post_type || "general";
+  const postDate = post.postDate || post.creation_date || post.post_date || new Date().toISOString();
   const content = post.content || "";
   const imageUrl = post.multimediaContent || post.multimedia_content;
+  
+  // Verificación de permisos
+  const isCurrentUserPost = user && postOwnerUsername && (
+    user.username === postOwnerUsername
+  );
+  const canManagePost = isAdmin || isModerator || isCurrentUserPost;
+  
+  // Cargar reacciones al montar el componente
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchAllReactions();
+    }
+  }, [isAuthenticated, fetchAllReactions]);
+  
+  // Determinar si el contenido multimedia es un video
+  useEffect(() => {
+    if (imageUrl) {
+      const isVideoContent = 
+        imageUrl.endsWith('.mkv') || 
+        imageUrl.endsWith('.mp4') || 
+        imageUrl.endsWith('.webm') || 
+        imageUrl.includes('video') ||
+        imageUrl.includes('.mkv?') ||
+        imageUrl.includes('.mp4?') ||
+        imageUrl.includes('.webm?');
+      
+      setIsVideo(isVideoContent);
+    }
+  }, [imageUrl]);
+  
+  // Cargar información del usuario
+  useEffect(() => {
+    const fetchUserName = async () => {
+      if (!userId) {
+        setUserName("Usuario desconocido");
+        setIsLoadingUser(false);
+        return;
+      }
+      
+      try {
+        const userData = await profileService.getUserById(userId);
+        
+        if (userData) {
+          const displayName = userData.username ||  
+                              (userData.firstName && userData.lastName && 
+                               `${userData.firstName} ${userData.lastName}`) ||
+                              userData.email;
+                              
+          if (displayName) {
+            setUserName(displayName);
+          } else {
+            setUserName(`Usuario #${userId}`);
+          }
+          
+          setPostOwnerUsername(userData.username || userData.userName);
+        } else {
+          setUserName(`Usuario #${userId}`);
+        }
+      } catch (error) {
+        console.error("Error al cargar información del usuario:", error);
+        setUserName(`Usuario #${userId}`);
+      } finally {
+        setIsLoadingUser(false);
+      }
+    };
+    
+    fetchUserName();
+  }, [userId]);
   
   // Formatear fecha
   const formattedDate = new Date(postDate).toLocaleDateString('es-ES', {
@@ -36,13 +121,43 @@ export const PostCard = ({ post, onRefresh }) => {
   
   // Manejar eliminación de publicación
   const handleDelete = async () => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta publicación?')) {
+    setIsDeleting(true);
+    try {
       const success = await handleDeletePost(postId);
       if (success && onRefresh) {
         onRefresh();
       }
+    } catch (error) {
+      console.error("Error al eliminar publicación:", error);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
     }
-    setShowOptions(false);
+  };
+
+  // Formatear tipo de publicación
+  const formatPostType = (type) => {
+    const types = {
+      'general': 'General',
+      'question': 'Pregunta',
+      'resource': 'Recurso',
+      'tutorial': 'Tutorial'
+    };
+    
+    return types[type.toLowerCase()] || type;
+  };
+
+  // Manejador de error para contenido multimedia
+  const handleMediaError = (e) => {
+    console.error("Error al cargar contenido multimedia:", e);
+    setMediaError(true);
+  };
+  
+  // Manejar edición exitosa
+  const handleEditSuccess = () => {
+    if (onRefresh) {
+      onRefresh();
+    }
   };
 
   return (
@@ -52,10 +167,10 @@ export const PostCard = ({ post, onRefresh }) => {
         <div className="flex items-center">
           {/* Avatar generado con iniciales */}
           <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center mr-3">
-            {userName.charAt(0).toUpperCase()}
+            {isLoadingUser ? "..." : userName?.charAt(0)?.toUpperCase() || "U"}
           </div>
           <div>
-            <p className="font-medium text-gray-800">{userName}</p>
+            <p className="font-medium text-gray-800">{isLoadingUser ? "Cargando..." : userName}</p>
             <div className="flex items-center text-xs text-gray-500">
               <Calendar className="w-3 h-3 mr-1" />
               <span>{formattedDate}</span>
@@ -63,66 +178,175 @@ export const PostCard = ({ post, onRefresh }) => {
           </div>
         </div>
         
-        {/* Menú de opciones (tres puntos verticales) */}
-        <div className="relative">
-          <button 
-            className="p-1 rounded-full hover:bg-gray-100"
-            onClick={() => setShowOptions(!showOptions)}
-          >
-            <MoreVertical className="w-5 h-5 text-gray-500" />
-          </button>
+        {/* Menú de opciones */}
+        {canManagePost && (
+          <div className="relative">
+            <button 
+              className="p-1 rounded-full hover:bg-gray-100"
+              onClick={() => setShowOptions(!showOptions)}
+            >
+              <MoreVertical className="w-5 h-5 text-gray-500" />
+            </button>
+            
+            {showOptions && (
+              <div className="absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                <button
+                  onClick={() => {
+                    setShowOptions(false);
+                    setShowEditModal(true);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                >
+                  <Pencil className="w-4 h-4 mr-2" />
+                  Editar publicación
+                </button>
+                
+                <button
+                  onClick={() => {
+                    setShowOptions(false);
+                    setShowDeleteModal(true);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
+                >
+                  <Trash className="w-4 h-4 mr-2" />
+                  Eliminar publicación
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      
+      {/* Contenido de la publicación */}
+      <div className="p-4">
+        {/* Tipo de publicación */}
+        <div className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full mb-2">
+          {formatPostType(postType)}
+        </div>
+        
+        <p className="text-gray-800 mb-4 whitespace-pre-line">{content}</p>
+        
+        {/* Contenido multimedia */}
+        {imageUrl && !mediaError && (
+          <div className="mb-4 rounded-md overflow-hidden border border-gray-200">
+            {isVideo ? (
+              <div className="relative">
+                <video 
+                  controls 
+                  className="w-full max-h-96"
+                  onError={handleMediaError}
+                >
+                  <source src={imageUrl} type="video/mp4" />
+                  <source src={imageUrl} type="video/webm" />
+                  <source src={imageUrl} type="video/x-matroska" />
+                  Tu navegador no soporta la etiqueta de video.
+                </video>
+                <div className="absolute top-0 left-0 bg-black bg-opacity-60 text-white px-2 py-1 text-xs rounded m-2">
+                  <Film className="w-4 h-4 inline-block mr-1" />
+                  Video
+                </div>
+              </div>
+            ) : (
+              <div className="relative">
+                <img 
+                  src={imageUrl} 
+                  alt="Contenido multimedia" 
+                  className="w-full object-contain max-h-96"
+                  onError={handleMediaError}
+                />
+                <div className="absolute top-0 left-0 bg-black bg-opacity-60 text-white px-2 py-1 text-xs rounded m-2">
+                  <Image className="w-4 h-4 inline-block mr-1" />
+                  Imagen
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Mensaje de error para contenido multimedia */}
+        {imageUrl && mediaError && (
+          <div className="mb-4 rounded-md overflow-hidden">
+            <div className="bg-gray-100 border border-gray-200 p-4 text-center text-gray-600 rounded flex flex-col items-center justify-center" style={{minHeight: "120px"}}>
+              {isVideo ? (
+                <>
+                  <Film className="w-8 h-8 mb-2 text-gray-400" />
+                  <p>No se pudo cargar el video</p>
+                  <a 
+                    href={imageUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-primary text-sm mt-2 hover:underline"
+                  >
+                    Abrir video en nueva pestaña
+                  </a>
+                </>
+              ) : (
+                <>
+                  <Image className="w-8 h-8 mb-2 text-gray-400" />
+                  <p>No se pudo cargar la imagen</p>
+                  <a 
+                    href={imageUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-primary text-sm mt-2 hover:underline"
+                  >
+                    Abrir imagen en nueva pestaña
+                  </a>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* Resumen de reacciones */}
+        <ReactionSummary postId={postId} className="mb-3" />
+        
+        {/* Barra de reacciones */}
+        <div className="border-t border-gray-100 pt-3 mt-4">
+          {/* Sección de reacciones principales */}
+          <div className="flex items-center justify-between mb-3">
+            {/* Botón de "Me gusta" principal */}
+            <LikeButton postId={postId} size="md" />
+            
+            {/* Botón para mostrar más reacciones */}
+            <button
+              onClick={() => setShowAllReactions(!showAllReactions)}
+              className="text-gray-500 hover:text-gray-700 text-sm transition-colors px-3 py-1 rounded-md hover:bg-gray-100"
+            >
+              {showAllReactions ? 'Menos reacciones' : 'Más reacciones'}
+            </button>
+          </div>
           
-          {/* Menú desplegable con opciones */}
-          {showOptions && (
-            <div className="absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-              <button
-                onClick={handleDelete}
-                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-              >
-                Eliminar publicación
-              </button>
+          {/* Panel de todas las reacciones (desplegable) */}
+          {showAllReactions && (
+            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+              <p className="text-sm text-gray-600 mb-2">Reacciona a esta publicación:</p>
+              <ReactionButtonGroup 
+                postId={postId}
+                size="sm"
+                showLabels={false}
+                className="justify-start"
+              />
             </div>
           )}
         </div>
       </div>
       
-      {/* Contenido de la publicación */}
-      <div className="p-4">
-        <p className="text-gray-800 mb-4 whitespace-pre-line">{content}</p>
-        
-        {/* Imagen adjunta si existe */}
-        {imageUrl && (
-          <div className="mb-4 rounded-md overflow-hidden">
-            <img 
-              src={imageUrl} 
-              alt="Contenido multimedia" 
-              className="w-full object-cover max-h-96"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = 'https://via.placeholder.com/400x300?text=Imagen+no+disponible';
-              }}
-            />
-          </div>
-        )}
-        
-        {/* Barra de interacciones (me gusta, comentarios, compartir) */}
-        <div className="flex items-center justify-between border-t border-gray-100 pt-3 mt-2">
-          <button className="flex items-center text-gray-600 hover:text-blue-500">
-            <ThumbsUp className="w-5 h-5 mr-1" />
-            <span>Me gusta</span>
-          </button>
-          
-          <button className="flex items-center text-gray-600 hover:text-green-500">
-            <MessageSquare className="w-5 h-5 mr-1" />
-            <span>Comentar</span>
-          </button>
-          
-          <button className="flex items-center text-gray-600 hover:text-purple-500">
-            <Share2 className="w-5 h-5 mr-1" />
-            <span>Compartir</span>
-          </button>
-        </div>
-      </div>
+      {/* Modales */}
+      <DeletePostModal 
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        post={post}
+        isDeleting={isDeleting}
+      />
+      
+      <EditPostModal 
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onSuccess={handleEditSuccess}
+        post={post}
+      />
     </div>
   );
 };

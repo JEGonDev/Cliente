@@ -85,6 +85,12 @@ export const usePost = () => {
         ...formData,
         file: files[0]
       });
+    } else if (name === 'multimediaContent' && value === '') {
+      // Si se establece explícitamente a una cadena vacía, significa eliminar el archivo
+      setFormData({
+        ...formData,
+        multimediaContent: null
+      });
     } else if (name === 'groupId' || name === 'threadId') {
       // Convertir a número o null si está vacío
       setFormData({
@@ -135,7 +141,8 @@ export const usePost = () => {
         setFormData({
           postType: post.postType || 'general',
           content: post.content || '',
-          file: null, // No podemos cargar el archivo, solo el nuevo
+          file: null, // No podemos cargar el archivo directamente
+          multimediaContent: post.multimediaContent || null, // Mantener referencia al archivo existente
           groupId: post.groupId
         });
 
@@ -220,53 +227,33 @@ export const usePost = () => {
     setLoading(true);
 
     try {
-      // Preparar los datos para enviar
-      let postData;
+      // Siempre usamos FormData para mantener consistencia
+      const postData = new FormData();
 
+      // 1. Agregar postType (OBLIGATORIO)
+      postData.append('postType', formData.postType);
+
+      // 2. Agregar content (OBLIGATORIO)
+      postData.append('content', formData.content);
+
+      // 3. Agregar el archivo si existe
       if (formData.file) {
-        // Si hay un archivo, usar FormData
-        postData = new FormData();
-
-        // 1. Agregar postType (OBLIGATORIO)
-        postData.append('postType', formData.postType);
-
-        // 2. Agregar content (OBLIGATORIO)
-        postData.append('content', formData.content);
-
-        // 3. Agregar el archivo como 'file', NO como 'multimediaContent'
         postData.append('file', formData.file);
+      }
 
-        // 4. Agregar groupId si existe (como Integer)
-        if (formData.groupId) {
-          postData.append('groupId', Number(formData.groupId));
-        }
+      // 4. Agregar groupId si existe (como Integer)
+      if (formData.groupId) {
+        postData.append('groupId', Number(formData.groupId));
+      }
 
-        // 5. Agregar threadId si existe (como Integer)
-        if (formData.threadId) {
-          postData.append('threadId', Number(formData.threadId));
-        }
-
-        // Importante: NO agregamos un campo 'multimediaContent', ese lo generará el backend
-      } else {
-        // Si no hay archivo, enviamos un objeto JSON
-        postData = {
-          postType: formData.postType,
-          content: formData.content
-        };
-
-        // Agregar campos opcionales solo si tienen valor
-        if (formData.groupId) {
-          postData.groupId = Number(formData.groupId);
-        }
-
-        if (formData.threadId) {
-          postData.threadId = Number(formData.threadId);
-        }
+      // 5. Agregar threadId si existe (como Integer)
+      if (formData.threadId) {
+        postData.append('threadId', Number(formData.threadId));
       }
 
       // Mostrar en consola lo que estamos enviando (para depuración)
       console.log('Enviando datos al servidor:',
-        formData.file ? 'FormData con archivo' : postData
+        formData.file ? 'FormData con archivo' : 'FormData sin archivo'
       );
 
       // Llamar al servicio para crear la publicación
@@ -320,37 +307,28 @@ export const usePost = () => {
     setLoading(true);
 
     try {
-      // Para actualización, solo enviamos los campos básicos
-      const updateData = {
-        postType: formData.postType,
-        content: formData.content
-      };
+      // Para actualización, preparamos los datos como FormData
+      const updateFormData = new FormData();
+      updateFormData.append('postType', formData.postType);
+      updateFormData.append('content', formData.content);
 
-      // Si hay un archivo nuevo, lo procesamos
+      // Si se eliminó el archivo multimedia existente, enviamos null
+      if (formData.multimediaContent === null) {
+        updateFormData.append('multimediaContent', '');
+      }
+
+      // Si hay un nuevo archivo, lo agregamos
       if (formData.file) {
-        const updateFormData = new FormData();
-        updateFormData.append('postType', formData.postType);
-        updateFormData.append('content', formData.content);
-        updateFormData.append('multimediaContent', formData.file);
+        updateFormData.append('file', formData.file);
+      }
 
-        const response = await communityService.updatePost(postId, updateFormData);
+      const response = await communityService.updatePost(postId, updateFormData);
 
-        if (response) {
-          setSuccessMessage('Publicación actualizada correctamente');
-          resetForm();
-          await fetchAllPosts();
-          return response;
-        }
-      } else {
-        // Sin archivo nuevo
-        const response = await communityService.updatePost(postId, updateData);
-
-        if (response) {
-          setSuccessMessage('Publicación actualizada correctamente');
-          resetForm();
-          await fetchAllPosts();
-          return response;
-        }
+      if (response) {
+        setSuccessMessage('Publicación actualizada correctamente');
+        resetForm();
+        await fetchAllPosts();
+        return response;
       }
 
       return null;

@@ -12,7 +12,7 @@ const defaultThresholds = {
   ec: { min: 1.0, max: 1.6 },
 };
 
-// Datos de ejemplo
+// Datos de ejemplo 
 const demoData = {
   temperature: {
     current: 22.4,
@@ -43,7 +43,6 @@ const demoData = {
  * @param {Object} props.data - Datos para mostrar en tiempo real
  */
 export const RealTimeLayout = ({ data = {} }) => {
-  // Validar si los datos proporcionados son válidos
   const isValidData =
     data?.temperature?.current !== undefined &&
     data?.humidity?.current !== undefined &&
@@ -52,11 +51,37 @@ export const RealTimeLayout = ({ data = {} }) => {
   const displayData = isValidData ? data : demoData;
 
   const [thresholds, setThresholds] = useState(defaultThresholds);
+  const [status, setStatus] = useState(null); // null | "loading" | "success" | "error"
 
-  // useEffect futuro: actualizar thresholds desde backend o sincronizar con data
+  // Actualiza thresholds si vienen desde props.data
   useEffect(() => {
-    // Lógica para sincronizar umbrales si fuese necesario
+    if (data?.thresholds) {
+      setThresholds((prevThresholds) => ({
+        ...prevThresholds,
+        ...data.thresholds,
+      }));
+    }
   }, [data]);
+
+  const handleSaveThresholds = async () => {
+    setStatus("loading");
+    try {
+      const response = await fetch("/api/thresholds", {
+        method: "POST", // o PUT según tu API
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(thresholds),
+      });
+
+      if (!response.ok) throw new Error("Error al guardar los umbrales");
+
+      setStatus("success");
+    } catch (error) {
+      setStatus("error");
+      console.error(error);
+    }
+  };
 
   return (
     <div className="p-6">
@@ -111,16 +136,28 @@ export const RealTimeLayout = ({ data = {} }) => {
         />
 
         {/* Botón para guardar los cambios */}
-        <button className="mt-4 p-2 bg-primary text-white rounded">
-          {" "}
-          Guardar Umbrales{" "}
+        <button
+          onClick={handleSaveThresholds}
+          disabled={status === "loading"}
+          className="mt-4 p-2 bg-primary text-white rounded disabled:opacity-50"
+        >
+          {status === "loading" ? "Guardando..." : "Guardar Umbrales"}
         </button>
+
+        {/* Mensajes de estado */}
+        {status === "success" && (
+          <p className="mt-2 text-green-600">Umbrales guardados correctamente.</p>
+        )}
+        {status === "error" && (
+          <p className="mt-2 text-red-600">
+            Error al guardar los umbrales. Inténtalo de nuevo.
+          </p>
+        )}
       </div>
     </div>
   );
 };
 
-// Definición de tipos para las props
 RealTimeLayout.propTypes = {
   data: PropTypes.shape({
     temperature: PropTypes.shape({
@@ -142,6 +179,20 @@ RealTimeLayout.propTypes = {
       unit: PropTypes.string,
       trend: PropTypes.string,
       trendTime: PropTypes.string,
+    }),
+    thresholds: PropTypes.shape({
+      temperature: PropTypes.shape({
+        min: PropTypes.number,
+        max: PropTypes.number,
+      }),
+      humidity: PropTypes.shape({
+        min: PropTypes.number,
+        max: PropTypes.number,
+      }),
+      ec: PropTypes.shape({
+        min: PropTypes.number,
+        max: PropTypes.number,
+      }),
     }),
   }),
 };
