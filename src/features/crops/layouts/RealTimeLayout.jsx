@@ -3,8 +3,9 @@ import PropTypes from "prop-types";
 import { RealTimeIndicator } from "../ui/RealTimeIndicator";
 import { RealTimeChart } from "../ui/RealTimeChart";
 import { TimeSelector } from "../ui/TimeSelector";
-import { GlobalThresholdsEditor } from "../ui/GlobalThresholdsEditor";
+import { ThresholdEditModal } from "../ui/ThresholdEditModal"; 
 import { Link } from 'react-router-dom';
+import { ThresholdSlider } from "../ui/ThresholdSlider";
 
 // Valores por defecto para umbrales
 const defaultThresholds = {
@@ -39,6 +40,7 @@ const demoData = {
 
 /**
  * Layout para la sección de monitoreo en tiempo real
+ * Ahora incluye sliders visuales para umbrales y modal de edición
  *
  * @param {Object} props - Propiedades del componente
  * @param {Object} props.data - Datos para mostrar en tiempo real
@@ -49,19 +51,11 @@ export const RealTimeLayout = ({ data = {} }) => {
     data?.humidity?.current !== undefined &&
     data?.ec?.current !== undefined;
 
-{/* Botón para volver a cultivos */}
-<div className="mb-4">
-  <Link
-    to="/monitoring/crops" // Asegúrate de que esta ruta sea correcta según tus rutas
-    className="inline-block bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 transition"
-  >
-    ← Volver a cultivos
-  </Link>
-</div>
   const displayData = isValidData ? data : demoData;
 
   const [thresholds, setThresholds] = useState(defaultThresholds);
   const [status, setStatus] = useState(null); // null | "loading" | "success" | "error"
+  const [isThresholdModalOpen, setIsThresholdModalOpen] = useState(false);
 
   // Actualiza thresholds si vienen desde props.data
   useEffect(() => {
@@ -73,41 +67,63 @@ export const RealTimeLayout = ({ data = {} }) => {
     }
   }, [data]);
 
-  const handleSaveThresholds = async () => {
-    setStatus("loading");
+  // Maneja apertura del modal de edición
+  const handleEditThresholds = () => {
+    setIsThresholdModalOpen(true);
+  };
+
+  //  Maneja guardado desde el modal
+  const handleSaveThresholdsFromModal = async (newThresholds) => {
     try {
+      // Simular llamada a API (reemplaza con tu endpoint real)
       const response = await fetch("/api/thresholds", {
-        method: "POST", // o PUT según tu API
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(thresholds),
+        body: JSON.stringify(newThresholds),
       });
 
-      if (!response.ok) throw new Error("Error al guardar los umbrales");
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
 
+      // Actualizar los umbrales locales inmediatamente
+      setThresholds(newThresholds);
       setStatus("success");
+      setTimeout(() => setStatus(null), 3000);
+      
+      return Promise.resolve();
     } catch (error) {
-      setStatus("error");
-      console.error(error);
+      console.error('Error saving thresholds:', error);
+      throw error; // Re-lanzar para que el modal lo maneje
     }
   };
 
-return (
-  <div className="p-6">
-    {/* Agrega aquí */}
-    <div className="mb-4">
-      <Link
-        to="/monitoring/crops"
-        className="inline-block bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 transition"
-      >
-        ← Volver a cultivos
-      </Link>
-    </div>
+  const handleSaveThresholds = async () => {
+    setStatus("loading");
+    try {
+      await handleSaveThresholdsFromModal(thresholds);
+    } catch (error) {
+      setStatus("error");
+    }
+  };
 
-    <h1 className="text-2xl font-bold mb-6">Monitoreo en tiempo real</h1>
+  return (
+    <div className="p-6">
+      {/* Botón de navegación */}
+      <div className="mb-4">
+        <Link
+          to="/monitoring/crops"
+          className="inline-block bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 transition"
+        >
+          ← Volver a cultivos
+        </Link>
+      </div>
 
-      {/* Indicadores en tiempo real */}
+      <h1 className="text-2xl font-bold mb-6">Monitoreo en tiempo real</h1>
+
+      {/* Indicadores en tiempo real (existentes) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
         <RealTimeIndicator
           label="Temperatura"
@@ -139,7 +155,7 @@ return (
         />
       </div>
 
-      {/* Gráfico de monitoreo en tiempo real */}
+      {/* Gráfico de monitoreo en tiempo real (existente) */}
       <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-medium">Monitoreo en tiempo real</h2>
@@ -148,32 +164,29 @@ return (
         <RealTimeChart />
       </div>
 
-      {/* Umbrales editables */}
-      <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
-        <GlobalThresholdsEditor
-          thresholds={thresholds}
-          setThresholds={setThresholds}
-        />
+      {/* Sliders de umbrales en lugar del formulario */}
+      <ThresholdSlider
+        thresholds={thresholds}
+        onEditClick={handleEditThresholds}
+      />
 
-        {/* Botón para guardar los cambios */}
-        <button
-          onClick={handleSaveThresholds}
-          disabled={status === "loading"}
-          className="mt-4 p-2 bg-primary text-white rounded disabled:opacity-50"
-        >
-          {status === "loading" ? "Guardando..." : "Guardar Umbrales"}
-        </button>
+      {/*  Modal para editar umbrales */}
+      <ThresholdEditModal
+        isOpen={isThresholdModalOpen}
+        onClose={() => setIsThresholdModalOpen(false)}
+        initialThresholds={thresholds}
+        onSave={handleSaveThresholdsFromModal}
+      />
 
-        {/* Mensajes de estado */}
-        {status === "success" && (
-          <p className="mt-2 text-green-600">Umbrales guardados correctamente.</p>
-        )}
-        {status === "error" && (
-          <p className="mt-2 text-red-600">
-            Error al guardar los umbrales. Inténtalo de nuevo.
-          </p>
-        )}
-      </div>
+      {/* NOTIFICACIÓN GLOBAL DE ÉXITO */}
+      {status === "success" && (
+        <div className="fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg z-50">
+          <div className="flex items-center gap-2">
+            <span>✅</span>
+            <span>Umbrales actualizados correctamente</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
