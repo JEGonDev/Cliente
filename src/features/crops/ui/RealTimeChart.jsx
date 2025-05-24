@@ -17,12 +17,12 @@ const sampleData = [
   { time: '22:00', temp: 22, hum: 75, cond: 1.5 }
 ];
 
-// Funciones para formatear etiquetas y tooltips
+// Funciones para formatear valores
 const formatTemperature = (value) => `${value} °C`;
 const formatHumidity = (value) => `${value} %`;
 const formatConductivity = (value) => `${value} dS/m`;
 
-// Componentes de iconos
+// Componentes de iconos (sin cambios, solo para referencia visual)
 const HumidityIcon = () => (
   <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
     <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
@@ -41,12 +41,32 @@ const ConductivityIcon = () => (
   </svg>
 );
 
+// Componente de Tooltip Personalizado
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    // El 'payload' contiene los datos de todas las líneas en el punto actual
+    const dataPoint = payload[0].payload; // Accede al objeto de datos completo (ej. { time: '00:00', temp: 22, hum: 80, cond: 1.2 })
+
+    return (
+      <div className="bg-white p-3 border border-gray-300 rounded shadow-md text-sm">
+        <p className="font-semibold text-gray-800 mb-1">{`Tiempo: ${label}`}</p>
+        <p className="text-blue-600">{`Humedad: ${formatHumidity(dataPoint.hum)}`}</p>
+        <p className="text-red-600">{`Temperatura: ${formatTemperature(dataPoint.temp)}`}</p>
+        <p className="text-purple-600">{`Conductividad: ${formatConductivity(dataPoint.cond)}`}</p>
+      </div>
+    );
+  }
+
+  return null;
+};
+
+
 export const RealTimeChart = () => {
   return (
     <div className="w-full space-y-6">
       {/* Grid para humedad y temperatura */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
+
         {/* Gráfica de Humedad */}
         <div className="bg-white rounded-lg p-4 shadow">
           <div className="flex items-center gap-2 mb-4">
@@ -64,13 +84,14 @@ export const RealTimeChart = () => {
                   stroke="#4b5563"
                   tick={{ fontSize: 12 }}
                 />
-                <Tooltip formatter={(value) => formatHumidity(value)} />
+                {/* Usar el CustomTooltip */}
+                <Tooltip content={<CustomTooltip />} />
                 <Legend verticalAlign="bottom" height={36} />
-                
+
                 {/* Líneas de umbral */}
                 <ReferenceLine y={80} stroke="#f97316" strokeDasharray="4 4" strokeWidth={1.5} />
                 <ReferenceLine y={60} stroke="#f97316" strokeDasharray="4 4" strokeWidth={1.5} />
-                
+
                 <Line
                   type="monotone"
                   dataKey="hum"
@@ -80,7 +101,7 @@ export const RealTimeChart = () => {
                   dot={{ r: 3 }}
                   activeDot={{ r: 5 }}
                 />
-                
+
                 {/* Líneas para la leyenda de umbrales */}
                 <Line
                   type="monotone"
@@ -93,7 +114,7 @@ export const RealTimeChart = () => {
                 <Line
                   type="monotone"
                   dataKey={() => null}
-                  name="Umbral mínimo" 
+                  name="Umbral mínimo"
                   stroke="#f97316"
                   strokeDasharray="4 4"
                   dot={false}
@@ -120,13 +141,14 @@ export const RealTimeChart = () => {
                   stroke="#4b5563"
                   tick={{ fontSize: 12 }}
                 />
-                <Tooltip formatter={(value) => formatTemperature(value)} />
+                {/* Usar el CustomTooltip */}
+                <Tooltip content={<CustomTooltip />} />
                 <Legend verticalAlign="bottom" height={36} />
-                
+
                 {/* Líneas de umbral */}
                 <ReferenceLine y={26} stroke="#f97316" strokeDasharray="4 4" strokeWidth={1.5} />
                 <ReferenceLine y={18} stroke="#f97316" strokeDasharray="4 4" strokeWidth={1.5} />
-                
+
                 <Line
                   type="monotone"
                   dataKey="temp"
@@ -136,7 +158,7 @@ export const RealTimeChart = () => {
                   dot={{ r: 3 }}
                   activeDot={{ r: 5 }}
                 />
-                
+
                 {/* Líneas para la leyenda de umbrales */}
                 <Line
                   type="monotone"
@@ -177,13 +199,14 @@ export const RealTimeChart = () => {
                 stroke="#4b5563"
                 tick={{ fontSize: 12 }}
               />
-              <Tooltip formatter={(value) => formatConductivity(value)} />
+              {/* Usar el CustomTooltip */}
+              <Tooltip content={<CustomTooltip />} />
               <Legend verticalAlign="bottom" height={36} />
-              
+
               {/* Líneas de umbral */}
               <ReferenceLine y={1.6} stroke="#f97316" strokeDasharray="4 4" strokeWidth={1.5} />
               <ReferenceLine y={0.9} stroke="#f97316" strokeDasharray="4 4" strokeWidth={1.5} />
-              
+
               <Line
                 type="monotone"
                 dataKey="cond"
@@ -193,7 +216,7 @@ export const RealTimeChart = () => {
                 dot={{ r: 3 }}
                 activeDot={{ r: 5 }}
               />
-              
+
               {/* Líneas para la leyenda de umbrales */}
               <Line
                 type="monotone"
