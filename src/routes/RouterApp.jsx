@@ -14,6 +14,8 @@ import { GroupListView } from "../features/community/pages/GroupListView";
 import { GroupDetailsView } from "../features/community/pages/GroupDetailsView";
 import { ThreadForumView } from "../features/community/pages/ThreadForumView";
 import { AdminCommunityView } from "../features/community/pages/AdminCommunityView";
+import { ThreadDetailView } from "../features/community/pages/ThreadDetailView";
+
 
 // Importaciones de modulo educativo
 import { EducationPage } from "../pages/EducationPage";
@@ -74,6 +76,8 @@ export const RouterApp = () => {
           <Route path="groups/:groupId" element={<GroupDetailsView />} />
           <Route path="ThreadForum" element={<ThreadForumView />} />
           <Route path="admin" element={<AdminCommunityView />} />
+          
+          <Route path="thread/:threadId" element={<ThreadDetailView />} />
         </Route>
 
         {/* Rutas del modulo de profile */}

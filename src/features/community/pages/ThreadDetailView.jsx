@@ -1,9 +1,9 @@
+import React, { useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { useThread } from "../../hooks/useThread";
-import { Card, Spinner, Alert } from "../../ui";
-import ThreadContentList from "../../components/threads/ThreadContentList";
+import { useThread } from "../hooks/useThread";
+import ThreadContentList from "../ui/ThreadContentList";
 
-export default function ThreadDetailView() {
+export const ThreadDetailView = () => {
   const { threadId } = useParams();
   const { fetchThreadById, threads, loading, error } = useThread();
 
@@ -26,8 +26,7 @@ export default function ThreadDetailView() {
         <small>
           Creado el: {new Date(thread.createdAt).toLocaleString()}
         </small>
-      </Card>
-      <ThreadContentList threadId={threadId} />
+      </Card>      
     </div>
   );
 }

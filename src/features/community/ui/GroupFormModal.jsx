@@ -55,7 +55,7 @@ export const GroupFormModal = ({ onClose, onGroupCreated }) => {
             </button>
             <button
               type="submit"
-              className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+              className="bg-primary text-white px-4 py-2 rounded-md hover:bg-green-600"
             >
               Crear
             </button>

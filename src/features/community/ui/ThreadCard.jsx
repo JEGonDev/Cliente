@@ -1,8 +1,11 @@
 import React from "react";
 import { FaUserCircle } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
-export const ThreadCard = ({ thread }) => (
+export const ThreadCard = ({ thread }) =>{ 
+  const navigate = useNavigate();
   
+  return (
   <div className="flex gap-3 items-start border rounded-lg p-4 shadow bg-white">
     <FaUserCircle className="text-3xl text-gray-400 mt-1" />
     <div className="flex-1">
@@ -22,6 +25,17 @@ export const ThreadCard = ({ thread }) => (
         </span>
       </div>
       <div className="mt-1 text-gray-800">{thread.content}</div>
+
+
     </div>
+    <div className="flex justify-end mt-4">
+        <button
+          onClick={() => navigate(`/comunity/thread/${thread.id}`)}
+          className="text-secondary underline text-sm"
+        >
+          Ver detalles
+        </button>
+      </div>
   </div>
-);
+  );
+};

@@ -1,6 +1,6 @@
-import { useThreadContent } from "../../hooks/useThreadContent";
+import { useThreadContent } from "../hooks/useThreadContent";
 import ContentCard from "../ui/ContentCard";
-import { Spinner, Alert } from "../../ui";
+
 
 export default function ThreadContentList({ threadId }) {
   const { contentItems, loading, error, fetchContent } = useThreadContent();
