@@ -14,7 +14,6 @@ export const DateRangeFilter = () => {
             <option>Lechuga</option>
             <option>Tomate</option>
             <option>Fresas</option>
-            <option>Albahaca</option>
           </select>
         </div>
         
@@ -24,7 +23,6 @@ export const DateRangeFilter = () => {
             <option>Temperatura</option>
             <option>Humedad</option>
             <option>EC</option>
-            <option>pH</option>
           </select>
         </div>
         
@@ -45,17 +43,6 @@ export const DateRangeFilter = () => {
             defaultValue="2025-04-30"
           />
         </div>
-      </div>
-      
-      <div className="mt-4 flex gap-3">
-        <button className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-800 rounded hover:bg-gray-200">
-          <Filter size={18} className="mr-1" />
-          Filtrar
-        </button>
-        
-        <button className="px-4 py-2 bg-green-800 text-white rounded hover:bg-green-700">
-          Exportar datos
-        </button>
       </div>
     </div>
   );

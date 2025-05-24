@@ -17,10 +17,16 @@ export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
   // Definición de las secciones de navegación
   const navItems = [
     {
-      id: 'monitoreo',
-      label: 'Módulo de monitoreo',
-      icon: <Thermometer size={18} />,
-      path: '/monitoring'
+      id: 'historial',
+      label: 'Historial de datos',
+      icon: <BarChart2 size={18} />,
+      path: '/monitoring/history'
+    },
+       {
+      id: 'cultivos',
+      label: 'Cultivos',
+      icon: <Clock size={18} />,
+      path: '/monitoring/crops'
     },
     {
       id: 'alertas',
@@ -28,18 +34,7 @@ export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
       icon: <Bell size={18} />,
       path: '/monitoring/alerts'
     },
-    {
-      id: 'cultivos',
-      label: 'Cultivos',
-      icon: <Clock size={18} />,
-      path: '/monitoring/crops'
-    },
-    {
-      id: 'historial',
-      label: 'Historial de datos',
-      icon: <BarChart2 size={18} />,
-      path: '/monitoring/history'
-    },
+ 
    
   ];
 

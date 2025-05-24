@@ -12,31 +12,6 @@ export const ExportSection = () => {
       </p>
       
       <div className="space-y-4">
-        {/* Opción de exportar como CSV */}
-        <div className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition">
-          <div className="flex items-center">
-            <div className="bg-blue-100 rounded-lg p-3 mr-4">
-              <FileText className="text-blue-600" size={24} />
-            </div>
-            <div>
-              <h3 className="font-medium">Exportar como CSV</h3>
-              <p className="text-sm text-gray-500">Formato de datos separados por comas</p>
-            </div>
-          </div>
-        </div>
-        
-        {/* Opción de exportar como Excel */}
-        <div className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition">
-          <div className="flex items-center">
-            <div className="bg-green-100 rounded-lg p-3 mr-4">
-              <FileSpreadsheet className="text-green-600" size={24} />
-            </div>
-            <div>
-              <h3 className="font-medium">Exportar como Excel</h3>
-              <p className="text-sm text-gray-500">Libro de Excel con múltiples hojas</p>
-            </div>
-          </div>
-        </div>
    {/* Opción de exportar como PDF */}
 <div className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition">
   <div className="flex items-center">
