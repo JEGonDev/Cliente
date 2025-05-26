@@ -87,7 +87,7 @@ export const DataHistoryLayout = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <StatCard label="Valor mínimo" value={`${min}°C`} color="blue" percentage={20} />
           <StatCard label="Valor promedio" value={`${avg}°C`} color="blue" percentage={50} />
-          <StatCard label="Valor máximo" value={`${max}°C`} color="blue" percentage={80} />
+          <StatCard label="Valor máximo" value={`${max}°C`} color="black" percentage={80} />
           <StatCard label="Desviación estándar" value={`${stdDev}°C`} color="blue" percentage={30} />
         </div>
       </div>

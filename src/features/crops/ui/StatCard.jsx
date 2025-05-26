@@ -31,7 +31,7 @@ export const StatCard = ({
     <div className="bg-white p-4 rounded-lg shadow-sm">
       <div className="flex justify-between mb-2">
         <span className="text-sm text-gray-600">{label}</span>
-        <span className="font-medium">{value}</span>
+        <span className="font-medium ">{value}</span>
       </div>
       
       <div className="w-full bg-gray-200 rounded-full h-2">
