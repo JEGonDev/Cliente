@@ -99,24 +99,52 @@ export const useThread = () => {
     }
   };
 
-  // Función para obtener UN hilo por id
-  const fetchThreadById = async (threadId) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await communityService.getThreadById(threadId);
-      if (response) {
-        setThreads([response]); // Lo envolvemos en array para reutilizar el render del listado
-      } else {
-        setThreads([]);
-      }
-    } catch (err) {
-      setError(err.message || "Error al obtener el hilo");
-      setThreads([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  /**
+   * ✅ Obtiene un hilo por su ID - SIN verificación de autenticación
+   * @param {number} id - ID del hilo
+   */
+  const fetchThreadById = async (id) => {
+  setLoading(true);
+  setError(null);
+  
+  try {
+    const response = await communityService.getThreadById(id);
+    
+    // ✅ Logs para debugging
+    console.log('Respuesta completa del servicio:', response);
+    console.log('Datos del hilo:', response.data);
+    
+    // ✅ Guardar el hilo individual en el array threads (para compatibilidad con el render)
+    setThreads([response.data]);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching thread ${id}:`, error);
+    setError(error.message || `Error al cargar el hilo ${id}`);
+    setThreads([]);
+    return null;
+  } finally {
+    setLoading(false);
+  }
+};
+  // // Función para obtener UN hilo por id
+  // const fetchThreadById = async (threadId) => {
+  //   setLoading(true);
+  //   setError(null);
+  //   try {
+  //     const response = await communityService.getThreadById(threadId);
+  //     console.log("Respuesta del hilo:", response);
+  //     if (response) {
+  //       setThreads([response]); // Lo envolvemos en array para reutilizar el render del listado
+  //     } else {
+  //       setThreads([]);
+  //     }
+  //   } catch (err) {
+  //     setError(err.message || "Error al obtener el hilo");
+  //     setThreads([]);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
 // Función para obtener hilos de un grupo específico
 const fetchThreadsByGroup = async (groupId) => {
@@ -314,6 +342,7 @@ const fetchThreadsByGroup = async (groupId) => {
     fetchThreadsByGroup,
     fetchAllThreads,
     fetchForumThreads,
+    fetchThreadById,
 
     // Funciones CRUD
     handleCreateThread,
