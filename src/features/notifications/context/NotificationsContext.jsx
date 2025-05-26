@@ -1,6 +1,7 @@
+// src/features/notifications/context/NotificationsContext.jsx
 import { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { AuthContext } from '../../authentication/context/AuthContext';
-import { websocketService } from '../../../common/services/webSocketService';
+import { websocketService } from '../../../services/websocketService';
 
 export const NotificationsContext = createContext();
 
@@ -14,13 +15,24 @@ export const NotificationsProvider = ({ children }) => {
   const [connectionError, setConnectionError] = useState(null);
   const [subscriptionId, setSubscriptionId] = useState(null);
 
-  // Categorías de notificaciones
+  // Categorías de notificaciones (basadas en las categorías reales del backend)
   const NOTIFICATION_CATEGORIES = {
+    // Comunidad
     GROUP: 'group',
     THREAD: 'thread',
     POST: 'post',
     REACTION: 'reaction',
-    SYSTEM: 'system'
+    
+    // Educación
+    ARTICLE: 'education_article',
+    GUIDE: 'education_guide',
+    MODULE: 'education_module',
+    VIDEO: 'education_video',
+    
+    // Monitoreo/Cultivos
+    CROP: 'crop',
+    SENSOR_ALERT: 'sensor_alert',
+    SENSOR: 'sensor',
   };
 
   /**
