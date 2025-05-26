@@ -320,12 +320,13 @@ export const communityService = {
     }
   },
 
-  getThreadById: async (id) => {
+  getThreadById: async (threadId) => {
     try {
-      const response = await API.get(ENDPOINTS.THREAD_BY_ID(id));
+      const response = await API.get(ENDPOINTS.THREAD_BY_ID(threadId));
       return response.data;
     } catch (error) {
-      handleError(error, `obtener hilo con ID ${id}`);
+      handleError(error, `obtener hilo con ID ${threadId}`);
+      throw error;
     }
   },
 
