@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Bell, X, Check, Trash2, MessageSquare, Users, FileText, Heart, AlertCircle, BookOpen, Video, Leaf } from 'lucide-react';
+import { Bell, X, Check, Trash2, MessageSquare, Users, FileText, Heart, AlertCircle, BookOpen, Video, Leaf, Activity } from 'lucide-react';
 import { useNotifications } from '../context/NotificationsContext';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -32,8 +32,9 @@ export const NotificationsDropdown = () => {
   }, []);
 
   // Iconos por categoría
-  const getCategoryIcon = (cat) => {
-    switch (cat) {
+  const getCategoryIcon = (category) => {
+    switch (category) {
+      // Comunidad
       case NOTIFICATION_CATEGORIES.GROUP:
         return <Users className="w-4 h-4" />;
       case NOTIFICATION_CATEGORIES.THREAD:
@@ -42,77 +43,79 @@ export const NotificationsDropdown = () => {
         return <FileText className="w-4 h-4" />;
       case NOTIFICATION_CATEGORIES.REACTION:
         return <Heart className="w-4 h-4" />;
+
+      // Educación
       case NOTIFICATION_CATEGORIES.ARTICLE:
+        return <FileText className="w-4 h-4" />;
       case NOTIFICATION_CATEGORIES.GUIDE:
+        return <BookOpen className="w-4 h-4" />;
       case NOTIFICATION_CATEGORIES.MODULE:
         return <BookOpen className="w-4 h-4" />;
       case NOTIFICATION_CATEGORIES.VIDEO:
         return <Video className="w-4 h-4" />;
+
+      // Cultivos/Monitoreo
       case NOTIFICATION_CATEGORIES.CROP:
         return <Leaf className="w-4 h-4" />;
       case NOTIFICATION_CATEGORIES.SENSOR_ALERT:
         return <AlertCircle className="w-4 h-4" />;
       case NOTIFICATION_CATEGORIES.SENSOR:
-        return <Bell className="w-4 h-4" />; // genérico
+        return <Activity className="w-4 h-4" />;
+
       default:
         return <Bell className="w-4 h-4" />;
     }
   };
 
   // Colores por categoría
-  const getCategoryColor = (cat) => {
-    switch (cat) {
+  const getCategoryColor = (category) => {
+    switch (category) {
+      // Comunidad
       case NOTIFICATION_CATEGORIES.GROUP:
         return 'text-blue-600 bg-blue-100';
       case NOTIFICATION_CATEGORIES.THREAD:
+        return 'text-orange-600 bg-orange-100';
       case NOTIFICATION_CATEGORIES.POST:
-      case NOTIFICATION_CATEGORIES.REACTION:
         return 'text-green-600 bg-green-100';
-      case NOTIFICATION_CATEGORIES.ARTICLE:
-      case NOTIFICATION_CATEGORIES.GUIDE:
-      case NOTIFICATION_CATEGORIES.MODULE:
-        return 'text-indigo-600 bg-indigo-100';
-      case NOTIFICATION_CATEGORIES.VIDEO:
+      case NOTIFICATION_CATEGORIES.REACTION:
         return 'text-pink-600 bg-pink-100';
+
+      // Educación
+      case NOTIFICATION_CATEGORIES.ARTICLE:
+        return 'text-purple-600 bg-purple-100';
+      case NOTIFICATION_CATEGORIES.GUIDE:
+        return 'text-indigo-600 bg-indigo-100';
+      case NOTIFICATION_CATEGORIES.MODULE:
+        return 'text-blue-600 bg-blue-100';
+      case NOTIFICATION_CATEGORIES.VIDEO:
+        return 'text-red-600 bg-red-100';
+
+      // Cultivos/Monitoreo
       case NOTIFICATION_CATEGORIES.CROP:
         return 'text-emerald-600 bg-emerald-100';
       case NOTIFICATION_CATEGORIES.SENSOR_ALERT:
         return 'text-red-600 bg-red-100';
       case NOTIFICATION_CATEGORIES.SENSOR:
-        return 'text-gray-600 bg-gray-100';
+        return 'text-yellow-600 bg-yellow-100';
+
       default:
         return 'text-gray-600 bg-gray-100';
     }
   };
 
-  // Aplicar filtro
-  const filteredNotifications = notifications.filter(n => {
-    if (filter === 'all') return true;
-    if (filter === 'community') {
-      return [
-        NOTIFICATION_CATEGORIES.GROUP,
-        NOTIFICATION_CATEGORIES.THREAD,
-        NOTIFICATION_CATEGORIES.POST,
-        NOTIFICATION_CATEGORIES.REACTION
-      ].includes(n.category);
-    }
-    if (filter === 'education') {
-      return [
-        NOTIFICATION_CATEGORIES.ARTICLE,
-        NOTIFICATION_CATEGORIES.GUIDE,
-        NOTIFICATION_CATEGORIES.MODULE,
-        NOTIFICATION_CATEGORIES.VIDEO
-      ].includes(n.category);
-    }
-    if (filter === 'monitoring') {
-      return [
-        NOTIFICATION_CATEGORIES.CROP,
-        NOTIFICATION_CATEGORIES.SENSOR_ALERT,
-        NOTIFICATION_CATEGORIES.SENSOR
-      ].includes(n.category);
-    }
-    return n.category === filter;
-  });
+  // Filtrar notificaciones
+  const filteredNotifications = filter === 'all'
+    ? notifications
+    : notifications.filter(n => {
+      if (filter === 'community') {
+        return ['group', 'thread', 'post', 'reaction'].includes(n.category);
+      } else if (filter === 'education') {
+        return ['education_article', 'education_guide', 'education_module', 'education_video'].includes(n.category);
+      } else if (filter === 'monitoring') {
+        return ['crop', 'sensor_alert', 'sensor'].includes(n.category);
+      }
+      return n.category === filter;
+    });
 
   // Formatear tiempo
   const formatTime = (ts) => {
@@ -123,6 +126,29 @@ export const NotificationsDropdown = () => {
     } catch {
       return 'Hace un momento';
     }
+  };
+
+  // Obtener nombre de categoría legible
+  const getCategoryLabel = (category) => {
+    const labels = {
+      // Comunidad
+      'group': 'Grupo',
+      'thread': 'Hilo',
+      'post': 'Publicación',
+      'reaction': 'Reacción',
+
+      // Educación
+      'education_article': 'Artículo',
+      'education_guide': 'Guía',
+      'education_module': 'Módulo',
+      'education_video': 'Video',
+
+      // Monitoreo/Cultivos
+      'crop': 'Cultivo',
+      'sensor_alert': 'Alerta de Sensor',
+      'sensor': 'Sensor'
+    };
+    return labels[category] || category;
   };
 
   return (
@@ -150,15 +176,15 @@ export const NotificationsDropdown = () => {
               </button>
             </div>
             <div className="flex gap-2 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300">
-              <FilterButton active={filter==='all'} onClick={()=>setFilter('all')}>Todas</FilterButton>
-              <FilterButton active={filter==='community'} onClick={()=>setFilter('community')}>Comunidad</FilterButton>
-              <FilterButton active={filter==='education'} onClick={()=>setFilter('education')}>Educación</FilterButton>
-              <FilterButton active={filter==='monitoring'} onClick={()=>setFilter('monitoring')}>Monitoreo</FilterButton>
+              <FilterButton active={filter === 'all'} onClick={() => setFilter('all')}>Todas</FilterButton>
+              <FilterButton active={filter === 'community'} onClick={() => setFilter('community')}>Comunidad</FilterButton>
+              <FilterButton active={filter === 'education'} onClick={() => setFilter('education')}>Educación</FilterButton>
+              <FilterButton active={filter === 'monitoring'} onClick={() => setFilter('monitoring')}>Monitoreo</FilterButton>
             </div>
           </div>
 
           <div className="max-h-96 overflow-y-auto">
-            {filteredNotifications.length===0 ? (
+            {filteredNotifications.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
                 <Bell className="w-12 h-12 mx-auto mb-2 text-gray-300" />
                 <p>No hay notificaciones</p>
@@ -169,20 +195,21 @@ export const NotificationsDropdown = () => {
                   <NotificationItem
                     key={n.id}
                     notification={n}
-                    onMarkAsRead={()=>markAsRead(n.id)}
-                    onRemove={()=>removeNotification(n.id)}
+                    onMarkAsRead={() => markAsRead(n.id)}
+                    onRemove={() => removeNotification(n.id)}
                     getCategoryIcon={getCategoryIcon}
                     getCategoryColor={getCategoryColor}
                     formatTime={formatTime}
+                    getCategoryLabel={getCategoryLabel}
                   />
                 ))}
               </div>
             )}
           </div>
 
-          {notifications.length>0 && (
+          {notifications.length > 0 && (
             <div className="p-3 border-t border-gray-200 flex justify-between">
-              <button onClick={markAllAsRead} className="text-sm text-primary hover:text-green-700 font-medium" disabled={unreadCount===0}>
+              <button onClick={markAllAsRead} className="text-sm text-primary hover:text-green-700 font-medium" disabled={unreadCount === 0}>
                 Marcar todas como leídas
               </button>
               <button onClick={clearAllNotifications} className="text-sm text-red-600 hover:text-red-700 font-medium">
@@ -199,23 +226,22 @@ export const NotificationsDropdown = () => {
 const FilterButton = ({ active, onClick, children }) => (
   <button
     onClick={onClick}
-    className={`px-3 py-1 text-sm font-medium rounded-full transition-colors ${
-      active ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-    }`}
+    className={`px-3 py-1 text-sm font-medium rounded-full transition-colors ${active ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+      }`}
   >
     {children}
   </button>
 );
 
-const NotificationItem = ({ notification, onMarkAsRead, onRemove, getCategoryIcon, getCategoryColor, formatTime }) => {
+const NotificationItem = ({ notification, onMarkAsRead, onRemove, getCategoryIcon, getCategoryColor, formatTime, getCategoryLabel }) => {
   const [hover, setHover] = useState(false);
 
   return (
     <div
       className={`p-4 transition-colors cursor-pointer ${notification.read ? 'bg-white' : 'bg-blue-50'} hover:bg-gray-50`}
-      onMouseEnter={()=>setHover(true)}
-      onMouseLeave={()=>setHover(false)}
-      onClick={()=>!notification.read && onMarkAsRead()}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      onClick={() => !notification.read && onMarkAsRead()}
     >
       <div className="flex items-start gap-3">
         <div className={`p-2 rounded-full ${getCategoryColor(notification.category)}`}>{getCategoryIcon(notification.category)}</div>
@@ -226,11 +252,11 @@ const NotificationItem = ({ notification, onMarkAsRead, onRemove, getCategoryIco
         {hover && (
           <div className="flex items-center gap-1">
             {!notification.read && (
-              <button onClick={e=>{e.stopPropagation(); onMarkAsRead();}} className="p-1 text-gray-400 hover:text-green-600 rounded" title="Marcar como leída">
+              <button onClick={e => { e.stopPropagation(); onMarkAsRead(); }} className="p-1 text-gray-400 hover:text-green-600 rounded" title="Marcar como leída">
                 <Check className="w-4 h-4" />
               </button>
             )}
-            <button onClick={e=>{e.stopPropagation(); onRemove();}} className="p-1 text-gray-400 hover:text-red-600 rounded" title="Eliminar">
+            <button onClick={e => { e.stopPropagation(); onRemove(); }} className="p-1 text-gray-400 hover:text-red-600 rounded" title="Eliminar">
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
