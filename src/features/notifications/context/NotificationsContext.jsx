@@ -5,7 +5,7 @@ import { websocketService } from '../../../common/services/webSocketService';
 export const NotificationsContext = createContext();
 
 export const NotificationsProvider = ({ children }) => {
-  const { isAuthenticated } = useContext(AuthContext);
+  const { isAuthenticated, user } = useContext(AuthContext);
   
   // Estados
   const [notifications, setNotifications] = useState([]);
@@ -16,31 +16,97 @@ export const NotificationsProvider = ({ children }) => {
 
   // Categorías de notificaciones (basadas en las categorías reales del backend)
   const NOTIFICATION_CATEGORIES = {
-    // Comunidad
+    // Comunidad (PERSONALIZADAS - solo para usuarios específicos)
     GROUP: 'group',
     THREAD: 'thread',
     POST: 'post',
     REACTION: 'reaction',
     
-    // Educación
+    // Educación (GLOBALES - para todos los usuarios)
     ARTICLE: 'education_article',
     GUIDE: 'education_guide',
     MODULE: 'education_module',
     VIDEO: 'education_video',
     
-    // Monitoreo/Cultivos
+    // Monitoreo/Cultivos (PERSONALIZADAS - solo para el propietario del cultivo)
     CROP: 'crop',
     SENSOR_ALERT: 'sensor_alert',
     SENSOR: 'sensor',
   };
 
+  // Categorías que son globales (todos los usuarios las reciben)
+  const GLOBAL_CATEGORIES = [
+    NOTIFICATION_CATEGORIES.ARTICLE,
+    NOTIFICATION_CATEGORIES.GUIDE,
+    NOTIFICATION_CATEGORIES.MODULE,
+    NOTIFICATION_CATEGORIES.VIDEO,
+  ];
+
   /**
-   * Agrega una nueva notificación
+   * Determina si una notificación debe ser mostrada al usuario actual
+   * @param {Object} notification - La notificación a evaluar
+   * @returns {boolean} - true si debe mostrarse, false si debe filtrarse
+   */
+  const shouldShowNotification = useCallback((notification) => {
+    // Si no hay usuario autenticado, no mostrar notificaciones
+    if (!user || !user.id) {
+      console.log('No hay usuario autenticado, filtrando notificación');
+      return false;
+    }
+
+    // Extraer información de la notificación
+    const notificationUserId = notification.userId || notification.targetUserId;
+    const notificationCategory = notification.category;
+    const currentUserId = user.id;
+
+    console.log('Evaluando notificación:', {
+      notificationId: notification.id,
+      notificationUserId,
+      notificationCategory,
+      currentUserId,
+      isGlobalCategory: GLOBAL_CATEGORIES.includes(notificationCategory)
+    });
+
+    // 1. Notificaciones de EDUCACIÓN son globales (todos las reciben)
+    if (GLOBAL_CATEGORIES.includes(notificationCategory)) {
+      console.log('✅ Notificación de educación (global) - mostrar a todos');
+      return true;
+    }
+
+    // 2. Notificaciones PERSONALIZADAS (comunidad, monitoreo)
+    // Solo mostrar si están dirigidas específicamente al usuario actual
+    if (notificationUserId && notificationUserId === currentUserId) {
+      console.log('✅ Notificación personalizada dirigida al usuario actual');
+      return true;
+    }
+
+    // 3. Notificaciones sin userId específico pero de categorías personalizadas
+    // Estas probablemente no deberían mostrarse ya que falta información de targeting
+    if (!notificationUserId && !GLOBAL_CATEGORIES.includes(notificationCategory)) {
+      console.log('⚠️ Notificación personalizada sin userId - filtrar por seguridad');
+      return false;
+    }
+
+    // 4. Por defecto, filtrar notificaciones que no cumplen los criterios
+    console.log('❌ Notificación filtrada - no cumple criterios');
+    return false;
+  }, [user, GLOBAL_CATEGORIES]);
+
+  /**
+   * Agrega una nueva notificación (con filtrado personalizado)
    */
   const addNotification = useCallback((notification) => {
+    console.log('Nueva notificación recibida:', notification);
+
+    // Filtrar la notificación antes de agregarla
+    if (!shouldShowNotification(notification)) {
+      console.log('Notificación filtrada, no se agregará a la lista');
+      return;
+    }
+
     const newNotification = {
-      id: notification.id,
-      userId: notification.userId,
+      id: notification.id || `notif_${Date.now()}_${Math.random()}`,
+      userId: notification.userId || notification.targetUserId,
       message: notification.message,
       category: notification.category,
       timestamp: notification.notificationDate || notification.timestamp || new Date().toISOString(),
@@ -49,7 +115,18 @@ export const NotificationsProvider = ({ children }) => {
       data: notification.data || {}
     };
 
-    setNotifications(prev => [newNotification, ...prev]);
+    console.log('✅ Agregando notificación filtrada:', newNotification);
+
+    setNotifications(prev => {
+      // Evitar duplicados
+      const exists = prev.some(n => n.id === newNotification.id);
+      if (exists) {
+        console.log('Notificación duplicada, ignorando');
+        return prev;
+      }
+      return [newNotification, ...prev];
+    });
+
     // Solo incrementar contador si no está leída
     if (!newNotification.read) {
       setUnreadCount(prev => prev + 1);
@@ -59,7 +136,7 @@ export const NotificationsProvider = ({ children }) => {
     if (!newNotification.read) {
       showBrowserNotification(newNotification);
     }
-  }, []);
+  }, [shouldShowNotification]);
 
   /**
    * Marca una notificación como leída
@@ -105,6 +182,15 @@ export const NotificationsProvider = ({ children }) => {
   }, []);
 
   /**
+   * Limpia notificaciones antiguas del usuario (al cambiar de usuario)
+   */
+  const clearUserNotifications = useCallback(() => {
+    console.log('Limpiando notificaciones del usuario anterior');
+    setNotifications([]);
+    setUnreadCount(0);
+  }, []);
+
+  /**
    * Filtra notificaciones por categoría
    */
   const getNotificationsByCategory = useCallback((category) => {
@@ -125,8 +211,10 @@ export const NotificationsProvider = ({ children }) => {
           setIsConnected(true);
           
           // Suscribirse al topic de notificaciones
+          // NOTA: En un escenario ideal, el backend tendría topics específicos por usuario
+          // como `/topic/notifications/${userId}`, pero trabajamos con lo que tenemos
           const subId = websocketService.subscribe('/topic/notifications', (notification) => {
-            console.log('📬 Nueva notificación recibida:', notification);
+            console.log('📬 Nueva notificación recibida desde WebSocket:', notification);
             addNotification(notification);
           });
           
@@ -185,20 +273,23 @@ export const NotificationsProvider = ({ children }) => {
     return false;
   }, []);
 
-  // Efecto para conectar/desconectar según autenticación
+  // Efecto para manejar cambios de usuario
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && user) {
+      console.log('Usuario autenticado, iniciando sistema de notificaciones para:', user.username || user.email);
       connectWebSocket();
       requestNotificationPermission();
     } else {
+      console.log('Usuario no autenticado, desconectando notificaciones');
       disconnectWebSocket();
+      clearUserNotifications();
     }
 
     // Cleanup
     return () => {
       disconnectWebSocket();
     };
-  }, [isAuthenticated]); // Solo dependemos de isAuthenticated
+  }, [isAuthenticated, user?.id]); // Dependemos del ID del usuario para detectar cambios
 
   // Valor del contexto
   const value = {
@@ -214,13 +305,16 @@ export const NotificationsProvider = ({ children }) => {
     markAllAsRead,
     removeNotification,
     clearAllNotifications,
+    clearUserNotifications,
     
     // Utilidades
     getNotificationsByCategory,
     requestNotificationPermission,
+    shouldShowNotification, // Exponer para debugging
     
     // Constantes
-    NOTIFICATION_CATEGORIES
+    NOTIFICATION_CATEGORIES,
+    GLOBAL_CATEGORIES
   };
 
   return (
