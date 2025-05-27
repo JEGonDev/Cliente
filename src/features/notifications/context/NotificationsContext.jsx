@@ -39,20 +39,26 @@ export const NotificationsProvider = ({ children }) => {
    */
   const addNotification = useCallback((notification) => {
     const newNotification = {
-      ...notification,
-      id: notification.id || Date.now(),
-      timestamp: notification.timestamp || new Date().toISOString(),
-      read: false
+      id: notification.id,
+      userId: notification.userId,
+      message: notification.message,
+      category: notification.category,
+      timestamp: notification.notificationDate || notification.timestamp || new Date().toISOString(),
+      read: notification.isRead || false,
+      // Datos adicionales si vienen del backend
+      data: notification.data || {}
     };
 
     setNotifications(prev => [newNotification, ...prev]);
-    setUnreadCount(prev => prev + 1);
+    // Solo incrementar contador si no está leída
+    if (!newNotification.read) {
+      setUnreadCount(prev => prev + 1);
+    }
 
-    // Reproducir sonido de notificación (opcional)
-    playNotificationSound();
-
-    // Mostrar notificación del navegador si está permitido
-    showBrowserNotification(newNotification);
+    // Mostrar notificación del navegador si está permitido y no está leída
+    if (!newNotification.read) {
+      showBrowserNotification(newNotification);
+    }
   }, []);
 
   /**
@@ -150,20 +156,6 @@ export const NotificationsProvider = ({ children }) => {
     websocketService.disconnect();
     setIsConnected(false);
   }, [subscriptionId]);
-
-  /**
-   * Reproduce sonido de notificación
-   */
-  const playNotificationSound = () => {
-    try {
-      // Puedes agregar un archivo de sonido en public/sounds/notification.mp3
-      const audio = new Audio('/sounds/notification.mp3');
-      audio.volume = 0.5;
-      audio.play().catch(e => console.log('No se pudo reproducir el sonido:', e));
-    } catch (error) {
-      // Silenciar error si no hay sonido
-    }
-  };
 
   /**
    * Muestra notificación del navegador
