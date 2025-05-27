@@ -93,25 +93,58 @@ export const AlertItem = ({
         </div>
       </div>
 
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={`Alerta: ${parameter} - ${crop}`}
-        size="md"
-        footerActions={
-          <button
-            onClick={() => setIsModalOpen(false)}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Cerrar
-          </button>
-        }
+<Modal
+  isOpen={isModalOpen}
+  onClose={() => setIsModalOpen(false)}
+  title={`Alerta: Temperatura - Tomate`}
+  size="md"
+  footerActions={
+    <button
+      onClick={() => setIsModalOpen(false)}
+      className="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+    >
+      Resuelta
+    </button>
+  }
+>
+  <div className="space-y-4 text-gray-800">
+    <p>
+      <strong>Mensaje:</strong>{" "}
+      <span className="font-medium">Temperatura demasiado alta en el cultivo.</span>
+    </p>
+    <p>
+      <strong>Valor actual:</strong>{" "}
+      <span className="font-semibold text-red-600">35°C</span>
+    </p>
+    <p>
+      <strong>Umbral:</strong>{" "}
+      <span className="font-semibold text-gray-700">30°C</span>
+    </p>
+    <p>
+      <strong>Tiempo de alerta:</strong>{" "}
+      <span>{new Date().toLocaleString()}</span>
+    </p>
+    <p>
+      <strong>Severidad:</strong>{" "}
+      <span className="px-2 py-1 rounded bg-yellow-300 text-yellow-800 font-semibold text-sm">
+        Alta
+      </span>
+    </p>
+    <p>
+      <strong>Ubicación:</strong>{" "}
+      <span>Invernadero 1</span>
+    </p>
+    <p className="flex items-center space-x-2">
+      <strong>Estado:</strong>
+      <button
+        className="px-3 py-1 rounded-full text-white text-xs font-bold
+         bg-red-400 hover:bg-red-500 transition"
       >
-        <p><strong>Mensaje:</strong> {message}</p>
-        <p><strong>Valor actual:</strong> {value}</p>
-        <p><strong>Umbral:</strong> {threshold}</p>
-        <p><strong>Tiempo transcurrido:</strong> {time}</p>
-      </Modal>
+        Activa
+      </button>
+    </p>
+  </div>
+</Modal>
     </>
   );
 };
