@@ -1,5 +1,9 @@
 import PropTypes from 'prop-types';
 import { AlertTriangle, AlertCircle, Info } from 'lucide-react';
+import { Modal } from '../../../ui/components/Modal';
+import { useState } from 'react';
+import { CheckCircle } from 'lucide-react';
+
 
 /**
  * Componente para mostrar una alerta individual
@@ -21,7 +25,9 @@ export const AlertItem = ({
   value = '',
   threshold = '',
   time = ''
-}) => {// Configuración según el tipo de alerta
+}) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const alertConfig = {
     error: {
       icon: <AlertCircle size={20} />,
@@ -40,44 +46,106 @@ export const AlertItem = ({
     }
   };
 
-  // Usar configuración por defecto para 'info' si el tipo no es reconocido
   const config = alertConfig[type] || alertConfig.info;
 
   return (
-    <div className={`rounded-md p-4 ${config.colorClasses}`}>
-      <div className="flex">
-        <div className={`flex-shrink-0 mr-3 ${config.iconClass}`}>
-          {config.icon}
-        </div>
-        <div className="flex-1">
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="text-sm font-medium">
-                {parameter} - {crop}
-              </h3>
-              <p className="text-sm mt-1">
-                {message}
-              </p>
-            </div>
-            <div className="text-xs">
-              {time}
-            </div>
+    <>
+      <div
+        className={`w-full bg-white rounded-lg shadow-md p-6 cursor-pointer transform transition-transform duration-200 hover:scale-[1.02] ${config.colorClasses}`}
+        onClick={() => setIsModalOpen(true)}
+      >
+        <div className="flex">
+          <div className={`flex-shrink-0 mr-3 ${config.iconClass}`}>
+            {config.icon}
           </div>
-          
-          <div className="mt-2 text-sm flex justify-between">
-            <div>
-              <span className="font-medium">Valor:</span> {value}
+          <div className="flex-1">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {parameter} - {crop}
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  {message}
+                </p>
+              </div>
+              <div className="text-xs text-gray-500">
+                {time}
+              </div>
             </div>
-            <div>
-              <span className="font-medium">Umbral:</span> {threshold}
+
+            <div className="mt-4 text-sm flex justify-between items-center">
+              <div>
+                <span className="font-medium text-gray-700">Valor:</span> {value}
+              </div>
+              <div>
+                <span className="font-medium text-gray-700">Umbral:</span> {threshold}
+              </div>
+              <div className="flex items-center gap-1 text-blue-600 hover:underline text-sm cursor-pointer"
+     onClick={(e) => {
+       e.stopPropagation();
+       // Lógica para "Resolver"
+     }}>
+  <CheckCircle className="w-4 h-4" />
+  <span>Resolver</span>
+</div>
             </div>
-            <button className="text-sm hover:underline">
-              Resolver
-            </button>
           </div>
         </div>
       </div>
-    </div>
+
+<Modal
+  isOpen={isModalOpen}
+  onClose={() => setIsModalOpen(false)}
+  title={`Alerta: Temperatura - Tomate`}
+  size="md"
+  footerActions={
+    <button
+      onClick={() => setIsModalOpen(false)}
+      className="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+    >
+      Resuelta
+    </button>
+  }
+>
+  <div className="space-y-4 text-gray-800">
+    <p>
+      <strong>Mensaje:</strong>{" "}
+      <span className="font-medium">Temperatura demasiado alta en el cultivo.</span>
+    </p>
+    <p>
+      <strong>Valor actual:</strong>{" "}
+      <span className="font-semibold text-red-600">35°C</span>
+    </p>
+    <p>
+      <strong>Umbral:</strong>{" "}
+      <span className="font-semibold text-gray-700">30°C</span>
+    </p>
+    <p>
+      <strong>Tiempo de alerta:</strong>{" "}
+      <span>{new Date().toLocaleString()}</span>
+    </p>
+    <p>
+      <strong>Severidad:</strong>{" "}
+      <span className="px-2 py-1 rounded bg-yellow-300 text-yellow-800 font-semibold text-sm">
+        Alta
+      </span>
+    </p>
+    <p>
+      <strong>Ubicación:</strong>{" "}
+      <span>Invernadero 1</span>
+    </p>
+    <p className="flex items-center space-x-2">
+      <strong>Estado:</strong>
+      <button
+        className="px-3 py-1 rounded-full text-white text-xs font-bold
+         bg-red-400 hover:bg-red-500 transition"
+      >
+        Activa
+      </button>
+    </p>
+  </div>
+</Modal>
+    </>
   );
 };
 
