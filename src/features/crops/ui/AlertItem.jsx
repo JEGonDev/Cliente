@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import { AlertTriangle, AlertCircle, Info } from 'lucide-react';
 import { Modal } from '../../../ui/components/Modal';
 import { useState } from 'react';
+import { CheckCircle } from 'lucide-react';
 
 
 /**
@@ -79,15 +80,14 @@ export const AlertItem = ({
               <div>
                 <span className="font-medium text-gray-700">Umbral:</span> {threshold}
               </div>
-              <button
-                className="text-sm text-blue-600 hover:underline"
-                onClick={(e) => {
-                  e.stopPropagation(); // Para que no se abra el modal al hacer click aquí
-                  // Aquí podrías poner la lógica para "Resolver"
-                }}
-              >
-                Resolver
-              </button>
+              <div className="flex items-center gap-1 text-blue-600 hover:underline text-sm cursor-pointer"
+     onClick={(e) => {
+       e.stopPropagation();
+       // Lógica para "Resolver"
+     }}>
+  <CheckCircle className="w-4 h-4" />
+  <span>Resolver</span>
+</div>
             </div>
           </div>
         </div>
