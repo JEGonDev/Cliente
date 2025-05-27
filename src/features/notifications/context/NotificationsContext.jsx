@@ -1,6 +1,7 @@
 import { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { AuthContext } from '../../authentication/context/AuthContext';
 import { websocketService } from '../../../common/services/webSocketService';
+import { Storage } from '../../../storage/Storage';
 
 export const NotificationsContext = createContext();
 
@@ -43,9 +44,65 @@ export const NotificationsProvider = ({ children }) => {
   ];
 
   /**
+   * Genera la clave de almacenamiento para las notificaciones del usuario actual
+   */
+  const getStorageKey = useCallback((userId) => {
+    return `notifications_user_${userId}`;
+  }, []);
+
+  /**
+   * Carga las notificaciones guardadas del usuario desde localStorage
+   */
+  const loadNotificationsFromStorage = useCallback((userId) => {
+    if (!userId) return [];
+    
+    try {
+      const storageKey = getStorageKey(userId);
+      const savedNotifications = Storage.get(storageKey);
+      
+      if (Array.isArray(savedNotifications)) {
+        console.log(`📁 Cargadas ${savedNotifications.length} notificaciones guardadas para el usuario ${userId}`);
+        return savedNotifications;
+      }
+    } catch (error) {
+      console.error('Error al cargar notificaciones desde storage:', error);
+    }
+    
+    return [];
+  }, [getStorageKey]);
+
+  /**
+   * Guarda las notificaciones del usuario en localStorage
+   */
+  const saveNotificationsToStorage = useCallback((userId, notificationsToSave) => {
+    if (!userId || !Array.isArray(notificationsToSave)) return;
+    
+    try {
+      const storageKey = getStorageKey(userId);
+      Storage.set(storageKey, notificationsToSave);
+      console.log(`💾 Guardadas ${notificationsToSave.length} notificaciones para el usuario ${userId}`);
+    } catch (error) {
+      console.error('Error al guardar notificaciones en storage:', error);
+    }
+  }, [getStorageKey]);
+
+  /**
+   * Elimina las notificaciones guardadas de un usuario específico
+   */
+  const clearStorageForUser = useCallback((userId) => {
+    if (!userId) return;
+    
+    try {
+      const storageKey = getStorageKey(userId);
+      Storage.remove(storageKey);
+      console.log(`🗑️ Limpiadas notificaciones guardadas para el usuario ${userId}`);
+    } catch (error) {
+      console.error('Error al limpiar notificaciones del storage:', error);
+    }
+  }, [getStorageKey]);
+
+  /**
    * Determina si una notificación debe ser mostrada al usuario actual
-   * @param {Object} notification - La notificación a evaluar
-   * @returns {boolean} - true si debe mostrarse, false si debe filtrarse
    */
   const shouldShowNotification = useCallback((notification) => {
     // Si no hay usuario autenticado, no mostrar notificaciones
@@ -93,7 +150,28 @@ export const NotificationsProvider = ({ children }) => {
   }, [user, GLOBAL_CATEGORIES]);
 
   /**
-   * Agrega una nueva notificación (con filtrado personalizado)
+   * Actualiza el conteo de no leídas
+   */
+  const updateUnreadCount = useCallback((notificationsList) => {
+    const unreadCount = notificationsList.filter(n => !n.read).length;
+    setUnreadCount(unreadCount);
+  }, []);
+
+  /**
+   * Actualiza las notificaciones y las guarda en localStorage
+   */
+  const updateNotifications = useCallback((newNotifications) => {
+    setNotifications(newNotifications);
+    updateUnreadCount(newNotifications);
+    
+    // Guardar en localStorage si hay usuario autenticado
+    if (user?.id) {
+      saveNotificationsToStorage(user.id, newNotifications);
+    }
+  }, [user?.id, saveNotificationsToStorage, updateUnreadCount]);
+
+  /**
+   * Agrega una nueva notificación (con filtrado personalizado y persistencia)
    */
   const addNotification = useCallback((notification) => {
     console.log('Nueva notificación recibida:', notification);
@@ -124,7 +202,15 @@ export const NotificationsProvider = ({ children }) => {
         console.log('Notificación duplicada, ignorando');
         return prev;
       }
-      return [newNotification, ...prev];
+      
+      const updatedNotifications = [newNotification, ...prev];
+      
+      // Guardar inmediatamente en localStorage
+      if (user?.id) {
+        saveNotificationsToStorage(user.id, updatedNotifications);
+      }
+      
+      return updatedNotifications;
     });
 
     // Solo incrementar contador si no está leída
@@ -136,29 +222,45 @@ export const NotificationsProvider = ({ children }) => {
     if (!newNotification.read) {
       showBrowserNotification(newNotification);
     }
-  }, [shouldShowNotification]);
+  }, [shouldShowNotification, user?.id, saveNotificationsToStorage]);
 
   /**
    * Marca una notificación como leída
    */
   const markAsRead = useCallback((notificationId) => {
-    setNotifications(prev =>
-      prev.map(notif =>
+    setNotifications(prev => {
+      const updatedNotifications = prev.map(notif =>
         notif.id === notificationId ? { ...notif, read: true } : notif
-      )
-    );
+      );
+      
+      // Guardar cambios en localStorage
+      if (user?.id) {
+        saveNotificationsToStorage(user.id, updatedNotifications);
+      }
+      
+      return updatedNotifications;
+    });
+    
     setUnreadCount(prev => Math.max(0, prev - 1));
-  }, []);
+  }, [user?.id, saveNotificationsToStorage]);
 
   /**
    * Marca todas las notificaciones como leídas
    */
   const markAllAsRead = useCallback(() => {
-    setNotifications(prev =>
-      prev.map(notif => ({ ...notif, read: true }))
-    );
+    setNotifications(prev => {
+      const updatedNotifications = prev.map(notif => ({ ...notif, read: true }));
+      
+      // Guardar cambios en localStorage
+      if (user?.id) {
+        saveNotificationsToStorage(user.id, updatedNotifications);
+      }
+      
+      return updatedNotifications;
+    });
+    
     setUnreadCount(0);
-  }, []);
+  }, [user?.id, saveNotificationsToStorage]);
 
   /**
    * Elimina una notificación
@@ -166,23 +268,37 @@ export const NotificationsProvider = ({ children }) => {
   const removeNotification = useCallback((notificationId) => {
     setNotifications(prev => {
       const notification = prev.find(n => n.id === notificationId);
+      const updatedNotifications = prev.filter(n => n.id !== notificationId);
+      
+      // Actualizar contador si la notificación eliminada no estaba leída
       if (notification && !notification.read) {
         setUnreadCount(count => Math.max(0, count - 1));
       }
-      return prev.filter(n => n.id !== notificationId);
+      
+      // Guardar cambios en localStorage
+      if (user?.id) {
+        saveNotificationsToStorage(user.id, updatedNotifications);
+      }
+      
+      return updatedNotifications;
     });
-  }, []);
+  }, [user?.id, saveNotificationsToStorage]);
 
   /**
-   * Limpia todas las notificaciones
+   * Limpia todas las notificaciones del usuario actual
    */
   const clearAllNotifications = useCallback(() => {
     setNotifications([]);
     setUnreadCount(0);
-  }, []);
+    
+    // Limpiar también del localStorage
+    if (user?.id) {
+      clearStorageForUser(user.id);
+    }
+  }, [user?.id, clearStorageForUser]);
 
   /**
-   * Limpia notificaciones antiguas del usuario (al cambiar de usuario)
+   * Limpia notificaciones del usuario anterior (al cambiar de usuario)
    */
   const clearUserNotifications = useCallback(() => {
     console.log('Limpiando notificaciones del usuario anterior');
@@ -211,8 +327,6 @@ export const NotificationsProvider = ({ children }) => {
           setIsConnected(true);
           
           // Suscribirse al topic de notificaciones
-          // NOTA: En un escenario ideal, el backend tendría topics específicos por usuario
-          // como `/topic/notifications/${userId}`, pero trabajamos con lo que tenemos
           const subId = websocketService.subscribe('/topic/notifications', (notification) => {
             console.log('📬 Nueva notificación recibida desde WebSocket:', notification);
             addNotification(notification);
@@ -253,7 +367,7 @@ export const NotificationsProvider = ({ children }) => {
       try {
         new Notification('Germogli', {
           body: notification.message,
-          icon: '/logo.png', // Asegúrate de tener un logo en public
+          icon: '/logo.png',
           tag: notification.id
         });
       } catch (error) {
@@ -273,10 +387,27 @@ export const NotificationsProvider = ({ children }) => {
     return false;
   }, []);
 
-  // Efecto para manejar cambios de usuario
+  // Efecto para cargar notificaciones al autenticarse o cambiar de usuario
   useEffect(() => {
-    if (isAuthenticated && user) {
-      console.log('Usuario autenticado, iniciando sistema de notificaciones para:', user.username || user.email);
+    if (isAuthenticated && user?.id) {
+      console.log('Usuario autenticado, cargando notificaciones guardadas para:', user.username || user.email);
+      
+      // Cargar notificaciones guardadas del usuario
+      const savedNotifications = loadNotificationsFromStorage(user.id);
+      
+      if (savedNotifications.length > 0) {
+        // Filtrar las notificaciones cargadas por si acaso
+        const filteredNotifications = savedNotifications.filter(notification => 
+          shouldShowNotification(notification)
+        );
+        
+        console.log(`📋 Cargadas ${filteredNotifications.length} notificaciones filtradas de ${savedNotifications.length} guardadas`);
+        
+        setNotifications(filteredNotifications);
+        updateUnreadCount(filteredNotifications);
+      }
+      
+      // Conectar al WebSocket
       connectWebSocket();
       requestNotificationPermission();
     } else {
