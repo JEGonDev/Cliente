@@ -1,5 +1,8 @@
 import PropTypes from 'prop-types';
 import { AlertTriangle, AlertCircle, Info } from 'lucide-react';
+import { Modal } from '../../../ui/components/Modal';
+import { useState } from 'react';
+
 
 /**
  * Componente para mostrar una alerta individual
@@ -21,7 +24,9 @@ export const AlertItem = ({
   value = '',
   threshold = '',
   time = ''
-}) => {// Configuración según el tipo de alerta
+}) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const alertConfig = {
     error: {
       icon: <AlertCircle size={20} />,
@@ -40,44 +45,74 @@ export const AlertItem = ({
     }
   };
 
-  // Usar configuración por defecto para 'info' si el tipo no es reconocido
   const config = alertConfig[type] || alertConfig.info;
 
   return (
-    <div className={`rounded-md p-4 ${config.colorClasses}`}>
-      <div className="flex">
-        <div className={`flex-shrink-0 mr-3 ${config.iconClass}`}>
-          {config.icon}
-        </div>
-        <div className="flex-1">
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="text-sm font-medium">
-                {parameter} - {crop}
-              </h3>
-              <p className="text-sm mt-1">
-                {message}
-              </p>
-            </div>
-            <div className="text-xs">
-              {time}
-            </div>
+    <>
+      <div
+        className={`w-full bg-white rounded-lg shadow-md p-6 cursor-pointer transform transition-transform duration-200 hover:scale-[1.02] ${config.colorClasses}`}
+        onClick={() => setIsModalOpen(true)}
+      >
+        <div className="flex">
+          <div className={`flex-shrink-0 mr-3 ${config.iconClass}`}>
+            {config.icon}
           </div>
-          
-          <div className="mt-2 text-sm flex justify-between">
-            <div>
-              <span className="font-medium">Valor:</span> {value}
+          <div className="flex-1">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {parameter} - {crop}
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  {message}
+                </p>
+              </div>
+              <div className="text-xs text-gray-500">
+                {time}
+              </div>
             </div>
-            <div>
-              <span className="font-medium">Umbral:</span> {threshold}
+
+            <div className="mt-4 text-sm flex justify-between items-center">
+              <div>
+                <span className="font-medium text-gray-700">Valor:</span> {value}
+              </div>
+              <div>
+                <span className="font-medium text-gray-700">Umbral:</span> {threshold}
+              </div>
+              <button
+                className="text-sm text-blue-600 hover:underline"
+                onClick={(e) => {
+                  e.stopPropagation(); // Para que no se abra el modal al hacer click aquí
+                  // Aquí podrías poner la lógica para "Resolver"
+                }}
+              >
+                Resolver
+              </button>
             </div>
-            <button className="text-sm hover:underline">
-              Resolver
-            </button>
           </div>
         </div>
       </div>
-    </div>
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={`Alerta: ${parameter} - ${crop}`}
+        size="md"
+        footerActions={
+          <button
+            onClick={() => setIsModalOpen(false)}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Cerrar
+          </button>
+        }
+      >
+        <p><strong>Mensaje:</strong> {message}</p>
+        <p><strong>Valor actual:</strong> {value}</p>
+        <p><strong>Umbral:</strong> {threshold}</p>
+        <p><strong>Tiempo transcurrido:</strong> {time}</p>
+      </Modal>
+    </>
   );
 };
 
