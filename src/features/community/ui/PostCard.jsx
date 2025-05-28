@@ -1,28 +1,25 @@
 import { useState, useEffect, useContext } from "react";
 import { MoreVertical, Calendar, Image, Film, Pencil, Trash } from "lucide-react";
 import { usePost } from "../hooks/usePost";
-import { useReactions } from "../hooks/useReactions";
 import PropTypes from "prop-types";
 import { profileService } from "../../profile/services/profileService";
 import { AuthContext } from "../../authentication/context/AuthContext";
 import { DeletePostModal } from "./DeletePostModal";
 import { EditPostModal } from "./EditPostModal";
-import { ReactionButtonGroup, ReactionSummary, LikeButton } from "./ReactionButton";
+import { ReactionButton } from "./ReactionButton";
 
 /**
  * Componente para mostrar una publicación en forma de tarjeta con reacciones integradas
  */
 export const PostCard = ({ post, onRefresh, onUpdate, onDelete }) => {
   // Contextos
-  const { user, isAuthenticated, isAdmin, isModerator } = useContext(AuthContext);
+  const { user, isAdmin, isModerator } = useContext(AuthContext);
 
   // Hooks
   const { handleDeletePost } = usePost();
-  const { fetchAllReactions } = useReactions();
 
   // Estados UI
   const [showOptions, setShowOptions] = useState(false);
-  const [showAllReactions, setShowAllReactions] = useState(false);
   const [userName, setUserName] = useState(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [postOwnerUsername, setPostOwnerUsername] = useState(null);
@@ -47,13 +44,6 @@ export const PostCard = ({ post, onRefresh, onUpdate, onDelete }) => {
     user.username === postOwnerUsername
   );
   const canManagePost = isAdmin || isModerator || isCurrentUserPost;
-
-  // Cargar reacciones al montar el componente
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchAllReactions();
-    }
-  }, [isAuthenticated, fetchAllReactions]);
 
   // Determinar si el contenido multimedia es un video
   useEffect(() => {
@@ -310,37 +300,10 @@ export const PostCard = ({ post, onRefresh, onUpdate, onDelete }) => {
           </div>
         )}
 
-        {/* Resumen de reacciones */}
-        <ReactionSummary postId={postId} className="mb-3" />
-
         {/* Barra de reacciones */}
         <div className="border-t border-gray-100 pt-3 mt-4">
-          {/* Sección de reacciones principales */}
-          <div className="flex items-center justify-between mb-3">
-            {/* Botón de "Me gusta" principal */}
-            <LikeButton postId={postId} size="md" />
-
-            {/* Botón para mostrar más reacciones */}
-            <button
-              onClick={() => setShowAllReactions(!showAllReactions)}
-              className="text-gray-500 hover:text-gray-700 text-sm transition-colors px-3 py-1 rounded-md hover:bg-gray-100"
-            >
-              {showAllReactions ? 'Menos reacciones' : 'Más reacciones'}
-            </button>
-          </div>
-
-          {/* Panel de todas las reacciones (desplegable) */}
-          {showAllReactions && (
-            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-              <p className="text-sm text-gray-600 mb-2">Reacciona a esta publicación:</p>
-              <ReactionButtonGroup
-                postId={postId}
-                size="sm"
-                showLabels={false}
-                className="justify-start"
-              />
-            </div>
-          )}
+          {/* Botón de reacción */}
+          <ReactionButton postId={postId} size="md" />
         </div>
       </div>
 
