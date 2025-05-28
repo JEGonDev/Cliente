@@ -1,28 +1,25 @@
 import { useState, useEffect, useContext } from "react";
 import { MoreVertical, Calendar, Image, Film, Pencil, Trash } from "lucide-react";
 import { usePost } from "../hooks/usePost";
-import { useReactions } from "../hooks/useReactions";
 import PropTypes from "prop-types";
 import { profileService } from "../../profile/services/profileService";
 import { AuthContext } from "../../authentication/context/AuthContext";
 import { DeletePostModal } from "./DeletePostModal";
 import { EditPostModal } from "./EditPostModal";
-import { ReactionButton, ReactionSummary } from "./ReactionButton";
+import { ReactionButton } from "./ReactionButton";
 
 /**
  * Componente para mostrar una publicación en forma de tarjeta con reacciones integradas
  */
 export const PostCard = ({ post, onRefresh, onUpdate, onDelete }) => {
   // Contextos
-  const { user, isAuthenticated, isAdmin, isModerator } = useContext(AuthContext);
+  const { user, isAdmin, isModerator } = useContext(AuthContext);
 
   // Hooks
   const { handleDeletePost } = usePost();
-  const { fetchAllReactions } = useReactions();
 
   // Estados UI
   const [showOptions, setShowOptions] = useState(false);
-  const [showAllReactions, setShowAllReactions] = useState(false);
   const [userName, setUserName] = useState(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [postOwnerUsername, setPostOwnerUsername] = useState(null);
@@ -47,13 +44,6 @@ export const PostCard = ({ post, onRefresh, onUpdate, onDelete }) => {
     user.username === postOwnerUsername
   );
   const canManagePost = isAdmin || isModerator || isCurrentUserPost;
-
-  // Cargar reacciones al montar el componente
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchAllReactions();
-    }
-  }, [isAuthenticated, fetchAllReactions]);
 
   // Determinar si el contenido multimedia es un video
   useEffect(() => {
@@ -309,9 +299,6 @@ export const PostCard = ({ post, onRefresh, onUpdate, onDelete }) => {
             </div>
           </div>
         )}
-
-        {/* Resumen de reacciones */}
-        <ReactionSummary postId={postId} className="mb-3" />
 
         {/* Barra de reacciones */}
         <div className="border-t border-gray-100 pt-3 mt-4">

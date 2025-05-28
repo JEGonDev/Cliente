@@ -26,31 +26,40 @@ export const useReactions = () => {
   const { user, isAuthenticated } = useContext(AuthContext);
 
   // ===================== EFECTOS =====================
-  
+
+  /**
+   * Cargar reacciones automáticamente al inicializar el hook
+   */
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchAllReactions();
+    }
+  }, [isAuthenticated]); // Solo se ejecuta cuando cambia el estado de autenticación
+
   /**
    * Agrupa las reacciones por publicación y tipo cuando cambian las reacciones
    */
   useEffect(() => {
     const grouped = reactions.reduce((acc, reaction) => {
       const { postId, reactionType } = reaction;
-      
+
       if (!acc[postId]) {
         acc[postId] = {};
       }
-      
+
       if (!acc[postId][reactionType]) {
         acc[postId][reactionType] = [];
       }
-      
+
       acc[postId][reactionType].push(reaction);
       return acc;
     }, {});
-    
+
     setReactionsByPost(grouped);
   }, [reactions]);
 
   // ===================== FUNCIONES DE OBTENCIÓN DE DATOS =====================
-  
+
   /**
    * Obtiene todas las reacciones del sistema
    */
@@ -62,7 +71,7 @@ export const useReactions = () => {
 
     setLoading(true);
     setError(null);
-    
+
     try {
       const response = await communityService.getAllReactions();
       setReactions(Array.isArray(response) ? response : []);
@@ -98,7 +107,7 @@ export const useReactions = () => {
   }, [isAuthenticated]);
 
   // ===================== FUNCIONES DE ANÁLISIS =====================
-  
+
   /**
    * Obtiene el conteo de reacciones por tipo para una publicación
    * @param {number} postId - ID de la publicación
@@ -106,12 +115,12 @@ export const useReactions = () => {
    */
   const getReactionCounts = useCallback((postId) => {
     if (!reactionsByPost[postId]) return {};
-    
+
     const counts = {};
     Object.keys(reactionsByPost[postId]).forEach(type => {
       counts[type] = reactionsByPost[postId][type].length;
     });
-    
+
     return counts;
   }, [reactionsByPost]);
 
@@ -125,7 +134,7 @@ export const useReactions = () => {
     if (!user || !reactionsByPost[postId] || !reactionsByPost[postId][reactionType]) {
       return false;
     }
-    
+
     return reactionsByPost[postId][reactionType].some(r => r.userId === user.id);
   }, [user, reactionsByPost]);
 
@@ -139,7 +148,7 @@ export const useReactions = () => {
     if (!user || !reactionsByPost[postId] || !reactionsByPost[postId][reactionType]) {
       return null;
     }
-    
+
     return reactionsByPost[postId][reactionType].find(r => r.userId === user.id) || null;
   }, [user, reactionsByPost]);
 
@@ -162,7 +171,7 @@ export const useReactions = () => {
   }, [reactions, user]);
 
   // ===================== OPERACIONES CRUD =====================
-  
+
   /**
    * Crea una nueva reacción
    * @param {Object} reactionData - Datos de la reacción {postId, reactionType}
@@ -193,10 +202,10 @@ export const useReactions = () => {
 
       if (response && response.data) {
         setSuccessMessage('Reacción agregada correctamente');
-        
+
         // Actualizar la lista local de reacciones
         await fetchAllReactions();
-        
+
         return response.data;
       }
 
@@ -232,12 +241,12 @@ export const useReactions = () => {
 
     try {
       await communityService.deleteReaction(reactionId);
-      
+
       setSuccessMessage('Reacción eliminada correctamente');
-      
+
       // Actualizar la lista local de reacciones
       await fetchAllReactions();
-      
+
       return true;
     } catch (err) {
       console.error(`Error al eliminar reacción ${reactionId}:`, err);
@@ -264,7 +273,7 @@ export const useReactions = () => {
 
     try {
       const existingReaction = findUserReaction(postId, reactionType);
-      
+
       if (existingReaction) {
         // Si ya existe, la eliminamos
         return await deleteReaction(existingReaction.id);
@@ -281,7 +290,7 @@ export const useReactions = () => {
   };
 
   // ===================== FUNCIONES DE UTILIDAD =====================
-  
+
   /**
    * Limpia mensajes de error y éxito
    */
@@ -297,14 +306,14 @@ export const useReactions = () => {
    */
   const canDeleteReaction = useCallback((reaction) => {
     if (!user || !reaction) return false;
-    
+
     // Solo el propietario de la reacción puede eliminarla
     // (los administradores podrían tener permisos adicionales si se implementa)
     return reaction.userId === user.id;
   }, [user]);
 
   // ===================== RETORNO DEL HOOK =====================
-  
+
   return {
     // Estados
     reactions,
@@ -312,23 +321,23 @@ export const useReactions = () => {
     loading,
     error,
     successMessage,
-    
+
     // Funciones de obtención de datos
     fetchAllReactions,
     fetchReactionsByPost,
-    
+
     // Funciones de análisis
     getReactionCounts,
     hasUserReacted,
     findUserReaction,
     getReactionsByPostId,
     getUserReactions,
-    
+
     // Operaciones CRUD
     createReaction,
     deleteReaction,
     toggleReaction,
-    
+
     // Utilidades
     clearMessages,
     canDeleteReaction

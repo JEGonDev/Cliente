@@ -2,6 +2,7 @@ import { useContext } from 'react';
 import { useReactions } from '../hooks/useReactions';
 import { AuthContext } from '../../authentication/context/AuthContext';
 import { Heart } from 'lucide-react';
+import PropTypes from 'prop-types';
 
 /**
  * Componente para mostrar y manejar la reacción de corazón
@@ -49,18 +50,24 @@ export const ReactionButton = ({
 
   // Mapear tamaños
   const sizeClasses = {
-    sm: 'px-2 py-1 text-xs',
-    md: 'px-3 py-1.5 text-sm',
-    lg: 'px-4 py-2 text-base'
+    sm: 'gap-1.5 text-sm',
+    md: 'gap-2 text-base',
+    lg: 'gap-2.5 text-lg'
+  };
+
+  const iconSizes = {
+    sm: 'w-4 h-4',
+    md: 'w-5 h-5',
+    lg: 'w-6 h-6'
   };
 
   // Clases CSS dinámicas
   const buttonClasses = `
-    inline-flex items-center gap-1 rounded-full font-medium transition-all duration-200
+    inline-flex items-center px-3 py-1.5 rounded-full transition-all duration-200
     ${sizeClasses[size]}
     ${isReacted
-      ? 'bg-pink-100 text-pink-600 ring-1 ring-pink-200 shadow-sm'
-      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+      ? 'text-pink-600 bg-pink-50 hover:bg-pink-100'
+      : 'text-gray-500 bg-gray-50 hover:bg-gray-100'
     }
     ${disabled || loading
       ? 'opacity-50 cursor-not-allowed'
@@ -70,32 +77,26 @@ export const ReactionButton = ({
   `.trim();
 
   return (
-    <div className="relative">
-      <button
-        onClick={handleClick}
-        disabled={disabled || loading || !isAuthenticated}
-        className={buttonClasses}
-        title={
-          !isAuthenticated
-            ? 'Inicia sesión para reaccionar'
-            : `${isReacted ? 'Quitar' : 'Agregar'} me gusta`
-        }
-        aria-label={`${isReacted ? 'Quitar' : 'Agregar'} me gusta a la publicación`}
-      >
-        {/* Icono de corazón */}
-        <Heart
-          className={`${size === 'lg' ? 'w-6 h-6' : size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'} 
-          ${isReacted ? 'fill-current' : ''} 
-          ${loading ? 'animate-pulse' : ''}`}
-        />
-
-        {/* Contador (opcional) */}
-        {showCount && count > 0 && (
-          <span className="font-semibold">
-            {count}
-          </span>
-        )}
-      </button>
+    <button
+      onClick={handleClick}
+      disabled={disabled || loading || !isAuthenticated}
+      className={buttonClasses}
+      title={
+        !isAuthenticated
+          ? 'Inicia sesión para reaccionar'
+          : `${isReacted ? 'Quitar' : 'Agregar'} me gusta`
+      }
+      aria-label={`${isReacted ? 'Quitar' : 'Agregar'} me gusta a la publicación`}
+    >
+      <Heart
+        className={`${iconSizes[size]} ${isReacted ? 'fill-current' : ''} ${loading ? 'animate-pulse' : ''}`}
+      />
+      {/* Contador al lado del corazón */}
+      {showCount && count > 0 && (
+        <span className="font-medium">
+          {count}
+        </span>
+      )}
 
       {/* Indicador de carga */}
       {loading && (
@@ -103,8 +104,16 @@ export const ReactionButton = ({
           <div className="w-3 h-3 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       )}
-    </div>
+    </button>
   );
+};
+
+ReactionButton.propTypes = {
+  postId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+  className: PropTypes.string,
+  showCount: PropTypes.bool,
+  disabled: PropTypes.bool,
+  size: PropTypes.oneOf(['sm', 'md', 'lg'])
 };
 
 /**
@@ -133,4 +142,9 @@ export const ReactionSummary = ({ postId, className = '' }) => {
       </span>
     </div>
   );
+};
+
+ReactionSummary.propTypes = {
+  postId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+  className: PropTypes.string
 };
