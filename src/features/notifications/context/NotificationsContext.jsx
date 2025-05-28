@@ -201,19 +201,7 @@ export const NotificationsProvider = ({ children }) => {
   const addNotification = useCallback((notification) => {
     console.log('Nueva notificación recibida:', notification);
 
-    // Si es una notificación global, guardarla en localStorage
-    if (GLOBAL_CATEGORIES.includes(notification.category)) {
-      const globals = loadGlobalNotifications();
-      const newGlobals = [notification, ...globals];
-      saveGlobalNotifications(newGlobals);
-    }
-
-    // Filtrar la notificación antes de agregarla
-    if (!shouldShowNotification(notification)) {
-      console.log('Notificación filtrada, no se agregará a la lista');
-      return;
-    }
-
+    // Crear el objeto de notificación con un ID consistente
     const newNotification = {
       id: notification.id || `notif_${Date.now()}_${Math.random()}`,
       userId: notification.userId || notification.targetUserId,
@@ -224,20 +212,48 @@ export const NotificationsProvider = ({ children }) => {
       data: notification.data || {}
     };
 
-    console.log('✅ Agregando notificación filtrada:', newNotification);
+    // Si es una notificación global (educativa)
+    if (GLOBAL_CATEGORIES.includes(notification.category)) {
+      const globals = loadGlobalNotifications();
+
+      // Verificar duplicados en notificaciones globales
+      if (globals.some(n => n.id === newNotification.id ||
+        (n.message === newNotification.message &&
+          n.category === newNotification.category &&
+          Math.abs(new Date(n.timestamp) - new Date(newNotification.timestamp)) < 1000))) {
+        console.log('Notificación global duplicada detectada, ignorando:', newNotification.id);
+        return;
+      }
+
+      // Guardar en notificaciones globales
+      const newGlobals = [newNotification, ...globals];
+      saveGlobalNotifications(newGlobals);
+    }
+
+    // Filtrar la notificación antes de agregarla
+    if (!shouldShowNotification(newNotification)) {
+      console.log('Notificación filtrada, no se agregará a la lista');
+      return;
+    }
 
     setNotifications(prev => {
-      // Evitar duplicados
-      const exists = prev.some(n => n.id === newNotification.id);
-      if (exists) {
-        console.log('Notificación duplicada, ignorando');
+      // Verificar duplicados por ID y contenido
+      const isDuplicate = prev.some(n =>
+        n.id === newNotification.id ||
+        (n.message === newNotification.message &&
+          n.category === newNotification.category &&
+          Math.abs(new Date(n.timestamp) - new Date(newNotification.timestamp)) < 1000)
+      );
+
+      if (isDuplicate) {
+        console.log('Notificación duplicada detectada en el estado actual, ignorando');
         return prev;
       }
 
       const updatedNotifications = [newNotification, ...prev];
 
-      // Guardar inmediatamente en localStorage
-      if (user?.id) {
+      // Guardar en localStorage si es una notificación personal
+      if (user?.id && !GLOBAL_CATEGORIES.includes(newNotification.category)) {
         saveNotificationsToStorage(user.id, updatedNotifications);
       }
 
@@ -253,7 +269,7 @@ export const NotificationsProvider = ({ children }) => {
     if (!newNotification.read) {
       showBrowserNotification(newNotification);
     }
-  }, [shouldShowNotification, user?.id, saveNotificationsToStorage, loadGlobalNotifications, saveGlobalNotifications]);
+  }, [shouldShowNotification, user?.id, saveNotificationsToStorage, loadGlobalNotifications, saveGlobalNotifications, GLOBAL_CATEGORIES]);
 
   /**
    * Marca una notificación como leída
@@ -325,6 +341,8 @@ export const NotificationsProvider = ({ children }) => {
     // Limpiar también del localStorage
     if (user?.id) {
       clearStorageForUser(user.id);
+      // Limpiar también las notificaciones globales
+      Storage.remove(GLOBAL_NOTIFICATIONS_KEY);
     }
   }, [user?.id, clearStorageForUser]);
 
@@ -335,6 +353,9 @@ export const NotificationsProvider = ({ children }) => {
     console.log('Limpiando notificaciones del usuario anterior');
     setNotifications([]);
     setUnreadCount(0);
+
+    // Limpiar también las notificaciones globales del storage
+    Storage.remove(GLOBAL_NOTIFICATIONS_KEY);
   }, []);
 
   /**
@@ -429,18 +450,37 @@ export const NotificationsProvider = ({ children }) => {
       // Cargar notificaciones globales
       const globalNotifications = loadGlobalNotifications();
 
-      // Combinar y filtrar todas las notificaciones
-      const allNotifications = [...savedNotifications, ...globalNotifications].filter(notification =>
-        shouldShowNotification(notification)
+      // Crear un mapa para detectar duplicados
+      const uniqueMap = new Map();
+
+      // Primero agregar las notificaciones personales
+      savedNotifications.forEach(notif => {
+        const key = `${notif.message}_${notif.category}`;
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, notif);
+        }
+      });
+
+      // Luego agregar las notificaciones globales que no existan
+      globalNotifications.forEach(notif => {
+        const key = `${notif.message}_${notif.category}`;
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, notif);
+        }
+      });
+
+      // Convertir el mapa a array y filtrar
+      const uniqueNotifications = Array.from(uniqueMap.values()).filter(
+        notification => shouldShowNotification(notification)
       );
 
       // Ordenar por fecha más reciente
-      allNotifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      uniqueNotifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-      console.log(`📋 Cargadas ${allNotifications.length} notificaciones totales`);
+      console.log(`📋 Cargadas ${uniqueNotifications.length} notificaciones únicas`);
 
-      setNotifications(allNotifications);
-      updateUnreadCount(allNotifications);
+      setNotifications(uniqueNotifications);
+      updateUnreadCount(uniqueNotifications);
 
       // Conectar al WebSocket
       connectWebSocket();
