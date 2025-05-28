@@ -65,8 +65,8 @@ export const communityService = {
       // Configurar headers correctamente según el tipo de datos
       const config = isFormData
         ? {
-            headers: { "Content-Type": "multipart/form-data" },
-          }
+          headers: { "Content-Type": "multipart/form-data" },
+        }
         : undefined;
 
       // Realizar la petición con la configuración adecuada
@@ -223,12 +223,12 @@ export const communityService = {
       return response.data;
     } catch (error) {
       console.error(`❌ Error eliminando grupo ${id}:`, error);
-      
+
       // Mejorar el manejo de errores específicos
       if (error.response) {
         const { status, data } = error.response;
         console.error(`Status: ${status}`, data);
-        
+
         switch (status) {
           case 401:
             throw new Error('No tienes autorización para eliminar grupos. Inicia sesión nuevamente.');
@@ -278,7 +278,7 @@ export const communityService = {
   getThreadsByGroup: async (groupId) => {
     try {
       const response = await API.get(`/threads/by-group/${groupId}`);
-      
+
 
       return response.data;
     } catch (error) {
@@ -375,12 +375,15 @@ export const communityService = {
 
   /**
    * Crea una nueva reacción en una publicación
-   * @param {Object} reactionData - Datos de la reacción {postId, reactionType}
+   * @param {Object} reactionData - Datos de la reacción {postId}
    * @returns {Promise<Object>} Respuesta del servidor con la reacción creada
    */
   createReaction: async (reactionData) => {
     try {
-      const response = await API.post('/reactions', reactionData);
+      const response = await API.post('/reactions', {
+        ...reactionData,
+        reactionType: 'heart' // Siempre usamos el tipo 'heart'
+      });
       return response.data;
     } catch (error) {
       handleError(error, 'crear reacción');

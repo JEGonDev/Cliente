@@ -42,7 +42,7 @@ export const NotificationsDropdown = () => {
       case NOTIFICATION_CATEGORIES.POST:
         return <FileText className="w-4 h-4" />;
       case NOTIFICATION_CATEGORIES.REACTION:
-        return <Heart className="w-4 h-4" />;
+        return <Heart className="w-4 h-4 text-pink-500" />;
 
       // Educación
       case NOTIFICATION_CATEGORIES.ARTICLE:
