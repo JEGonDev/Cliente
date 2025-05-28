@@ -7,7 +7,7 @@ export const NotificationsContext = createContext();
 
 export const NotificationsProvider = ({ children }) => {
   const { isAuthenticated, user } = useContext(AuthContext);
-  
+
   // Estados
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -22,13 +22,13 @@ export const NotificationsProvider = ({ children }) => {
     THREAD: 'thread',
     POST: 'post',
     REACTION: 'reaction',
-    
+
     // Educación (GLOBALES - para todos los usuarios)
     ARTICLE: 'education_article',
     GUIDE: 'education_guide',
     MODULE: 'education_module',
     VIDEO: 'education_video',
-    
+
     // Monitoreo/Cultivos (PERSONALIZADAS - solo para el propietario del cultivo)
     CROP: 'crop',
     SENSOR_ALERT: 'sensor_alert',
@@ -44,6 +44,11 @@ export const NotificationsProvider = ({ children }) => {
   ];
 
   /**
+   * Genera la clave de almacenamiento para las notificaciones globales
+   */
+  const GLOBAL_NOTIFICATIONS_KEY = 'global_notifications';
+
+  /**
    * Genera la clave de almacenamiento para las notificaciones del usuario actual
    */
   const getStorageKey = useCallback((userId) => {
@@ -55,11 +60,11 @@ export const NotificationsProvider = ({ children }) => {
    */
   const loadNotificationsFromStorage = useCallback((userId) => {
     if (!userId) return [];
-    
+
     try {
       const storageKey = getStorageKey(userId);
       const savedNotifications = Storage.get(storageKey);
-      
+
       if (Array.isArray(savedNotifications)) {
         console.log(`📁 Cargadas ${savedNotifications.length} notificaciones guardadas para el usuario ${userId}`);
         return savedNotifications;
@@ -67,7 +72,7 @@ export const NotificationsProvider = ({ children }) => {
     } catch (error) {
       console.error('Error al cargar notificaciones desde storage:', error);
     }
-    
+
     return [];
   }, [getStorageKey]);
 
@@ -76,7 +81,7 @@ export const NotificationsProvider = ({ children }) => {
    */
   const saveNotificationsToStorage = useCallback((userId, notificationsToSave) => {
     if (!userId || !Array.isArray(notificationsToSave)) return;
-    
+
     try {
       const storageKey = getStorageKey(userId);
       Storage.set(storageKey, notificationsToSave);
@@ -91,7 +96,7 @@ export const NotificationsProvider = ({ children }) => {
    */
   const clearStorageForUser = useCallback((userId) => {
     if (!userId) return;
-    
+
     try {
       const storageKey = getStorageKey(userId);
       Storage.remove(storageKey);
@@ -102,13 +107,40 @@ export const NotificationsProvider = ({ children }) => {
   }, [getStorageKey]);
 
   /**
+   * Carga las notificaciones globales desde localStorage
+   */
+  const loadGlobalNotifications = useCallback(() => {
+    try {
+      const savedGlobals = Storage.get(GLOBAL_NOTIFICATIONS_KEY) || [];
+      if (Array.isArray(savedGlobals)) {
+        console.log(`📁 Cargadas ${savedGlobals.length} notificaciones globales`);
+        return savedGlobals;
+      }
+    } catch (error) {
+      console.error('Error al cargar notificaciones globales:', error);
+    }
+    return [];
+  }, []);
+
+  /**
+   * Guarda las notificaciones globales en localStorage
+   */
+  const saveGlobalNotifications = useCallback((notifications) => {
+    try {
+      Storage.set(GLOBAL_NOTIFICATIONS_KEY, notifications);
+      console.log(`💾 Guardadas ${notifications.length} notificaciones globales`);
+    } catch (error) {
+      console.error('Error al guardar notificaciones globales:', error);
+    }
+  }, []);
+
+  /**
    * Determina si una notificación debe ser mostrada al usuario actual
    */
   const shouldShowNotification = useCallback((notification) => {
-    // Si no hay usuario autenticado, no mostrar notificaciones
+    // Si no hay usuario autenticado, solo mostrar notificaciones globales
     if (!user || !user.id) {
-      console.log('No hay usuario autenticado, filtrando notificación');
-      return false;
+      return GLOBAL_CATEGORIES.includes(notification.category);
     }
 
     // Extraer información de la notificación
@@ -137,14 +169,7 @@ export const NotificationsProvider = ({ children }) => {
       return true;
     }
 
-    // 3. Notificaciones sin userId específico pero de categorías personalizadas
-    // Estas probablemente no deberían mostrarse ya que falta información de targeting
-    if (!notificationUserId && !GLOBAL_CATEGORIES.includes(notificationCategory)) {
-      console.log('⚠️ Notificación personalizada sin userId - filtrar por seguridad');
-      return false;
-    }
-
-    // 4. Por defecto, filtrar notificaciones que no cumplen los criterios
+    // 3. Por defecto, filtrar notificaciones que no cumplen los criterios
     console.log('❌ Notificación filtrada - no cumple criterios');
     return false;
   }, [user, GLOBAL_CATEGORIES]);
@@ -163,7 +188,7 @@ export const NotificationsProvider = ({ children }) => {
   const updateNotifications = useCallback((newNotifications) => {
     setNotifications(newNotifications);
     updateUnreadCount(newNotifications);
-    
+
     // Guardar en localStorage si hay usuario autenticado
     if (user?.id) {
       saveNotificationsToStorage(user.id, newNotifications);
@@ -176,12 +201,7 @@ export const NotificationsProvider = ({ children }) => {
   const addNotification = useCallback((notification) => {
     console.log('Nueva notificación recibida:', notification);
 
-    // Filtrar la notificación antes de agregarla
-    if (!shouldShowNotification(notification)) {
-      console.log('Notificación filtrada, no se agregará a la lista');
-      return;
-    }
-
+    // Crear el objeto de notificación con un ID consistente
     const newNotification = {
       id: notification.id || `notif_${Date.now()}_${Math.random()}`,
       userId: notification.userId || notification.targetUserId,
@@ -189,27 +209,54 @@ export const NotificationsProvider = ({ children }) => {
       category: notification.category,
       timestamp: notification.notificationDate || notification.timestamp || new Date().toISOString(),
       read: notification.isRead || false,
-      // Datos adicionales si vienen del backend
       data: notification.data || {}
     };
 
-    console.log('✅ Agregando notificación filtrada:', newNotification);
+    // Si es una notificación global (educativa)
+    if (GLOBAL_CATEGORIES.includes(notification.category)) {
+      const globals = loadGlobalNotifications();
+
+      // Verificar duplicados en notificaciones globales
+      if (globals.some(n => n.id === newNotification.id ||
+        (n.message === newNotification.message &&
+          n.category === newNotification.category &&
+          Math.abs(new Date(n.timestamp) - new Date(newNotification.timestamp)) < 1000))) {
+        console.log('Notificación global duplicada detectada, ignorando:', newNotification.id);
+        return;
+      }
+
+      // Guardar en notificaciones globales
+      const newGlobals = [newNotification, ...globals];
+      saveGlobalNotifications(newGlobals);
+    }
+
+    // Filtrar la notificación antes de agregarla
+    if (!shouldShowNotification(newNotification)) {
+      console.log('Notificación filtrada, no se agregará a la lista');
+      return;
+    }
 
     setNotifications(prev => {
-      // Evitar duplicados
-      const exists = prev.some(n => n.id === newNotification.id);
-      if (exists) {
-        console.log('Notificación duplicada, ignorando');
+      // Verificar duplicados por ID y contenido
+      const isDuplicate = prev.some(n =>
+        n.id === newNotification.id ||
+        (n.message === newNotification.message &&
+          n.category === newNotification.category &&
+          Math.abs(new Date(n.timestamp) - new Date(newNotification.timestamp)) < 1000)
+      );
+
+      if (isDuplicate) {
+        console.log('Notificación duplicada detectada en el estado actual, ignorando');
         return prev;
       }
-      
+
       const updatedNotifications = [newNotification, ...prev];
-      
-      // Guardar inmediatamente en localStorage
-      if (user?.id) {
+
+      // Guardar en localStorage si es una notificación personal
+      if (user?.id && !GLOBAL_CATEGORIES.includes(newNotification.category)) {
         saveNotificationsToStorage(user.id, updatedNotifications);
       }
-      
+
       return updatedNotifications;
     });
 
@@ -222,7 +269,7 @@ export const NotificationsProvider = ({ children }) => {
     if (!newNotification.read) {
       showBrowserNotification(newNotification);
     }
-  }, [shouldShowNotification, user?.id, saveNotificationsToStorage]);
+  }, [shouldShowNotification, user?.id, saveNotificationsToStorage, loadGlobalNotifications, saveGlobalNotifications, GLOBAL_CATEGORIES]);
 
   /**
    * Marca una notificación como leída
@@ -232,15 +279,15 @@ export const NotificationsProvider = ({ children }) => {
       const updatedNotifications = prev.map(notif =>
         notif.id === notificationId ? { ...notif, read: true } : notif
       );
-      
+
       // Guardar cambios en localStorage
       if (user?.id) {
         saveNotificationsToStorage(user.id, updatedNotifications);
       }
-      
+
       return updatedNotifications;
     });
-    
+
     setUnreadCount(prev => Math.max(0, prev - 1));
   }, [user?.id, saveNotificationsToStorage]);
 
@@ -250,15 +297,15 @@ export const NotificationsProvider = ({ children }) => {
   const markAllAsRead = useCallback(() => {
     setNotifications(prev => {
       const updatedNotifications = prev.map(notif => ({ ...notif, read: true }));
-      
+
       // Guardar cambios en localStorage
       if (user?.id) {
         saveNotificationsToStorage(user.id, updatedNotifications);
       }
-      
+
       return updatedNotifications;
     });
-    
+
     setUnreadCount(0);
   }, [user?.id, saveNotificationsToStorage]);
 
@@ -269,17 +316,17 @@ export const NotificationsProvider = ({ children }) => {
     setNotifications(prev => {
       const notification = prev.find(n => n.id === notificationId);
       const updatedNotifications = prev.filter(n => n.id !== notificationId);
-      
+
       // Actualizar contador si la notificación eliminada no estaba leída
       if (notification && !notification.read) {
         setUnreadCount(count => Math.max(0, count - 1));
       }
-      
+
       // Guardar cambios en localStorage
       if (user?.id) {
         saveNotificationsToStorage(user.id, updatedNotifications);
       }
-      
+
       return updatedNotifications;
     });
   }, [user?.id, saveNotificationsToStorage]);
@@ -290,10 +337,12 @@ export const NotificationsProvider = ({ children }) => {
   const clearAllNotifications = useCallback(() => {
     setNotifications([]);
     setUnreadCount(0);
-    
+
     // Limpiar también del localStorage
     if (user?.id) {
       clearStorageForUser(user.id);
+      // Limpiar también las notificaciones globales
+      Storage.remove(GLOBAL_NOTIFICATIONS_KEY);
     }
   }, [user?.id, clearStorageForUser]);
 
@@ -304,6 +353,9 @@ export const NotificationsProvider = ({ children }) => {
     console.log('Limpiando notificaciones del usuario anterior');
     setNotifications([]);
     setUnreadCount(0);
+
+    // Limpiar también las notificaciones globales del storage
+    Storage.remove(GLOBAL_NOTIFICATIONS_KEY);
   }, []);
 
   /**
@@ -320,18 +372,18 @@ export const NotificationsProvider = ({ children }) => {
   const connectWebSocket = useCallback(async () => {
     try {
       setConnectionError(null);
-      
+
       await websocketService.connect(
         () => {
           console.log('✅ Conectado al sistema de notificaciones');
           setIsConnected(true);
-          
+
           // Suscribirse al topic de notificaciones
           const subId = websocketService.subscribe('/topic/notifications', (notification) => {
             console.log('📬 Nueva notificación recibida desde WebSocket:', notification);
             addNotification(notification);
           });
-          
+
           setSubscriptionId(subId);
         },
         (error) => {
@@ -354,7 +406,7 @@ export const NotificationsProvider = ({ children }) => {
       websocketService.unsubscribe(subscriptionId);
       setSubscriptionId(null);
     }
-    
+
     websocketService.disconnect();
     setIsConnected(false);
   }, [subscriptionId]);
@@ -391,36 +443,60 @@ export const NotificationsProvider = ({ children }) => {
   useEffect(() => {
     if (isAuthenticated && user?.id) {
       console.log('Usuario autenticado, cargando notificaciones guardadas para:', user.username || user.email);
-      
+
       // Cargar notificaciones guardadas del usuario
       const savedNotifications = loadNotificationsFromStorage(user.id);
-      
-      if (savedNotifications.length > 0) {
-        // Filtrar las notificaciones cargadas por si acaso
-        const filteredNotifications = savedNotifications.filter(notification => 
-          shouldShowNotification(notification)
-        );
-        
-        console.log(`📋 Cargadas ${filteredNotifications.length} notificaciones filtradas de ${savedNotifications.length} guardadas`);
-        
-        setNotifications(filteredNotifications);
-        updateUnreadCount(filteredNotifications);
-      }
-      
+
+      // Cargar notificaciones globales
+      const globalNotifications = loadGlobalNotifications();
+
+      // Crear un mapa para detectar duplicados
+      const uniqueMap = new Map();
+
+      // Primero agregar las notificaciones personales
+      savedNotifications.forEach(notif => {
+        const key = `${notif.message}_${notif.category}`;
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, notif);
+        }
+      });
+
+      // Luego agregar las notificaciones globales que no existan
+      globalNotifications.forEach(notif => {
+        const key = `${notif.message}_${notif.category}`;
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, notif);
+        }
+      });
+
+      // Convertir el mapa a array y filtrar
+      const uniqueNotifications = Array.from(uniqueMap.values()).filter(
+        notification => shouldShowNotification(notification)
+      );
+
+      // Ordenar por fecha más reciente
+      uniqueNotifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      console.log(`📋 Cargadas ${uniqueNotifications.length} notificaciones únicas`);
+
+      setNotifications(uniqueNotifications);
+      updateUnreadCount(uniqueNotifications);
+
       // Conectar al WebSocket
       connectWebSocket();
       requestNotificationPermission();
     } else {
-      console.log('Usuario no autenticado, desconectando notificaciones');
-      disconnectWebSocket();
-      clearUserNotifications();
+      console.log('Usuario no autenticado, cargando solo notificaciones globales');
+      const globalNotifications = loadGlobalNotifications();
+      setNotifications(globalNotifications);
+      updateUnreadCount(globalNotifications);
     }
 
     // Cleanup
     return () => {
       disconnectWebSocket();
     };
-  }, [isAuthenticated, user?.id]); // Dependemos del ID del usuario para detectar cambios
+  }, [isAuthenticated, user?.id]);
 
   // Valor del contexto
   const value = {
@@ -429,7 +505,7 @@ export const NotificationsProvider = ({ children }) => {
     unreadCount,
     isConnected,
     connectionError,
-    
+
     // Acciones
     addNotification,
     markAsRead,
@@ -437,12 +513,12 @@ export const NotificationsProvider = ({ children }) => {
     removeNotification,
     clearAllNotifications,
     clearUserNotifications,
-    
+
     // Utilidades
     getNotificationsByCategory,
     requestNotificationPermission,
     shouldShowNotification, // Exponer para debugging
-    
+
     // Constantes
     NOTIFICATION_CATEGORIES,
     GLOBAL_CATEGORIES
