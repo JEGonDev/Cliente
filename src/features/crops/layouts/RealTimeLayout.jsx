@@ -24,7 +24,11 @@ export const RealTimeLayout = () => {
     updateAllThresholds
   } = useMonitoring();
 
-  const [localThresholds, setLocalThresholds] = useState({});
+  const [localThresholds, setLocalThresholds] = useState({
+    temperature: { min: 18.0, max: 26.0 },
+    humidity: { min: 60, max: 80 },
+    ec: { min: 1.0, max: 1.6 },
+  });
   const [status, setStatus] = useState(null);
   const [isThresholdModalOpen, setIsThresholdModalOpen] = useState(false);
 
@@ -196,6 +200,7 @@ export const RealTimeLayout = () => {
           value={displayData.ec.current}
           unit={displayData.ec.unit}
           trend={displayData.ec.trend}
+          trendDirection={displayData.ec.trendDirection}
           trendTime={displayData.ec.trendTime}
           icon="conductivity"
         />
@@ -203,11 +208,7 @@ export const RealTimeLayout = () => {
 
       {/* Gráfico de monitoreo en tiempo real */}
       <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
-        <RealTimeChart
-          data={realTimeData}
-          timeRange={timeRange}
-          isMonitoring={isMonitoring}
-        />
+        <RealTimeChart />
       </div>
 
       {/* Sliders de umbrales */}
