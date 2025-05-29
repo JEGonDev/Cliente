@@ -16,7 +16,6 @@ import { ThreadForumView } from "../features/community/pages/ThreadForumView";
 import { AdminCommunityView } from "../features/community/pages/AdminCommunityView";
 import { ThreadDetailView } from "../features/community/pages/ThreadDetailView";
 
-
 // Importaciones de modulo educativo
 import { EducationPage } from "../pages/EducationPage";
 import { OpenModulePage } from "../features/education/pages/OpenModulePage";
@@ -82,7 +81,6 @@ export const RouterApp = () => {
         {/* Rutas del modulo de profile */}
         <Route path="/profile/edit" element={<ProfileEditPage />} />
         <Route path="/profile/admin" element={<ProfileAdminPage />} />
-
 
       </Route>
     </Routes>

@@ -15,7 +15,8 @@ export const AddSensorModal = ({ isOpen, onClose, onAddSensor }) => {
   const firstInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
-    type: ''
+    sensorType: '',
+    unitOfMeasurement: ''
   });
 
   const [errors, setErrors] = useState({});
@@ -24,11 +25,11 @@ export const AddSensorModal = ({ isOpen, onClose, onAddSensor }) => {
   // Usar el contexto de monitoreo
   const { createSensor, loading } = useMonitoring();
 
-  // Tipos de sensores disponibles
-  const sensorTypes = [
-    { value: 'temperature', label: 'Temperatura', icon: '🌡️', unit: '°C' },
-    { value: 'ec', label: 'Conductividad Eléctrica', icon: '⚡', unit: 'mS/cm' },
-    { value: 'humidity', label: 'Humedad', icon: '💧', unit: '%' }
+  // Unidades de medida disponibles
+  const measurementUnits = [
+    { value: '°C', label: 'Temperatura (°C)' },
+    { value: 'mS/cm', label: 'Conductividad Eléctrica (mS/cm)' },
+    { value: '%', label: 'Humedad (%)' }
   ];
 
   // Efecto para manejar el foco al abrir el modal
@@ -59,8 +60,12 @@ export const AddSensorModal = ({ isOpen, onClose, onAddSensor }) => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.type) {
-      newErrors.type = 'Debe seleccionar un tipo de sensor';
+    if (!formData.sensorType.trim()) {
+      newErrors.sensorType = 'El tipo de sensor es obligatorio';
+    }
+
+    if (!formData.unitOfMeasurement) {
+      newErrors.unitOfMeasurement = 'Debe seleccionar una unidad de medida';
     }
 
     return newErrors;
@@ -78,13 +83,10 @@ export const AddSensorModal = ({ isOpen, onClose, onAddSensor }) => {
     setIsSubmitting(true);
 
     try {
-      // Obtener la unidad de medida según el tipo de sensor
-      const selectedSensorType = sensorTypes.find(type => type.value === formData.type);
-
       // Preparar datos para el backend
       const sensorData = {
-        sensorType: formData.type,
-        unitOfMeasurement: selectedSensorType.unit
+        sensorType: formData.sensorType.trim(),
+        unitOfMeasurement: formData.unitOfMeasurement
       };
 
       console.log('Creando sensor:', sensorData);
@@ -126,7 +128,8 @@ export const AddSensorModal = ({ isOpen, onClose, onAddSensor }) => {
 
   const handleReset = () => {
     setFormData({
-      type: ''
+      sensorType: '',
+      unitOfMeasurement: ''
     });
     setErrors({});
   };
@@ -148,30 +151,53 @@ export const AddSensorModal = ({ isOpen, onClose, onAddSensor }) => {
           Agregar Nuevo Sensor
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
           {/* Tipo de sensor */}
           <div>
-            <label htmlFor="type" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="sensorType" className="block text-sm font-medium text-gray-700">
               Tipo de sensor *
             </label>
-            <select
+            <input
               ref={firstInputRef}
-              id="type"
-              name="type"
-              value={formData.type}
+              type="text"
+              id="sensorType"
+              name="sensorType"
+              value={formData.sensorType}
               onChange={handleInputChange}
-              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${errors.type ? 'border-red-300' : ''
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${errors.sensorType ? 'border-red-300' : ''
+                }`}
+              placeholder="Ej: temperature, humidity, ec"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Escriba el tipo de sensor que desea crear (temperature, humidity, ec) y una descripcion corta si lo deseas
+            </p>
+            {errors.sensorType && (
+              <p className="mt-1 text-sm text-red-600">{errors.sensorType}</p>
+            )}
+          </div>
+
+          {/* Unidad de medida */}
+          <div>
+            <label htmlFor="unitOfMeasurement" className="block text-sm font-medium text-gray-700">
+              Unidad de medida *
+            </label>
+            <select
+              id="unitOfMeasurement"
+              name="unitOfMeasurement"
+              value={formData.unitOfMeasurement}
+              onChange={handleInputChange}
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${errors.unitOfMeasurement ? 'border-red-300' : ''
                 }`}
             >
-              <option value="">Seleccione un tipo</option>
-              {sensorTypes.map(type => (
-                <option key={type.value} value={type.value}>
-                  {type.icon} {type.label} ({type.unit})
+              <option value="">Seleccione una unidad</option>
+              {measurementUnits.map(unit => (
+                <option key={unit.value} value={unit.value}>
+                  {unit.label}
                 </option>
               ))}
             </select>
-            {errors.type && (
-              <p className="mt-1 text-sm text-red-600">{errors.type}</p>
+            {errors.unitOfMeasurement && (
+              <p className="mt-1 text-sm text-red-600">{errors.unitOfMeasurement}</p>
             )}
           </div>
 
@@ -193,7 +219,8 @@ export const AddSensorModal = ({ isOpen, onClose, onAddSensor }) => {
               Cancelar
             </button>
             <button
-              type="submit"
+              type="button"
+              onClick={handleSubmit}
               disabled={isSubmitting || loading}
               className="px-4 py-2 text-sm font-medium text-white bg-primary border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
             >
@@ -203,7 +230,7 @@ export const AddSensorModal = ({ isOpen, onClose, onAddSensor }) => {
               {(isSubmitting || loading) ? 'Agregando...' : 'Agregar Sensor'}
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
