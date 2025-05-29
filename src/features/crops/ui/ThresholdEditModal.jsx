@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { X, AlertCircle, CheckCircle, Loader } from 'lucide-react';
 import { GlobalThresholdsEditor } from './GlobalThresholdsEditor';
+import { useMonitoring } from '../hooks/useMonitoring';
 
 /**
  * Modal para editar umbrales reutilizando el componente GlobalThresholdsEditor
@@ -29,6 +30,13 @@ export const ThresholdEditModal = ({
   const [status, setStatus] = useState(null); // null | "loading" | "success" | "error"
   const [errorMessage, setErrorMessage] = useState('');
   const [hasChanges, setHasChanges] = useState(false);
+
+  // Usar el contexto de monitoreo
+  const {
+    selectedCrop,
+    updateAllThresholds,
+    loading: contextLoading
+  } = useMonitoring();
 
   // Actualizar umbrales locales cuando cambian los iniciales
   useEffect(() => {
@@ -132,12 +140,23 @@ export const ThresholdEditModal = ({
       return;
     }
 
+    if (!selectedCrop) {
+      setStatus("error");
+      setErrorMessage('No hay cultivo seleccionado para actualizar los umbrales');
+      return;
+    }
+
     setStatus("loading");
     setErrorMessage('');
 
     try {
-      // Llamar al callback de guardado (puede ser async)
-      await onSave(thresholds);
+      // Actualizar usando el contexto
+      await updateAllThresholds(thresholds);
+
+      // También llamar al callback proporcionado si existe
+      if (onSave) {
+        await onSave(thresholds);
+      }
 
       setStatus("success");
 
@@ -186,7 +205,12 @@ export const ThresholdEditModal = ({
         return (
           <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
             <Loader size={16} className="animate-spin text-blue-600" />
-            <p className="text-sm text-blue-700">Guardando umbrales...</p>
+            <div>
+              <p className="text-sm text-blue-700">Guardando umbrales...</p>
+              {selectedCrop && (
+                <p className="text-xs text-blue-600">Cultivo: {selectedCrop.name}</p>
+              )}
+            </div>
           </div>
         );
 
@@ -194,9 +218,12 @@ export const ThresholdEditModal = ({
         return (
           <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-md">
             <CheckCircle size={16} className="text-green-600" />
-            <p className="text-sm text-green-700">
-              ¡Umbrales guardados correctamente! Cerrando modal...
-            </p>
+            <div>
+              <p className="text-sm text-green-700">
+                ¡Umbrales guardados correctamente!
+              </p>
+              <p className="text-xs text-green-600">Cerrando modal...</p>
+            </div>
           </div>
         );
 
@@ -317,13 +344,13 @@ export const ThresholdEditModal = ({
                 ref={lastFocusableElementRef}
                 type="button"
                 onClick={handleSave}
-                disabled={status === "loading" || !hasChanges}
+                disabled={status === "loading" || !hasChanges || contextLoading}
                 className="px-4 py-2 text-sm font-medium text-white bg-primary border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
               >
-                {status === "loading" && (
+                {(status === "loading" || contextLoading) && (
                   <Loader size={16} className="animate-spin" />
                 )}
-                {status === "loading" ? 'Guardando...' : 'Guardar Cambios'}
+                {(status === "loading" || contextLoading) ? 'Guardando...' : 'Guardar Cambios'}
               </button>
             </div>
           </div>
