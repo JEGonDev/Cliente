@@ -38,40 +38,10 @@ export const SensorCard = ({
 
   const getSensorIcon = (type) => {
     const normalizedType = type.toLowerCase();
-    const icons = {
-      temperature: '🌡️',
-      humidity: '💧',
-      ec: '⚡',
-      ph: '🧪'
-    };
-
-    // Buscar coincidencias parciales
-    for (const [key, icon] of Object.entries(icons)) {
-      if (normalizedType.includes(key)) {
-        return icon;
-      }
-    }
-
+    if (normalizedType.includes('temperature')) return '🌡️';
+    if (normalizedType.includes('humidity')) return '💧';
+    if (normalizedType.includes('ec')) return '⚡';
     return '📊'; // Icono por defecto
-  };
-
-  const getUnit = (type) => {
-    const normalizedType = type.toLowerCase();
-    const units = {
-      temperature: '°C',
-      humidity: '%',
-      ec: 'mS/cm',
-      ph: 'pH'
-    };
-
-    // Buscar coincidencias parciales
-    for (const [key, unit] of Object.entries(units)) {
-      if (normalizedType.includes(key)) {
-        return unit;
-      }
-    }
-
-    return ''; // Sin unidad por defecto
   };
 
   const getSensorStatus = (minutesAgo, sensorStatus) => {
@@ -103,12 +73,12 @@ export const SensorCard = ({
   // Normalizar datos del sensor para compatibilidad
   const normalizedSensor = {
     id: sensor.id,
-    name: sensor.name || `Sensor ${sensor.id}`,
-    type: sensor.type || 'unknown',
+    name: `Sensor ${sensor.id}`,
+    type: sensor.sensorType || 'unknown',
     lastReading: sensor.lastReading ?? 0,
     minutesAgo: sensor.minutesAgo ?? 0,
-    status: sensor.status || sensor.isActive,
-    location: sensor.location
+    status: sensor.status || true, // Por defecto activo
+    unit: sensor.unitOfMeasurement || ''
   };
 
   const status = getSensorStatus(normalizedSensor.minutesAgo, normalizedSensor.status);
@@ -126,13 +96,13 @@ export const SensorCard = ({
       `}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={onToggleSelection}
+      onClick={() => onToggleSelection(sensor.id)}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          onToggleSelection();
+          onToggleSelection(sensor.id);
         }
       }}
       aria-label={`Seleccionar sensor ${normalizedSensor.name}`}
@@ -142,7 +112,7 @@ export const SensorCard = ({
         <input
           type="checkbox"
           checked={isSelected}
-          onChange={onToggleSelection}
+          onChange={() => onToggleSelection(sensor.id)}
           className="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
           onClick={(e) => e.stopPropagation()}
           aria-label={`Checkbox para ${normalizedSensor.name}`}
@@ -161,11 +131,9 @@ export const SensorCard = ({
           <p className="text-xs text-gray-600 capitalize">
             {normalizedSensor.type}
           </p>
-          {normalizedSensor.location && (
-            <p className="text-xs text-gray-500">
-              📍 {normalizedSensor.location}
-            </p>
-          )}
+          <p className="text-xs text-gray-500">
+            Unidad: {normalizedSensor.unit}
+          </p>
         </div>
         <div className={`text-xs font-medium ${status.color}`}>
           {status.label}
@@ -178,7 +146,7 @@ export const SensorCard = ({
           <span className="text-xs text-gray-500">Última lectura:</span>
           <span className="text-sm font-medium text-gray-900">
             {normalizedSensor.lastReading !== null && normalizedSensor.lastReading !== undefined
-              ? `${normalizedSensor.lastReading}${getUnit(normalizedSensor.type)}`
+              ? `${normalizedSensor.lastReading}${normalizedSensor.unit}`
               : 'Sin datos'
             }
           </span>
@@ -205,13 +173,11 @@ export const SensorCard = ({
 SensorCard.propTypes = {
   sensor: PropTypes.shape({
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-    name: PropTypes.string,
-    type: PropTypes.string,
+    sensorType: PropTypes.string,
+    unitOfMeasurement: PropTypes.string,
     lastReading: PropTypes.number,
     minutesAgo: PropTypes.number,
-    status: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
-    isActive: PropTypes.bool,
-    location: PropTypes.string
+    status: PropTypes.oneOfType([PropTypes.string, PropTypes.bool])
   }).isRequired,
   isSelected: PropTypes.bool,
   onToggleSelection: PropTypes.func.isRequired,

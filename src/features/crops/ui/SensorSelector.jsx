@@ -2,28 +2,21 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { SensorCard } from './SensorCard';
 import { AddSensorModal } from './AddSensorModal';
 
-export const SensorSelector = ({ 
-  selectedSensorIds = [], 
+export const SensorSelector = ({
+  selectedSensorIds = [],
   onSensorSelectionChange,
-  className = "" 
+  className = ""
 }) => {
   const [availableSensors, setAvailableSensors] = useState([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const mockSensors = useMemo(() => [
-    { id: 'temp-01', name: 'Sensor Temp-01', type: 'Temperatura', lastReading: 24, minutesAgo: 10, isActive: true },
-    { id: 'hum-04', name: 'Sensor Hum-04', type: 'Humedad', lastReading: 68, minutesAgo: 5, isActive: true },
-    { id: 'ec-02', name: 'Sensor EC-02', type: 'Conductividad', lastReading: 1.3, minutesAgo: 15, isActive: true },
-   
-  ], []);
-
   useEffect(() => {
     const loadSensors = async () => {
       setIsLoading(true);
       try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setAvailableSensors(mockSensors);
+        // Aquí deberías hacer la llamada real a tu API
+        setIsLoading(false);
       } catch (error) {
         console.error('Error loading sensors:', error);
       } finally {
@@ -31,7 +24,7 @@ export const SensorSelector = ({
       }
     };
     loadSensors();
-  }, [mockSensors]);
+  }, []);
 
   // Solo sensores activos sin filtro ni búsqueda
   const filteredSensors = useMemo(() => {

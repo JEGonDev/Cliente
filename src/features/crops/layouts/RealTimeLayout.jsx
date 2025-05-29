@@ -24,11 +24,7 @@ export const RealTimeLayout = () => {
     updateAllThresholds
   } = useMonitoring();
 
-  const [localThresholds, setLocalThresholds] = useState({
-    temperature: { min: 18.0, max: 26.0 },
-    humidity: { min: 60, max: 80 },
-    ec: { min: 1.0, max: 1.6 },
-  });
+  const [localThresholds, setLocalThresholds] = useState({});
   const [status, setStatus] = useState(null);
   const [isThresholdModalOpen, setIsThresholdModalOpen] = useState(false);
 
@@ -164,8 +160,8 @@ export const RealTimeLayout = () => {
           <button
             onClick={isMonitoring ? stopMonitoring : startMonitoring}
             className={`px-4 py-2 rounded-md ${isMonitoring
-                ? 'bg-red-600 hover:bg-red-700 text-white'
-                : 'bg-green-600 hover:bg-green-700 text-white'
+              ? 'bg-red-600 hover:bg-red-700 text-white'
+              : 'bg-green-600 hover:bg-green-700 text-white'
               }`}
           >
             {isMonitoring ? 'Detener monitoreo' : 'Iniciar monitoreo'}
