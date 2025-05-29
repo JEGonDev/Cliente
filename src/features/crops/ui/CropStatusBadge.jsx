@@ -5,10 +5,13 @@ export const CropStatusBadge = ({ status }) => {
     active: { label: "Activo", bgColor: "bg-green-100", textColor: "text-green-800" },
     paused: { label: "En pausa", bgColor: "bg-yellow-100", textColor: "text-yellow-800" },
     alert: { label: "Alerta", bgColor: "bg-red-100", textColor: "text-red-800" },
-    completed: { label: "Completado", bgColor: "bg-gray-100", textColor: "text-gray-800" }
+    completed: { label: "Completado", bgColor: "bg-gray-100", textColor: "text-gray-800" },
+    inactive: { label: "Inactivo", bgColor: "bg-gray-100", textColor: "text-gray-800" }
   };
 
-  const config = statusConfig[status] || statusConfig.active;
+  // Normalizar el estado a minúsculas y manejar valores nulos/indefinidos
+  const normalizedStatus = (status || '').toLowerCase();
+  const config = statusConfig[normalizedStatus] || statusConfig.inactive;
 
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bgColor} ${config.textColor}`}>
@@ -18,5 +21,5 @@ export const CropStatusBadge = ({ status }) => {
 };
 
 CropStatusBadge.propTypes = {
-  status: PropTypes.oneOf(['active', 'paused', 'alert', 'completed']).isRequired
+  status: PropTypes.string
 };

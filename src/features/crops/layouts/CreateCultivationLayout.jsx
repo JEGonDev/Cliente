@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GlobalThresholdsEditor } from '../ui/GlobalThresholdsEditor';
 import { SensorSelector } from '../ui/SensorSelector'; // ✅ CORRECCIÓN 1: Cambié SensorCard por SensorSelector
- 
+
 export const CreateCultivationLayout = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('basic');
@@ -84,11 +84,10 @@ export const CreateCultivationLayout = () => {
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab)}
-            className={`pb-2 font-semibold text-gray-700 ${
-              activeTab === tab
+            className={`pb-2 font-semibold text-gray-700 ${activeTab === tab
                 ? 'border-b-2 border-green-500 text-green-600'
                 : 'hover:text-green-500'
-            }`}
+              }`}
           >
             {tab === 'basic' && 'Información Básica'}
             {tab === 'thresholds' && 'Umbrales '}
