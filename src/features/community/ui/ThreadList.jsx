@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useImperativeHandle } from "react";
 import { ThreadCard } from "./ThreadCard";
 import { useThread } from "../hooks/useThread";
 
@@ -11,7 +11,8 @@ export const ThreadList = ({
   threadId, 
   onThreadsLoaded,
   showCards = true,
-  className = ""
+  className = "",
+  refetchRef
 }) => {
   const {
     threads,
@@ -24,29 +25,55 @@ export const ThreadList = ({
     fetchThreadById,
   } = useThread();
 
-  // ✅ Efecto simplificado sin dependencias de funciones
-  useEffect(() => {
-    const loadThreads = async () => {
-      try {
-        if (threadId) {
-          await fetchThreadById(threadId);
-        } else if (groupId) {
-          await fetchThreadsByGroup(groupId);
-        } else if (userId) {
-          await fetchThreadsByUser(userId);
-        } else {
-          // Para el foro general (cuando groupId es null)
-          await fetchForumThreads();
-        }
-      } catch (err) {
-        console.error('Error cargando hilos:', err);
+  const reloadThreads = async () => {
+    try {
+      if (threadId) {
+        await fetchThreadById(threadId);
+      } else if (groupId) {
+        await fetchThreadsByGroup(groupId);
+      } else if (userId) {
+        await fetchThreadsByUser(userId);
+      } else {
+        await fetchForumThreads();
       }
-    };
+    } catch (err) {
+      console.error('Error cargando hilos:', err);
+    }
+  };
+  useEffect(() => {
+  reloadThreads();
+  // eslint-disable-next-line
+}, [groupId, userId, threadId]);
 
-    loadThreads();
+  useEffect(() => {
+    if (refetchRef) {
+      refetchRef.current = reloadThreads;
+    }
+  }, [refetchRef, groupId, userId, threadId]);
+
+  // ✅ Efecto simplificado sin dependencias de funciones
+  // useEffect(() => {
+  //   const loadThreads = async () => {
+  //     try {
+  //       if (threadId) {
+  //         await fetchThreadById(threadId);
+  //       } else if (groupId) {
+  //         await fetchThreadsByGroup(groupId);
+  //       } else if (userId) {
+  //         await fetchThreadsByUser(userId);
+  //       } else {
+  //         // Para el foro general (cuando groupId es null)
+  //         await fetchForumThreads();
+  //       }
+  //     } catch (err) {
+  //       console.error('Error cargando hilos:', err);
+  //     }
+  //   };
+
+  //   loadThreads();
     
-    // ✅ Solo dependencias de valores, NO de funciones
-  }, [groupId, userId, threadId]);
+  //   // ✅ Solo dependencias de valores, NO de funciones
+  // }, [groupId, userId, threadId]);
 
   // ✅ Notificar al padre cuando los hilos cambien
   useEffect(() => {

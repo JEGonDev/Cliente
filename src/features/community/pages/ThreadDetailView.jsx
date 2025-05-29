@@ -27,6 +27,7 @@ export const ThreadDetailView = () => {
     handleChange,
     resetForm,
     formErrors,
+    setFormDataFromThread
   } = useThread();
 
   // ✅ CORREGIDO: Extraer el hilo individual del array
@@ -89,13 +90,11 @@ export const ThreadDetailView = () => {
 
   // Handlers para acciones
   const handleEditClick = () => {
-    if (thread) {
-      handleChange({ target: { name: "title", value: thread.title } });
-      handleChange({ target: { name: "content", value: thread.content } });
-      handleChange({ target: { name: "groupId", value: thread.groupId } });
-      setIsEditModalOpen(true);
-    }
-  };
+  if (thread && setFormDataFromThread) {
+    setFormDataFromThread(thread);
+    setIsEditModalOpen(true);
+  }
+};
 
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
@@ -213,7 +212,7 @@ export const ThreadDetailView = () => {
 
   return (
     <>
-      <section >
+      <section>
         {/* Header con información del grupo */}
         <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6">
           <div className="flex items-center gap-2 bg-gray-300 rounded px-4 py-2 min-h-[40px] w-full md:w-auto md:flex-1">
@@ -239,42 +238,48 @@ export const ThreadDetailView = () => {
 
           {/* Card principal del hilo */}
           <div className="w-full bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
-            {/* Header: Título y grupo */}
-            <div className="bg-gradient-to-r from-primary to-secondary p-6 text-white rounded-t-lg">
-              <h1 className="text-2xl font-bold mb-1">{thread.title}</h1>
-              {selectedGroup?.name || thread.groupName}
+            <article
+              key={thread.thread_id || thread.id}
+              className="flex-1 bg-gray-100 border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-start gap-4">
+                {/* <div className="flex-shrink-0">
+            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+              <span className="text-gray-600 font-medium">
+                {(thread.authorName || thread.userName || "U")
+                  .charAt(0)
+                  .toUpperCase()}
+              </span>
             </div>
+          </div> */}
 
-            {/* Contenido del hilo */}
-            <div className="p-6">
-              {/* Info del autor */}
-              <div className="flex items-center space-x-3 mb-4">
-                <img
-                  src={thread.userAvatar || getDefaultAvatar(thread.userName)}
-                  alt={`Avatar de ${thread.userName || "Usuario"}`}
-                  className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = getDefaultAvatar(thread.userName);
-                  }}
-                />
-                <div>
-                  <div className="font-medium text-base">
-                    {thread.userName ||
-                      thread.userFirstName ||
-                      "Usuario Anónimo"}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    {/* <h3 className="font-semibold text-gray-900 truncate">
+                {thread.authorName || thread.userName || "Usuario"}
+              </h3>
+              <span className="text-gray-400">•</span> */}
+
+                    <h2 className="text-lg font-bold text-gray-900 truncate">
+                      {thread.title}
+                    </h2>
+                    <time className="text-sm text-gray-500">
+                      {new Date(
+                        thread.creation_date ||
+                          thread.creationDate ||
+                          thread.createdAt
+                      ).toLocaleDateString("es-ES", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </time>
                   </div>
-                  <div className="text-sm text-gray-500">
-                    {formatDate(thread.createdAt || thread.creationDate)}
-                  </div>
+
+                  <p className="text-gray-700 line-clamp-3">{thread.content}</p>
                 </div>
-              </div>
-
-              {/* Contenido */}
-              <div className="prose max-w-none mb-6">
-                <p className="text-gray-700 whitespace-pre-wrap">
-                  {thread.content}
-                </p>
               </div>
 
               {/* Metadata */}
@@ -287,32 +292,32 @@ export const ThreadDetailView = () => {
                     </span>
                   )}
               </div>
-            </div>
 
-            {/* Acciones de administración */}
-            {(canUpdateThread(thread) || canDeleteThread(thread)) &&
-              (isAdmin || isModerator) && (
-                <div className="flex justify-end gap-2 px-6 pb-6">
-                  {canUpdateThread(thread) && (
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={handleEditClick}
-                    >
-                      Editar
-                    </Button>
-                  )}
-                  {canDeleteThread(thread) && (
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => setIsDeleteDialogOpen(true)}
-                    >
-                      Eliminar
-                    </Button>
-                  )}
-                </div>
-              )}
+              {/* Acciones de administración */}
+              {(canUpdateThread(thread) || canDeleteThread(thread)) &&
+                (isAdmin || isModerator) && (
+                  <div className="flex justify-end gap-2 px-6 pb-6">
+                    {canUpdateThread(thread) && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={handleEditClick}
+                      >
+                        Editar
+                      </Button>
+                    )}
+                    {canDeleteThread(thread) && (
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => setIsDeleteDialogOpen(true)}
+                      >
+                        Eliminar
+                      </Button>
+                    )}
+                  </div>
+                )}
+            </article>
           </div>
 
           {/* Modal de edición */}
