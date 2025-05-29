@@ -32,7 +32,7 @@ import { CropsPage } from "../features/crops/pages/CropsPage";
 import { RealTimeMonitoringPage } from "../features/crops/pages/RealTimeMonitoringPage";
 import { CreateCultivationPage } from "../features/crops/pages/CreateCultivationPage";
 
-export const RouterApp = () => { 
+export const RouterApp = () => {
   return (
     // Rutas existentes de la aplicacion:
     <Routes>
@@ -43,15 +43,6 @@ export const RouterApp = () => {
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="*" element={<NotFoundPage />} />
-
-         {/* Rutas del modulo de monitoreo */}
-         <Route path="/monitoring" element={<MonitoringPage />} />
-        <Route path="/monitoring/history" element={<DataHistoryPage />} />
-        <Route path="/monitoring/alerts" element={<AlertsPage />} />
-        <Route path="/monitoring/crops" element={<CropsPage />} />
-  <Route path="/monitoring/crops/:cultivoId/real-time" element={<RealTimeMonitoringPage />} />
-  <Route path="/monitoring/crops/create" element={<CreateCultivationPage />} />
-
 
       {/* Rutas protegidas: */}
       <Route element={<ProtectedRoutes />}>
@@ -66,8 +57,16 @@ export const RouterApp = () => {
           element={<ModuleFormPage />}
         />
 
-              {/* Rutas del modulo de comunidad */}
-              <Route path="/comunity" element={<CommunityLayout />}>
+        {/* Rutas del modulo de monitoreo */}
+        <Route path="/monitoring" element={<MonitoringPage />} />
+        <Route path="/monitoring/history" element={<DataHistoryPage />} />
+        <Route path="/monitoring/alerts" element={<AlertsPage />} />
+        <Route path="/monitoring/crops" element={<CropsPage />} />
+        <Route path="/monitoring/crops/:cultivoId/real-time" element={<RealTimeMonitoringPage />} />
+        <Route path="/monitoring/crops/create" element={<CreateCultivationPage />} />
+
+        {/* Rutas del modulo de comunidad */}
+        <Route path="/comunity" element={<CommunityLayout />}>
           {/* Redirige por defecto a /comunity/posts */}
           <Route index element={<Navigate to="/comunity/posts" replace />} />
           {/* Subrutas del módulo de comunidad */}
@@ -76,7 +75,7 @@ export const RouterApp = () => {
           <Route path="groups/:groupId" element={<GroupDetailsView />} />
           <Route path="ThreadForum" element={<ThreadForumView />} />
           <Route path="admin" element={<AdminCommunityView />} />
-          
+
           <Route path="thread/:threadId" element={<ThreadDetailView />} />
         </Route>
 
