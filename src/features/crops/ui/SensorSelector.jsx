@@ -1,41 +1,32 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useMonitoring } from '../hooks/useMonitoring';
 import { SensorCard } from './SensorCard';
 import { AddSensorModal } from './AddSensorModal';
 
-export const SensorSelector = ({ 
-  selectedSensorIds = [], 
+export const SensorSelector = ({
+  selectedSensorIds = [],
   onSensorSelectionChange,
-  className = "" 
+  className = ""
 }) => {
-  const [availableSensors, setAvailableSensors] = useState([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
-  const mockSensors = useMemo(() => [
-    { id: 'temp-01', name: 'Sensor Temp-01', type: 'Temperatura', lastReading: 24, minutesAgo: 10, isActive: true },
-    { id: 'hum-04', name: 'Sensor Hum-04', type: 'Humedad', lastReading: 68, minutesAgo: 5, isActive: true },
-    { id: 'ec-02', name: 'Sensor EC-02', type: 'Conductividad', lastReading: 1.3, minutesAgo: 15, isActive: true },
-   
-  ], []);
+  // Usar el contexto de monitoreo para obtener sensores reales
+  const {
+    sensors: availableSensors,
+    loading: isLoading,
+    error,
+    fetchAllSensors,
+    createSensor
+  } = useMonitoring();
 
+  // Cargar sensores al montar el componente
   useEffect(() => {
-    const loadSensors = async () => {
-      setIsLoading(true);
-      try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setAvailableSensors(mockSensors);
-      } catch (error) {
-        console.error('Error loading sensors:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadSensors();
-  }, [mockSensors]);
+    fetchAllSensors();
+  }, [fetchAllSensors]);
 
-  // Solo sensores activos sin filtro ni búsqueda
+  // Filtrar solo sensores activos
   const filteredSensors = useMemo(() => {
-    return availableSensors.filter(sensor => sensor.isActive);
+    return availableSensors.filter(sensor => sensor.status === 'ACTIVE' || sensor.isActive !== false);
   }, [availableSensors]);
 
   const handleSensorToggle = useCallback((sensorId) => {
@@ -45,8 +36,21 @@ export const SensorSelector = ({
     onSensorSelectionChange?.(updatedSelection);
   }, [selectedSensorIds, onSensorSelectionChange]);
 
+  const handleAddSensor = async (sensorData) => {
+    try {
+      const newSensor = await createSensor(sensorData);
+      if (newSensor) {
+        console.log('Sensor creado exitosamente:', newSensor);
+        // El sensor se agregará automáticamente a la lista a través del contexto
+      }
+    } catch (error) {
+      console.error('Error al crear sensor:', error);
+    }
+  };
+
   const selectedCount = selectedSensorIds.length;
 
+  // Estado de carga
   if (isLoading) {
     return (
       <div className={`space-y-4 ${className}`}>
@@ -58,6 +62,23 @@ export const SensorSelector = ({
               <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
             ))}
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Estado de error
+  if (error) {
+    return (
+      <div className={`space-y-4 ${className}`}>
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <p className="text-red-700">Error al cargar sensores: {error}</p>
+          <button
+            onClick={fetchAllSensors}
+            className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Reintentar
+          </button>
         </div>
       </div>
     );
@@ -102,7 +123,15 @@ export const SensorSelector = ({
           {filteredSensors.map(sensor => (
             <SensorCard
               key={sensor.id}
-              sensor={sensor}
+              sensor={{
+                id: sensor.id,
+                sensorType: sensor.sensorType || sensor.type,
+                name: `Sensor ${sensor.id}`,
+                unitOfMeasurement: sensor.unitOfMeasurement || sensor.unit,
+                lastReading: sensor.lastReading || 0,
+                minutesAgo: sensor.minutesAgo || 0,
+                status: sensor.status || 'ACTIVE'
+              }}
               isSelected={selectedSensorIds.includes(sensor.id)}
               onToggleSelection={() => handleSensorToggle(sensor.id)}
             />
@@ -115,7 +144,7 @@ export const SensorSelector = ({
             No se encontraron sensores
           </h4>
           <p className="text-gray-600 mb-4">
-            No hay sensores disponibles que coincidan con los filtros actuales.
+            No hay sensores disponibles. Crea tu primer sensor para comenzar.
           </p>
           <button
             type="button"
@@ -131,17 +160,7 @@ export const SensorSelector = ({
       <AddSensorModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onAddSensor={(data) => {
-          const newSensor = {
-            id: `custom-${Date.now()}`,
-            ...data,
-            lastReading: 0,
-            minutesAgo: 0,
-            isActive: true
-          };
-          setAvailableSensors(prev => [...prev, newSensor]);
-          setIsAddModalOpen(false);
-        }}
+        onAddSensor={handleAddSensor}
       />
     </div>
   );
