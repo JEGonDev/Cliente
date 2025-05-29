@@ -67,6 +67,14 @@ export const useThread = () => {
     }
   };
 
+  const setFormDataFromThread = (thread) => {
+  setFormData({
+    title: thread.title || "",
+    content: thread.content || "",
+    groupId: thread.groupId || null,
+  });
+};
+
   // Función para resetear el formulario
   const resetForm = () => {
     setFormData({
@@ -337,6 +345,7 @@ const fetchThreadsByGroup = async (groupId) => {
     handleChange,
     resetForm,
     validateForm,
+    setFormDataFromThread,
 
     // Funciones para obtener datos
     fetchThreadsByGroup,
