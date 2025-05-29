@@ -125,11 +125,12 @@ export const SensorSelector = ({
               key={sensor.id}
               sensor={{
                 id: sensor.id,
-                name: sensor.name,
-                type: sensor.type,
+                sensorType: sensor.sensorType || sensor.type,
+                name: `Sensor ${sensor.id}`,
+                unitOfMeasurement: sensor.unitOfMeasurement || sensor.unit,
                 lastReading: sensor.lastReading || 0,
                 minutesAgo: sensor.minutesAgo || 0,
-                isActive: sensor.status === 'ACTIVE' || sensor.isActive !== false
+                status: sensor.status || 'ACTIVE'
               }}
               isSelected={selectedSensorIds.includes(sensor.id)}
               onToggleSelection={() => handleSensorToggle(sensor.id)}

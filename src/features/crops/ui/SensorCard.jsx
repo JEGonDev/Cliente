@@ -73,12 +73,20 @@ export const SensorCard = ({
   // Normalizar datos del sensor para compatibilidad
   const normalizedSensor = {
     id: sensor.id,
-    name: `Sensor ${sensor.id}`,
+    name: sensor.name || `Sensor ${sensor.id}`,
     type: sensor.sensorType || 'unknown',
     lastReading: sensor.lastReading ?? 0,
     minutesAgo: sensor.minutesAgo ?? 0,
-    status: sensor.status || true, // Por defecto activo
+    status: sensor.status || 'ACTIVE',
     unit: sensor.unitOfMeasurement || ''
+  };
+
+  const getSensorType = (type) => {
+    const normalizedType = type.toLowerCase();
+    if (normalizedType.includes('temperature')) return 'Temperatura';
+    if (normalizedType.includes('humidity')) return 'Humedad';
+    if (normalizedType.includes('ec')) return 'Conductividad';
+    return type || 'Unknown';
   };
 
   const status = getSensorStatus(normalizedSensor.minutesAgo, normalizedSensor.status);
@@ -130,10 +138,10 @@ export const SensorCard = ({
             </div>
           </div>
           <p className="text-xs text-gray-600 capitalize">
-            {normalizedSensor.type}
+            {getSensorType(normalizedSensor.type)}
           </p>
           <p className="text-xs text-gray-500">
-            Unidad: {normalizedSensor.unit}
+            Unidad: {normalizedSensor.unit || 'Sin unidad'}
           </p>
           <div className={`text-xs font-medium mt-1 ${status.color}`}>
             {status.label}
