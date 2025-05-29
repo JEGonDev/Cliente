@@ -1,35 +1,54 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { useMonitoring } from '../hooks/useMonitoring';
 
 export const EditCropModal = ({ isOpen, onClose, crop }) => {
   const { updateCrop, deleteCrop } = useMonitoring();
   const [formData, setFormData] = useState({
-    name: '',
-    location: '',
-    cropType: '',
-    status: ''
+    cropName: '',
+    cropType: ''
   });
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState(null);
+  const isInitialMount = useRef(true);
+  const previousCropId = useRef(crop?.id);
 
   useEffect(() => {
-    if (crop) {
-      setFormData({
-        name: crop.cropName || crop.name || '',
-        location: crop.location || '',
-        cropType: crop.cropType || '',
-        status: crop.status || 'active'
-      });
+    // Solo actualizar el formulario si:
+    // 1. Es el montaje inicial, o
+    // 2. Ha cambiado el ID del cultivo (significa que estamos editando un cultivo diferente)
+    if (isInitialMount.current || previousCropId.current !== crop?.id) {
+      if (crop) {
+        setFormData({
+          cropName: crop.cropName || crop.name || '',
+          cropType: crop.cropType || ''
+        });
+        previousCropId.current = crop.id;
+      }
+      isInitialMount.current = false;
     }
   }, [crop]);
+
+  // Resetear el formulario cuando se cierra el modal
+  useEffect(() => {
+    if (!isOpen) {
+      isInitialMount.current = true;
+      setIsDeleting(false);
+      setError(null);
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
     try {
-      await updateCrop(crop.id, formData);
+      const updateData = {
+        cropName: formData.cropName,
+        cropType: formData.cropType
+      };
+
+      await updateCrop(crop.id, updateData);
       onClose();
     } catch (err) {
       setError(err.message || 'Error al actualizar el cultivo');
@@ -55,7 +74,9 @@ export const EditCropModal = ({ isOpen, onClose, crop }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg max-w-md w-full p-6">
-        <h2 className="text-xl font-semibold mb-4">Editar Cultivo</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Editar Cultivo</h2>
+        </div>
 
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -66,25 +87,12 @@ export const EditCropModal = ({ isOpen, onClose, crop }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nombre
+              Nombre del Cultivo
             </label>
             <input
               type="text"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Ubicación
-            </label>
-            <input
-              type="text"
-              value={formData.location}
-              onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+              value={formData.cropName}
+              onChange={(e) => setFormData(prev => ({ ...prev, cropName: e.target.value }))}
               className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent"
               required
             />
@@ -103,27 +111,11 @@ export const EditCropModal = ({ isOpen, onClose, crop }) => {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Estado
-            </label>
-            <select
-              value={formData.status}
-              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-              className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent"
-              required
-            >
-              <option value="active">Activo</option>
-              <option value="paused">Pausado</option>
-              <option value="completed">Completado</option>
-            </select>
-          </div>
-
-          <div className="flex justify-between pt-4">
+          <div className="flex justify-between pt-4 border-t mt-6">
             <button
               type="button"
               onClick={handleDelete}
-              className={`px-4 py-2 text-white rounded ${isDeleting
+              className={`px-4 py-2 text-white rounded transition-colors ${isDeleting
                   ? 'bg-red-600 hover:bg-red-700'
                   : 'bg-gray-500 hover:bg-gray-600'
                 }`}
@@ -134,14 +126,17 @@ export const EditCropModal = ({ isOpen, onClose, crop }) => {
             <div className="space-x-2">
               <button
                 type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-gray-700 border rounded hover:bg-gray-100"
+                onClick={() => {
+                  setIsDeleting(false);
+                  onClose();
+                }}
+                className="px-4 py-2 text-gray-700 border rounded hover:bg-gray-100 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-primary text-white rounded hover:bg-green-700"
+                className="px-4 py-2 bg-primary text-white rounded hover:bg-green-700 transition-colors"
               >
                 Guardar
               </button>
@@ -160,8 +155,6 @@ EditCropModal.propTypes = {
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     name: PropTypes.string,
     cropName: PropTypes.string,
-    location: PropTypes.string,
-    cropType: PropTypes.string,
-    status: PropTypes.string
+    cropType: PropTypes.string
   })
 }; 

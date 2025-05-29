@@ -6,6 +6,7 @@ import { EditCropModal } from './EditCropModal';
 
 export const CropCard = ({ crop, onClick }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   // Función para obtener datos de sensores de manera flexible
   const getSensorData = () => {
@@ -84,8 +85,11 @@ export const CropCard = ({ crop, onClick }) => {
   return (
     <>
       <div
-        className="w-full bg-white rounded-lg shadow-md p-6 cursor-pointer transform transition-transform duration-200 hover:scale-[1.02] relative"
+        className={`w-full bg-white rounded-lg shadow-md p-6 cursor-pointer transform transition-all duration-200 relative
+          ${isHovered ? 'scale-[1.02]' : ''}`}
         onClick={() => onClick(crop)}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
         {/* Botón de edición */}
         <button
@@ -94,50 +98,61 @@ export const CropCard = ({ crop, onClick }) => {
             e.stopPropagation();
             setIsEditModalOpen(true);
           }}
-          className="absolute top-2 right-2 p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"
+          className="absolute top-3 right-3 p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
           aria-label="Editar cultivo"
         >
           <Pencil className="h-4 w-4" />
         </button>
 
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="text-lg font-semibold text-gray-800">{crop.cropName || crop.name || 'Sin nombre'}</h3>
+        {/* Encabezado con estado */}
+        <div className="flex justify-between items-start mb-3 pr-8">
+          <h3 className="text-lg font-semibold text-gray-800 truncate">
+            {crop.cropName || crop.name || 'Sin nombre'}
+          </h3>
           <CropStatusBadge status={normalizedStatus} />
         </div>
 
-        <p className="text-sm text-gray-600 mb-3">
-          {crop.location || crop.description || (crop.cropType && crop.cropType.name) || crop.cropType || 'Sin ubicación especificada'}
-        </p>
+        {/* Información del cultivo */}
+        <div className="mb-4">
+          <p className="text-sm text-gray-600">
+            {crop.cropType || 'Tipo no especificado'}
+          </p>
+          <p className="text-xs text-gray-500">
+            {crop.location || 'Sin ubicación especificada'}
+          </p>
+        </div>
 
+        {/* Datos de sensores */}
         <div className="flex items-center justify-between">
-          <div className="flex space-x-3">
+          <div className="flex space-x-4">
             <div className="flex items-center text-sm">
-              <Droplets className="h-4 w-4 text-blue-500 mr-1" />
+              <Droplets className="h-4 w-4 text-blue-500 mr-1.5" />
               <span>{sensorData.humidity}%</span>
             </div>
             <div className="flex items-center text-sm">
-              <Thermometer className="h-4 w-4 text-red-500 mr-1" />
+              <Thermometer className="h-4 w-4 text-red-500 mr-1.5" />
               <span>{sensorData.temperature}°C</span>
             </div>
             {sensorData.conductivity > 0 && (
               <div className="flex items-center text-sm">
-                <span className="text-purple-500 mr-1">⚡</span>
+                <span className="text-purple-500 mr-1.5">⚡</span>
                 <span>{sensorData.conductivity} mS/cm</span>
               </div>
             )}
           </div>
 
+          {/* Contador de alertas */}
           <div className="flex items-center text-gray-600">
-            <span className="text-xs">
+            <span className="text-xs mr-1">
               {alertsCount > 0 ? `${alertsCount} alertas` : 'Sin alertas'}
             </span>
-            <ChevronRight className="h-4 w-4 ml-1" />
+            <ChevronRight className="h-4 w-4" />
           </div>
         </div>
 
-        {/* Información adicional si viene del backend */}
+        {/* Fecha de inicio si está disponible */}
         {crop.startDate && (
-          <div className="mt-2 pt-2 border-t border-gray-100">
+          <div className="mt-3 pt-3 border-t border-gray-100">
             <p className="text-xs text-gray-500">
               Iniciado: {new Date(crop.startDate).toLocaleDateString('es-ES')}
             </p>
