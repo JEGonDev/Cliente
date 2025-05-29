@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Bell, MessageSquare, Users } from "lucide-react";
+import { Bell, MessageSquare, Users, HomeIcon } from "lucide-react";
 import PropTypes from "prop-types";
 
 /**
@@ -42,6 +42,17 @@ export const BarIcons_layout = ({ activeSection }) => {
       >
         <Users className="w-6 h-6" />
         <span className="text-xs mt-1 hidden md:block">Grupos</span>
+      </button>
+
+      {/* comunidad */}
+      <button
+        className={`p-2 flex flex-col items-center ${
+          activeSection === "groups" ? "text-green-600" : "text-gray-800"
+        }`}
+        onClick={() => navigate("/comunity")}
+      >
+        <HomeIcon className="w-6 h-6" />
+        <span className="text-xs mt-1 hidden md:block">Inicio</span>
       </button>
     </div>
   );
