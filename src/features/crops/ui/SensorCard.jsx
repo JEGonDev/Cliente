@@ -107,36 +107,37 @@ export const SensorCard = ({
       }}
       aria-label={`Seleccionar sensor ${normalizedSensor.name}`}
     >
-      {/* Checkbox en la esquina superior derecha */}
-      <div className="absolute top-3 right-3">
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={() => onToggleSelection(sensor.id)}
-          className="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
-          onClick={(e) => e.stopPropagation()}
-          aria-label={`Checkbox para ${normalizedSensor.name}`}
-        />
-      </div>
-
       {/* Encabezado del sensor */}
       <div className="flex items-start gap-3 mb-3">
         <div className="text-2xl flex-shrink-0">
           {getSensorIcon(normalizedSensor.type)}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 text-sm truncate">
-            {normalizedSensor.name}
-          </h3>
+          <div className="flex items-start justify-between mb-1">
+            <h3 className="font-semibold text-gray-900 text-sm truncate pr-8">
+              {normalizedSensor.name}
+            </h3>
+            {/* Checkbox movido al lado del título */}
+            <div>
+              <input
+                type="checkbox"
+                checked={isSelected}
+                onChange={() => onToggleSelection(sensor.id)}
+                className="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
+                onClick={(e) => e.stopPropagation()}
+                aria-label={`Checkbox para ${normalizedSensor.name}`}
+              />
+            </div>
+          </div>
           <p className="text-xs text-gray-600 capitalize">
             {normalizedSensor.type}
           </p>
           <p className="text-xs text-gray-500">
             Unidad: {normalizedSensor.unit}
           </p>
-        </div>
-        <div className={`text-xs font-medium ${status.color}`}>
-          {status.label}
+          <div className={`text-xs font-medium mt-1 ${status.color}`}>
+            {status.label}
+          </div>
         </div>
       </div>
 
