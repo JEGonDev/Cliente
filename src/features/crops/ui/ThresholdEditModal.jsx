@@ -13,17 +13,17 @@ import { GlobalThresholdsEditor } from './GlobalThresholdsEditor';
  * @param {Object} props.initialThresholds - Umbrales iniciales para editar
  * @param {Function} props.onSave - Callback para guardar umbrales (debe retornar Promise)
  */
-export const ThresholdEditModal = ({ 
-  isOpen, 
-  onClose, 
-  initialThresholds, 
-  onSave 
+export const ThresholdEditModal = ({
+  isOpen,
+  onClose,
+  initialThresholds,
+  onSave
 }) => {
   // Referencias y estados del modal
   const modalRef = useRef(null);
   const firstFocusableElementRef = useRef(null);
   const lastFocusableElementRef = useRef(null);
-  
+
   // Estados locales del componente
   const [thresholds, setThresholds] = useState(initialThresholds);
   const [status, setStatus] = useState(null); // null | "loading" | "success" | "error"
@@ -49,7 +49,7 @@ export const ThresholdEditModal = ({
       const focusableElements = modalRef.current?.querySelectorAll(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
       );
-      
+
       if (focusableElements?.length > 0) {
         firstFocusableElementRef.current = focusableElements[0];
         lastFocusableElementRef.current = focusableElements[focusableElements.length - 1];
@@ -58,7 +58,7 @@ export const ThresholdEditModal = ({
 
       // Prevenir scroll del body
       document.body.style.overflow = 'hidden';
-      
+
       return () => {
         document.body.style.overflow = 'unset';
       };
@@ -100,13 +100,13 @@ export const ThresholdEditModal = ({
    */
   const validateThresholds = (thresholdsToValidate) => {
     const errors = [];
-    
+
     Object.entries(thresholdsToValidate).forEach(([key, { min, max }]) => {
       if (min >= max) {
         const paramName = key === 'ec' ? 'EC' : key.charAt(0).toUpperCase() + key.slice(1);
         errors.push(`${paramName}: El valor mínimo debe ser menor que el máximo`);
       }
-      
+
       if (min < 0) {
         const paramName = key === 'ec' ? 'EC' : key.charAt(0).toUpperCase() + key.slice(1);
         errors.push(`${paramName}: El valor mínimo no puede ser negativo`);
@@ -125,7 +125,7 @@ export const ThresholdEditModal = ({
   const handleSave = async () => {
     // Validar umbrales antes de guardar
     const validation = validateThresholds(thresholds);
-    
+
     if (!validation.isValid) {
       setStatus("error");
       setErrorMessage(validation.errors.join('. '));
@@ -134,18 +134,18 @@ export const ThresholdEditModal = ({
 
     setStatus("loading");
     setErrorMessage('');
-    
+
     try {
       // Llamar al callback de guardado (puede ser async)
       await onSave(thresholds);
-      
+
       setStatus("success");
-      
+
       // Cerrar modal después de mostrar éxito
       setTimeout(() => {
         handleClose();
       }, 1500);
-      
+
     } catch (error) {
       setStatus("error");
       setErrorMessage(error.message || 'Error inesperado al guardar los umbrales');
@@ -159,19 +159,12 @@ export const ThresholdEditModal = ({
   const handleClose = () => {
     if (status === "loading") return;
 
-    if (hasChanges && status !== "success") {
-      const confirmClose = window.confirm(
-        '¿Estás seguro de que quieres cerrar? Los cambios no guardados se perderán.'
-      );
-      if (!confirmClose) return;
-    }
-
     // Resetear estados
     setStatus(null);
     setErrorMessage('');
     setThresholds(initialThresholds);
     setHasChanges(false);
-    
+
     onClose();
   };
 
@@ -196,7 +189,7 @@ export const ThresholdEditModal = ({
             <p className="text-sm text-blue-700">Guardando umbrales...</p>
           </div>
         );
-      
+
       case "success":
         return (
           <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-md">
@@ -206,7 +199,7 @@ export const ThresholdEditModal = ({
             </p>
           </div>
         );
-      
+
       case "error":
         return (
           <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-md">
@@ -217,7 +210,7 @@ export const ThresholdEditModal = ({
             </div>
           </div>
         );
-      
+
       default:
         return null;
     }
@@ -226,40 +219,40 @@ export const ThresholdEditModal = ({
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 overflow-y-auto"
       aria-labelledby="modal-title"
       role="dialog"
       aria-modal="true"
     >
       {/* Overlay */}
-      <div 
+      <div
         className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
         onClick={handleOverlayClick}
       >
-        <div 
+        <div
           className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
           aria-hidden="true"
         />
 
         {/* Espaciador para centrar el modal */}
-        <span 
-          className="hidden sm:inline-block sm:align-middle sm:h-screen" 
+        <span
+          className="hidden sm:inline-block sm:align-middle sm:h-screen"
           aria-hidden="true"
         >
           &#8203;
         </span>
 
         {/* Modal */}
-        <div 
+        <div
           ref={modalRef}
           className="relative inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full sm:p-6"
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 
-                id="modal-title" 
+              <h3
+                id="modal-title"
                 className="text-lg font-semibold text-gray-900"
               >
                 Editar Umbrales de Alertas
@@ -285,7 +278,7 @@ export const ThresholdEditModal = ({
             {/* Descripción informativa */}
             <div className="bg-blue-50 border-l-4 border-blue-400 p-3">
               <p className="text-sm text-blue-700">
-                <strong>Información:</strong> Los umbrales determinan cuándo se generan alertas automáticas. 
+                <strong>Información:</strong> Los umbrales determinan cuándo se generan alertas automáticas.
                 Configure valores apropiados para su tipo de cultivo para recibir notificaciones oportunas.
               </p>
             </div>
@@ -319,7 +312,7 @@ export const ThresholdEditModal = ({
               >
                 {hasChanges && status !== "success" ? 'Cancelar' : 'Cerrar'}
               </button>
-              
+
               <button
                 ref={lastFocusableElementRef}
                 type="button"
