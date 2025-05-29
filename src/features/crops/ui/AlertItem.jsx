@@ -1,13 +1,14 @@
 import PropTypes from 'prop-types';
-import { AlertTriangle, AlertCircle, Info } from 'lucide-react';
+import { AlertTriangle, AlertCircle, Info, CheckCircle } from 'lucide-react';
 import { Modal } from '../../../ui/components/Modal';
 import { useState } from 'react';
-import { CheckCircle } from 'lucide-react';
+import { useMonitoring } from '../hooks/useMonitoring';
 
 /**
  * Componente para mostrar una alerta individual
  * 
  * @param {Object} props - Propiedades del componente
+ * @param {string} props.id - Identificador de la alerta
  * @param {string} props.type - Tipo de alerta (error, warning, info)
  * @param {string} props.parameter - Parámetro al que se refiere la alerta
  * @param {string} props.crop - Cultivo relacionado con la alerta
@@ -18,6 +19,7 @@ import { CheckCircle } from 'lucide-react';
  * @param {function} props.onDelete - Función para eliminar la alerta
  */
 export const AlertItem = ({
+  id,
   type = 'info',
   parameter = '',
   crop = '',
@@ -28,32 +30,59 @@ export const AlertItem = ({
   onDelete
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const { deleteAlert } = useMonitoring();
 
   const alertConfig = {
     error: {
       icon: <AlertCircle size={20} />,
       colorClasses: 'bg-red-50 border-l-4 border-l-red-500 text-red-700',
-      iconClass: 'text-red-500',
-      severityText: 'Alta',
-      severityClass: 'bg-red-100 text-red-800'
+      iconClass: 'text-red-500'
     },
     warning: {
       icon: <AlertTriangle size={20} />,
       colorClasses: 'bg-yellow-50 border-l-4 border-l-yellow-500 text-yellow-700',
-      iconClass: 'text-yellow-500',
-      severityText: 'Media',
-      severityClass: 'bg-yellow-100 text-yellow-800'
+      iconClass: 'text-yellow-500'
     },
     info: {
       icon: <Info size={20} />,
       colorClasses: 'bg-blue-50 border-l-4 border-l-blue-500 text-blue-700',
-      iconClass: 'text-blue-500',
-      severityText: 'Baja',
-      severityClass: 'bg-blue-100 text-blue-800'
+      iconClass: 'text-blue-500'
     }
   };
 
   const config = alertConfig[type] || alertConfig.info;
+
+  const handleResolve = async (e) => {
+    e.stopPropagation();
+
+    if (!id) {
+      console.warn('No se puede resolver la alerta: ID no proporcionado');
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      const success = await deleteAlert(id);
+
+      if (success) {
+        // Llamar callback si se proporciona
+        if (onDelete) {
+          onDelete(id);
+        }
+        console.log('Alerta resuelta exitosamente');
+      } else {
+        alert('Error al resolver la alerta');
+      }
+    } catch (error) {
+      console.error('Error al resolver alerta:', error);
+      alert('Error al resolver la alerta. Inténtalo de nuevo.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <>
@@ -87,14 +116,24 @@ export const AlertItem = ({
               <div>
                 <span className="font-medium text-gray-700">Umbral:</span> {threshold}
               </div>
-              <div className="flex items-center gap-1 text-blue-600 hover:underline text-sm cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete?.();
-                }}>
-                <CheckCircle className="w-4 h-4" />
-                <span>Resolver</span>
-              </div>
+              <button
+                className={`flex items-center gap-1 text-blue-600 hover:underline text-sm cursor-pointer transition-colors ${isDeleting ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                onClick={handleResolve}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span>Resolviendo...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Resolver</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
@@ -106,15 +145,28 @@ export const AlertItem = ({
         title={`Alerta: ${parameter} - ${crop}`}
         size="md"
         footerActions={
-          <button
-            onClick={() => {
-              onDelete?.();
-              setIsModalOpen(false);
-            }}
-            className="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-          >
-            Resolver alerta
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition"
+            >
+              Cerrar
+            </button>
+            <button
+              onClick={async () => {
+                await handleResolve({ stopPropagation: () => { } });
+                setIsModalOpen(false);
+              }}
+              disabled={isDeleting}
+              className={`px-4 py-2 bg-primary text-white rounded hover:bg-blue-700 transition flex items-center gap-2 ${isDeleting ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+            >
+              {isDeleting && (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              )}
+              {isDeleting ? 'Resolviendo...' : 'Marcar como resuelta'}
+            </button>
+          </div>
         }
       >
         <div className="space-y-4 text-gray-800">
@@ -124,10 +176,7 @@ export const AlertItem = ({
           </p>
           <p>
             <strong>Valor actual:</strong>{" "}
-            <span className={`font-semibold ${type === 'error' ? 'text-red-600' :
-              type === 'warning' ? 'text-yellow-600' :
-                'text-blue-600'
-              }`}>
+            <span className={`font-semibold ${type === 'error' ? 'text-red-600' : type === 'warning' ? 'text-yellow-600' : 'text-blue-600'}`}>
               {value}
             </span>
           </p>
@@ -141,13 +190,12 @@ export const AlertItem = ({
           </p>
           <p>
             <strong>Severidad:</strong>{" "}
-            <span className={`px-2 py-1 rounded ${config.severityClass} font-semibold text-sm`}>
-              {config.severityText}
+            <span className={`px-2 py-1 rounded font-semibold text-sm ${type === 'error' ? 'bg-red-100 text-red-800' :
+                type === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-blue-100 text-blue-800'
+              }`}>
+              {type === 'error' ? 'Alta' : type === 'warning' ? 'Media' : 'Baja'}
             </span>
-          </p>
-          <p>
-            <strong>Parámetro:</strong>{" "}
-            <span>{parameter}</span>
           </p>
           <p>
             <strong>Cultivo:</strong>{" "}
@@ -155,11 +203,8 @@ export const AlertItem = ({
           </p>
           <p className="flex items-center space-x-2">
             <strong>Estado:</strong>
-            <span className={`px-3 py-1 rounded-full text-xs font-bold ${type === 'error' ? 'bg-red-100 text-red-800' :
-                type === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-blue-100 text-blue-800'
-              }`}>
-              Pendiente
+            <span className="px-3 py-1 rounded-full text-white text-xs font-bold bg-red-400">
+              Activa
             </span>
           </p>
         </div>
@@ -169,6 +214,7 @@ export const AlertItem = ({
 };
 
 AlertItem.propTypes = {
+  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   type: PropTypes.oneOf(['error', 'warning', 'info']),
   parameter: PropTypes.string,
   crop: PropTypes.string,
