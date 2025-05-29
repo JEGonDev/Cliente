@@ -1,8 +1,12 @@
-import { ChevronRight, Droplets, Thermometer } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronRight, Droplets, Thermometer, Pencil } from 'lucide-react';
 import PropTypes from 'prop-types';
 import { CropStatusBadge } from './CropStatusBadge';
+import { EditCropModal } from './EditCropModal';
 
 export const CropCard = ({ crop, onClick }) => {
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   // Función para obtener datos de sensores de manera flexible
   const getSensorData = () => {
     // Si sensors es un objeto (formato mock)
@@ -78,54 +82,76 @@ export const CropCard = ({ crop, onClick }) => {
   const normalizedStatus = getNormalizedStatus();
 
   return (
-    <div
-      className="w-full bg-white rounded-lg shadow-md p-6 cursor-pointer transform transition-transform duration-200 hover:scale-[1.02]"
-      onClick={() => onClick(crop)}
-    >
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="text-lg font-semibold text-gray-800">{crop.cropName || crop.name || 'Sin nombre'}</h3>
-        <CropStatusBadge status={normalizedStatus} />
-      </div>
+    <>
+      <div
+        className="w-full bg-white rounded-lg shadow-md p-6 cursor-pointer transform transition-transform duration-200 hover:scale-[1.02] relative"
+        onClick={() => onClick(crop)}
+      >
+        {/* Botón de edición */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsEditModalOpen(true);
+          }}
+          className="absolute top-2 right-2 p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"
+          aria-label="Editar cultivo"
+        >
+          <Pencil className="h-4 w-4" />
+        </button>
 
-      <p className="text-sm text-gray-600 mb-3">
-        {crop.location || crop.description || (crop.cropType && crop.cropType.name) || crop.cropType || 'Sin ubicación especificada'}
-      </p>
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="text-lg font-semibold text-gray-800">{crop.cropName || crop.name || 'Sin nombre'}</h3>
+          <CropStatusBadge status={normalizedStatus} />
+        </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex space-x-3">
-          <div className="flex items-center text-sm">
-            <Droplets className="h-4 w-4 text-blue-500 mr-1" />
-            <span>{sensorData.humidity}%</span>
-          </div>
-          <div className="flex items-center text-sm">
-            <Thermometer className="h-4 w-4 text-red-500 mr-1" />
-            <span>{sensorData.temperature}°C</span>
-          </div>
-          {sensorData.conductivity > 0 && (
+        <p className="text-sm text-gray-600 mb-3">
+          {crop.location || crop.description || (crop.cropType && crop.cropType.name) || crop.cropType || 'Sin ubicación especificada'}
+        </p>
+
+        <div className="flex items-center justify-between">
+          <div className="flex space-x-3">
             <div className="flex items-center text-sm">
-              <span className="text-purple-500 mr-1">⚡</span>
-              <span>{sensorData.conductivity} mS/cm</span>
+              <Droplets className="h-4 w-4 text-blue-500 mr-1" />
+              <span>{sensorData.humidity}%</span>
             </div>
-          )}
+            <div className="flex items-center text-sm">
+              <Thermometer className="h-4 w-4 text-red-500 mr-1" />
+              <span>{sensorData.temperature}°C</span>
+            </div>
+            {sensorData.conductivity > 0 && (
+              <div className="flex items-center text-sm">
+                <span className="text-purple-500 mr-1">⚡</span>
+                <span>{sensorData.conductivity} mS/cm</span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center text-gray-600">
+            <span className="text-xs">
+              {alertsCount > 0 ? `${alertsCount} alertas` : 'Sin alertas'}
+            </span>
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </div>
         </div>
 
-        <div className="flex items-center text-gray-600">
-          <span className="text-xs">
-            {alertsCount > 0 ? `${alertsCount} alertas` : 'Sin alertas'}
-          </span>
-          <ChevronRight className="h-4 w-4 ml-1" />
-        </div>
+        {/* Información adicional si viene del backend */}
+        {crop.startDate && (
+          <div className="mt-2 pt-2 border-t border-gray-100">
+            <p className="text-xs text-gray-500">
+              Iniciado: {new Date(crop.startDate).toLocaleDateString('es-ES')}
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Información adicional si viene del backend */}
-      {crop.startDate && (
-        <div className="mt-2 pt-2 border-t border-gray-100">
-          <p className="text-xs text-gray-500">
-            Iniciado: {new Date(crop.startDate).toLocaleDateString('es-ES')}
-          </p>
-        </div>
-      )}
-    </div>
+      {/* Modal de edición */}
+      <EditCropModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        crop={crop}
+      />
+    </>
   );
 };
 

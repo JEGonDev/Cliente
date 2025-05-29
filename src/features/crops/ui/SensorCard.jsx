@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import PropTypes from 'prop-types';
+import { EditSensorModal } from './EditSensorModal';
+import { Pencil } from 'lucide-react';
 
 /**
  * Componente SensorCard - Representa una tarjeta individual de sensor
@@ -18,6 +20,7 @@ export const SensorCard = ({
   className = ""
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const formatTimeAgo = (minutes) => {
     if (!minutes || minutes === 0) return 'Sin datos';
@@ -92,90 +95,109 @@ export const SensorCard = ({
   const status = getSensorStatus(normalizedSensor.minutesAgo, normalizedSensor.status);
 
   return (
-    <div
-      className={`
-        relative p-4 border rounded-lg transition-all duration-300 cursor-pointer
-        ${isSelected
-          ? 'border-green-500 bg-green-50 shadow-md'
-          : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
-        }
-        ${isHovered ? 'transform scale-[1.02]' : ''}
-        ${className}
-      `}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={() => onToggleSelection(sensor.id)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onToggleSelection(sensor.id);
-        }
-      }}
-      aria-label={`Seleccionar sensor ${normalizedSensor.name}`}
-    >
-      {/* Encabezado del sensor */}
-      <div className="flex items-start gap-3 mb-3">
-        <div className="text-2xl flex-shrink-0">
-          {getSensorIcon(normalizedSensor.type)}
+    <>
+      <div
+        className={`
+          relative p-4 border rounded-lg transition-all duration-300 cursor-pointer
+          ${isSelected
+            ? 'border-green-500 bg-green-50 shadow-md'
+            : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
+          }
+          ${isHovered ? 'transform scale-[1.02]' : ''}
+          ${className}
+        `}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        onClick={() => onToggleSelection(sensor.id)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onToggleSelection(sensor.id);
+          }
+        }}
+        aria-label={`Seleccionar sensor ${normalizedSensor.name}`}
+      >
+        {/* Checkbox en la esquina superior derecha */}
+        <div className="absolute top-3 right-3">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onToggleSelection(sensor.id)}
+            className="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
+            onClick={(e) => e.stopPropagation()}
+            aria-label={`Checkbox para ${normalizedSensor.name}`}
+          />
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between mb-1">
-            <h3 className="font-semibold text-gray-900 text-sm truncate pr-8">
-              {normalizedSensor.name}
-            </h3>
-            {/* Checkbox movido al lado del título */}
-            <div>
-              <input
-                type="checkbox"
-                checked={isSelected}
-                onChange={() => onToggleSelection(sensor.id)}
-                className="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
-                onClick={(e) => e.stopPropagation()}
-                aria-label={`Checkbox para ${normalizedSensor.name}`}
-              />
-            </div>
+
+        {/* Botón de edición en la esquina superior izquierda */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsEditModalOpen(true);
+          }}
+          className="absolute top-3 left-3 p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+          aria-label="Editar sensor"
+        >
+          <Pencil className="h-4 w-4" />
+        </button>
+
+        {/* Contenido principal centrado */}
+        <div className="flex flex-col items-center justify-center pt-8 pb-4">
+          <div className="text-3xl mb-3">
+            {getSensorIcon(normalizedSensor.type)}
           </div>
-          <p className="text-xs text-gray-600 capitalize">
+          <h3 className="font-semibold text-gray-900 text-base mb-1 text-center">
+            {normalizedSensor.name}
+          </h3>
+          <p className="text-sm text-gray-600 capitalize mb-1">
             {getSensorType(normalizedSensor.type)}
           </p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 mb-2">
             Unidad: {normalizedSensor.unit || 'Sin unidad'}
           </p>
-          <div className={`text-xs font-medium mt-1 ${status.color}`}>
+          <div className={`text-xs font-medium ${status.color}`}>
             {status.label}
           </div>
         </div>
+
+        {/* Información de la última lectura */}
+        <div className="border-t pt-3 mt-2">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-gray-500">Última lectura:</span>
+            <span className="text-sm font-medium text-gray-900">
+              {normalizedSensor.lastReading !== null && normalizedSensor.lastReading !== undefined
+                ? `${normalizedSensor.lastReading}${normalizedSensor.unit}`
+                : 'Sin datos'
+              }
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-500">Actualizada:</span>
+            <span className="text-xs text-gray-600">
+              {formatTimeAgo(normalizedSensor.minutesAgo)}
+            </span>
+          </div>
+        </div>
+
+        {/* Indicador visual de selección */}
+        {isSelected && (
+          <div className="absolute inset-0 border-2 border-green-500 rounded-lg pointer-events-none">
+            <div className="absolute top-0 right-0 w-0 h-0 border-l-[12px] border-l-transparent border-t-[12px] border-t-green-500"></div>
+          </div>
+        )}
       </div>
 
-      {/* Información de la última lectura */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-500">Última lectura:</span>
-          <span className="text-sm font-medium text-gray-900">
-            {normalizedSensor.lastReading !== null && normalizedSensor.lastReading !== undefined
-              ? `${normalizedSensor.lastReading}${normalizedSensor.unit}`
-              : 'Sin datos'
-            }
-          </span>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-500">Actualizada:</span>
-          <span className="text-xs text-gray-600">
-            {formatTimeAgo(normalizedSensor.minutesAgo)}
-          </span>
-        </div>
-      </div>
-
-      {/* Indicador visual de selección */}
-      {isSelected && (
-        <div className="absolute inset-0 border-2 border-green-500 rounded-lg pointer-events-none">
-          <div className="absolute top-0 right-0 w-0 h-0 border-l-[12px] border-l-transparent border-t-[12px] border-t-green-500"></div>
-        </div>
-      )}
-    </div>
+      {/* Modal de edición */}
+      <EditSensorModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        sensor={sensor}
+      />
+    </>
   );
 };
 
