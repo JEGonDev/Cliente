@@ -4,7 +4,6 @@ import { Modal } from '../../../ui/components/Modal';
 import { useState } from 'react';
 import { CheckCircle } from 'lucide-react';
 
-
 /**
  * Componente para mostrar una alerta individual
  * 
@@ -16,6 +15,7 @@ import { CheckCircle } from 'lucide-react';
  * @param {string} props.value - Valor actual
  * @param {string} props.threshold - Valor del umbral
  * @param {string} props.time - Tiempo transcurrido
+ * @param {function} props.onDelete - Función para eliminar la alerta
  */
 export const AlertItem = ({
   type = 'info',
@@ -24,7 +24,8 @@ export const AlertItem = ({
   message = '',
   value = '',
   threshold = '',
-  time = ''
+  time = '',
+  onDelete
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -32,17 +33,23 @@ export const AlertItem = ({
     error: {
       icon: <AlertCircle size={20} />,
       colorClasses: 'bg-red-50 border-l-4 border-l-red-500 text-red-700',
-      iconClass: 'text-red-500'
+      iconClass: 'text-red-500',
+      severityText: 'Alta',
+      severityClass: 'bg-red-100 text-red-800'
     },
     warning: {
       icon: <AlertTriangle size={20} />,
       colorClasses: 'bg-yellow-50 border-l-4 border-l-yellow-500 text-yellow-700',
-      iconClass: 'text-yellow-500'
+      iconClass: 'text-yellow-500',
+      severityText: 'Media',
+      severityClass: 'bg-yellow-100 text-yellow-800'
     },
     info: {
       icon: <Info size={20} />,
       colorClasses: 'bg-blue-50 border-l-4 border-l-blue-500 text-blue-700',
-      iconClass: 'text-blue-500'
+      iconClass: 'text-blue-500',
+      severityText: 'Baja',
+      severityClass: 'bg-blue-100 text-blue-800'
     }
   };
 
@@ -81,70 +88,79 @@ export const AlertItem = ({
                 <span className="font-medium text-gray-700">Umbral:</span> {threshold}
               </div>
               <div className="flex items-center gap-1 text-blue-600 hover:underline text-sm cursor-pointer"
-     onClick={(e) => {
-       e.stopPropagation();
-       // Lógica para "Resolver"
-     }}>
-  <CheckCircle className="w-4 h-4" />
-  <span>Resolver</span>
-</div>
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete?.();
+                }}>
+                <CheckCircle className="w-4 h-4" />
+                <span>Resolver</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-<Modal
-  isOpen={isModalOpen}
-  onClose={() => setIsModalOpen(false)}
-  title={`Alerta: Temperatura - Tomate`}
-  size="md"
-  footerActions={
-    <button
-      onClick={() => setIsModalOpen(false)}
-      className="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-    >
-      Resuelta
-    </button>
-  }
->
-  <div className="space-y-4 text-gray-800">
-    <p>
-      <strong>Mensaje:</strong>{" "}
-      <span className="font-medium">Temperatura demasiado alta en el cultivo.</span>
-    </p>
-    <p>
-      <strong>Valor actual:</strong>{" "}
-      <span className="font-semibold text-red-600">35°C</span>
-    </p>
-    <p>
-      <strong>Umbral:</strong>{" "}
-      <span className="font-semibold text-gray-700">30°C</span>
-    </p>
-    <p>
-      <strong>Tiempo de alerta:</strong>{" "}
-      <span>{new Date().toLocaleString()}</span>
-    </p>
-    <p>
-      <strong>Severidad:</strong>{" "}
-      <span className="px-2 py-1 rounded bg-yellow-300 text-yellow-800 font-semibold text-sm">
-        Alta
-      </span>
-    </p>
-    <p>
-      <strong>Ubicación:</strong>{" "}
-      <span>Invernadero 1</span>
-    </p>
-    <p className="flex items-center space-x-2">
-      <strong>Estado:</strong>
-      <button
-        className="px-3 py-1 rounded-full text-white text-xs font-bold
-         bg-red-400 hover:bg-red-500 transition"
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={`Alerta: ${parameter} - ${crop}`}
+        size="md"
+        footerActions={
+          <button
+            onClick={() => {
+              onDelete?.();
+              setIsModalOpen(false);
+            }}
+            className="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+          >
+            Resolver alerta
+          </button>
+        }
       >
-        Activa
-      </button>
-    </p>
-  </div>
-</Modal>
+        <div className="space-y-4 text-gray-800">
+          <p>
+            <strong>Mensaje:</strong>{" "}
+            <span className="font-medium">{message}</span>
+          </p>
+          <p>
+            <strong>Valor actual:</strong>{" "}
+            <span className={`font-semibold ${type === 'error' ? 'text-red-600' :
+                type === 'warning' ? 'text-yellow-600' :
+                  'text-blue-600'
+              }`}>
+              {value}
+            </span>
+          </p>
+          <p>
+            <strong>Umbral:</strong>{" "}
+            <span className="font-semibold text-gray-700">{threshold}</span>
+          </p>
+          <p>
+            <strong>Tiempo de alerta:</strong>{" "}
+            <span>{time}</span>
+          </p>
+          <p>
+            <strong>Severidad:</strong>{" "}
+            <span className={`px-2 py-1 rounded ${config.severityClass} font-semibold text-sm`}>
+              {config.severityText}
+            </span>
+          </p>
+          <p>
+            <strong>Parámetro:</strong>{" "}
+            <span>{parameter}</span>
+          </p>
+          <p>
+            <strong>Cultivo:</strong>{" "}
+            <span>{crop}</span>
+          </p>
+          <p className="flex items-center space-x-2">
+            <strong>Estado:</strong>
+            <span className="px-3 py-1 rounded-full text-white text-xs font-bold bg-yellow-500">
+              Pendiente
+            </span>
+          </p>
+        </div>
+      </Modal>
     </>
   );
 };
@@ -156,5 +172,6 @@ AlertItem.propTypes = {
   message: PropTypes.string,
   value: PropTypes.string,
   threshold: PropTypes.string,
-  time: PropTypes.string
+  time: PropTypes.string,
+  onDelete: PropTypes.func
 };
