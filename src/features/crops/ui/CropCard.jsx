@@ -1,5 +1,6 @@
 import { ChevronRight, Droplets, Thermometer } from 'lucide-react';
 import PropTypes from 'prop-types';
+import { CropStatusBadge } from './CropStatusBadge';
 
 export const CropCard = ({ crop, onClick }) => {
   // Formatear la fecha de inicio
@@ -17,6 +18,7 @@ export const CropCard = ({ crop, onClick }) => {
     >
       <div className="flex justify-between items-start mb-2">
         <h3 className="text-lg font-semibold text-gray-800">{crop.cropName || 'Sin nombre'}</h3>
+        <CropStatusBadge status={crop.status} />
       </div>
       <p className="text-sm text-gray-600 mb-3">{crop.cropType || 'Tipo no especificado'}</p>
       <div className="flex items-center justify-between">
@@ -45,7 +47,8 @@ CropCard.propTypes = {
     userId: PropTypes.number,
     cropName: PropTypes.string,
     cropType: PropTypes.string,
-    startDate: PropTypes.string
+    startDate: PropTypes.string,
+    status: PropTypes.string
   }).isRequired,
   onClick: PropTypes.func.isRequired
 };

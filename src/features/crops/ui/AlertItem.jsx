@@ -125,8 +125,8 @@ export const AlertItem = ({
           <p>
             <strong>Valor actual:</strong>{" "}
             <span className={`font-semibold ${type === 'error' ? 'text-red-600' :
-                type === 'warning' ? 'text-yellow-600' :
-                  'text-blue-600'
+              type === 'warning' ? 'text-yellow-600' :
+                'text-blue-600'
               }`}>
               {value}
             </span>
@@ -155,7 +155,10 @@ export const AlertItem = ({
           </p>
           <p className="flex items-center space-x-2">
             <strong>Estado:</strong>
-            <span className="px-3 py-1 rounded-full text-white text-xs font-bold bg-yellow-500">
+            <span className={`px-3 py-1 rounded-full text-xs font-bold ${type === 'error' ? 'bg-red-100 text-red-800' :
+                type === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-blue-100 text-blue-800'
+              }`}>
               Pendiente
             </span>
           </p>
