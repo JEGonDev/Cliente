@@ -9,6 +9,8 @@ class WebSocketService {
     this.reconnectDelay = 5000;
     this.heartbeatIncoming = 10000;
     this.heartbeatOutgoing = 10000;
+    this.maxReconnectAttempts = 5;
+    this.reconnectAttempts = 0;
   }
 
   /**
@@ -20,34 +22,62 @@ class WebSocketService {
   connect(onConnected, onError) {
     return new Promise((resolve, reject) => {
       try {
+        // Si ya está conectado, resolver inmediatamente
+        if (this.connected && this.stompClient) {
+          console.log('WebSocket ya está conectado');
+          resolve();
+          return;
+        }
+
+        // Limpiar cliente anterior si existe
+        if (this.stompClient) {
+          this.disconnect();
+        }
+
         // Crear conexión SockJS
-        const socket = new SockJS(`${import.meta.env.VITE_API_URL}/ws`);
+        const wsUrl = `${import.meta.env.VITE_API_URL}/ws`;
+        console.log('Conectando a WebSocket:', wsUrl);
+        const socket = new SockJS(wsUrl);
+
         this.stompClient = Stomp.over(socket);
-        
+
         // Configuración
         this.stompClient.reconnect_delay = this.reconnectDelay;
         this.stompClient.heartbeat.outgoing = this.heartbeatOutgoing;
         this.stompClient.heartbeat.incoming = this.heartbeatIncoming;
-        
+
         // Desactivar logs de debug en producción
         if (import.meta.env.PROD) {
           this.stompClient.debug = null;
         }
-        
-        // Conectar (autenticación por cookie)
+
+        // Conectar
         this.stompClient.connect(
           {}, // Headers vacíos - la autenticación va por cookie
           (frame) => {
             console.log('✅ WebSocket conectado:', frame);
             this.connected = true;
+            this.reconnectAttempts = 0;
             if (onConnected) onConnected(frame);
             resolve(frame);
           },
           (error) => {
             console.error('❌ Error de WebSocket:', error);
             this.connected = false;
-            if (onError) onError(error);
-            reject(error);
+            this.reconnectAttempts++;
+
+            if (this.reconnectAttempts < this.maxReconnectAttempts) {
+              console.log(`Reintentando conexión (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+              setTimeout(() => {
+                this.connect(onConnected, onError)
+                  .then(resolve)
+                  .catch(reject);
+              }, this.reconnectDelay);
+            } else {
+              console.error('Se alcanzó el máximo de intentos de reconexión');
+              if (onError) onError(error);
+              reject(error);
+            }
           }
         );
       } catch (error) {
@@ -82,7 +112,7 @@ class WebSocketService {
     // Guardar la suscripción para poder cancelarla después
     const subscriptionId = subscription.id;
     this.subscriptions.set(subscriptionId, subscription);
-    
+
     return subscriptionId;
   }
 
@@ -126,7 +156,7 @@ class WebSocketService {
         subscription.unsubscribe();
       });
       this.subscriptions.clear();
-      
+
       // Desconectar
       this.stompClient.disconnect(() => {
         console.log('🔌 WebSocket desconectado');
