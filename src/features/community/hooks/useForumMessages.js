@@ -74,7 +74,7 @@ export const useForumMessages = () => {
     setError(null);
 
     try {
-      const response = await communityService.getAllMessages();
+      const response = await communityService.getForumMessages();
 
       // Procesamos la respuesta según el formato del API
       let messagesData = [];
@@ -84,18 +84,8 @@ export const useForumMessages = () => {
         messagesData = response.data;
       }
 
-      // Filtrar solo mensajes del foro general
-      const forumMessages = messagesData.filter(message =>
-        !message.postId &&
-        !message.threadId &&
-        !message.groupId &&
-        !message.post_id &&
-        !message.thread_id &&
-        !message.group_id
-      );
-
       // Ordenar por fecha
-      const sortedMessages = forumMessages.sort((a, b) => {
+      const sortedMessages = messagesData.sort((a, b) => {
         const dateA = new Date(a.messageDate || a.creation_date || a.created_at || 0);
         const dateB = new Date(b.messageDate || b.creation_date || b.created_at || 0);
         return dateA - dateB;
