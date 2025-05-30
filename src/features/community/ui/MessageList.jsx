@@ -27,7 +27,10 @@ export const MessageList = ({
   // Auto scroll al final cuando llegan nuevos mensajes
   useEffect(() => {
     if (autoScroll && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      // Pequeño delay para asegurar que el DOM se haya actualizado
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
     }
   }, [messages.length, autoScroll]);
 
@@ -74,13 +77,13 @@ export const MessageList = ({
 
   if (messages.length === 0) {
     return (
-      <div className="text-center py-12">
-        <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-8">
-          <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+      <div className="flex items-center justify-center h-full min-h-[200px]">
+        <div className="text-center max-w-md mx-auto">
+          <MessageCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             No hay mensajes en el foro
           </h3>
-          <p className="text-gray-500 mb-4">
+          <p className="text-gray-500 text-sm">
             ¡Sé el primero en iniciar la conversación! Comparte tus ideas, haz preguntas o simplemente saluda a la comunidad.
           </p>
         </div>
@@ -89,29 +92,9 @@ export const MessageList = ({
   }
 
   return (
-    <div className="space-y-3" ref={containerRef}>
-      {/* Header con información */}
-      <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-        <div className="flex items-center space-x-2">
-          <MessageCircle className="w-5 h-5 text-gray-500" />
-          <span className="text-sm font-medium text-gray-700">
-            {messages.length} {messages.length === 1 ? 'mensaje' : 'mensajes'}
-          </span>
-        </div>
-        
-        {onRefresh && (
-          <button
-            onClick={onRefresh}
-            disabled={isLoading}
-            className="text-xs text-gray-500 hover:text-primary disabled:opacity-50"
-          >
-            {isLoading ? 'Actualizando...' : 'Actualizar'}
-          </button>
-        )}
-      </div>
-
+    <div className="h-full flex flex-col" ref={containerRef}>
       {/* Lista de mensajes */}
-      <div className="space-y-3">
+      <div className="flex-1 space-y-3 p-4">
         {messages.map((message) => (
           <MessageCard
             key={message.id || message.message_id}
@@ -123,7 +106,7 @@ export const MessageList = ({
 
       {/* Indicador de carga para nuevos mensajes */}
       {isLoading && messages.length > 0 && (
-        <div className="text-center py-3">
+        <div className="text-center py-3 border-t border-gray-100">
           <div className="inline-flex items-center space-x-2 text-sm text-gray-500">
             <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-primary"></div>
             <span>Cargando mensajes...</span>
