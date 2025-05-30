@@ -187,11 +187,13 @@ export const useWebSocket = () => {
     if (!connected || !content.trim()) return;
 
     const message = {
-      content: content.trim(),
+      postId: null,
       userId: user?.id,
-      username: user?.username,
-      timestamp: new Date().toISOString(),
-      messageType: 'forum'
+      content: content.trim(),
+      threadId: null,
+      groupId: null,
+      messageId: null,
+      creationDate: null
     };
 
     websocketService.send('/app/message/forum', message);

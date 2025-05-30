@@ -51,9 +51,13 @@ class WebSocketService {
           this.stompClient.debug = null;
         }
 
-        // Conectar
+        // Obtener token de autenticación
+        const token = localStorage.getItem('token');
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+        // Conectar con headers de autenticación
         this.stompClient.connect(
-          {}, // Headers vacíos - la autenticación va por cookie
+          headers,
           (frame) => {
             console.log('✅ WebSocket conectado:', frame);
             this.connected = true;
@@ -139,9 +143,20 @@ class WebSocketService {
       return;
     }
 
+    // Obtener token de autenticación
+    const token = localStorage.getItem('token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    // Enviar el mensaje tal cual, sin modificar
+    console.log('📤 Enviando mensaje:', {
+      destination,
+      headers,
+      message
+    });
+
     this.stompClient.send(
       destination,
-      {},
+      headers,
       typeof message === 'object' ? JSON.stringify(message) : message
     );
   }

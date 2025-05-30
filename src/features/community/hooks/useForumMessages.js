@@ -123,10 +123,15 @@ export const useForumMessages = () => {
     setError(null);
 
     try {
-      // Enviar mensaje a través de WebSocket
+      // Enviar mensaje con el formato que coincide con el procedimiento almacenado
       websocketService.send('/app/message/forum', {
+        postId: null,
+        userId: null, // El backend lo obtendrá del token
         content: content.trim(),
-        messageType: 'CHAT'
+        threadId: null,
+        groupId: null,
+        messageId: null, // Para p_message_id OUT
+        creationDate: null // Para p_creation_date OUT
       });
 
       return true;
