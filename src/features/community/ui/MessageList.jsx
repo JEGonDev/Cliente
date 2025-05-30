@@ -13,8 +13,8 @@ import { MessageCircle } from 'lucide-react';
  * @param {Function} props.onRefresh - Función para refrescar mensajes
  * @param {boolean} props.autoScroll - Si debe hacer scroll automático al final
  */
-export const MessageList = ({ 
-  messages = [], 
+export const MessageList = ({
+  messages = [],
   isLoading = false,
   error = null,
   onDeleteMessage,
@@ -24,13 +24,17 @@ export const MessageList = ({
   const messagesEndRef = useRef(null);
   const containerRef = useRef(null);
 
+  // Función para hacer scroll al final
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   // Auto scroll al final cuando llegan nuevos mensajes
   useEffect(() => {
-    if (autoScroll && messagesEndRef.current) {
-      // Pequeño delay para asegurar que el DOM se haya actualizado
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+    if (autoScroll) {
+      scrollToBottom();
     }
   }, [messages.length, autoScroll]);
 
@@ -49,7 +53,7 @@ export const MessageList = ({
 
   if (isLoading && messages.length === 0) {
     return (
-      <div className="flex justify-center items-center py-12">
+      <div className="flex justify-center items-center h-full min-h-[200px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mx-auto mb-3"></div>
           <p className="text-gray-600">Cargando mensajes...</p>
@@ -91,17 +95,23 @@ export const MessageList = ({
     );
   }
 
+  // Ordenar mensajes del más antiguo al más nuevo
+  const sortedMessages = [...messages].sort((a, b) =>
+    new Date(a.creationDate) - new Date(b.creationDate)
+  );
+
   return (
     <div className="h-full flex flex-col" ref={containerRef}>
       {/* Lista de mensajes */}
-      <div className="flex-1 space-y-3 p-4">
-        {messages.map((message) => (
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+        {sortedMessages.map((message) => (
           <MessageCard
             key={message.id || message.message_id}
             message={message}
             onDelete={handleDeleteMessage}
           />
         ))}
+        <div ref={messagesEndRef} className="h-4" /> {/* Añadido un poco de espacio al final */}
       </div>
 
       {/* Indicador de carga para nuevos mensajes */}
@@ -113,9 +123,6 @@ export const MessageList = ({
           </div>
         </div>
       )}
-
-      {/* Referencia para auto-scroll */}
-      <div ref={messagesEndRef} />
     </div>
   );
 };

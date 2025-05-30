@@ -464,4 +464,93 @@ export const communityService = {
       return [];
     }
   },
+
+  // ==================== MENSAJES - MÉTODOS ====================
+
+  /**
+   * Obtiene un mensaje por su ID
+   */
+  getMessageById: async (id) => {
+    try {
+      const response = await API.get(ENDPOINTS.MESSAGE_BY_ID(id));
+      return response.data;
+    } catch (error) {
+      handleError(error, `obtener mensaje con ID ${id}`);
+      throw error;
+    }
+  },
+
+  /**
+   * Elimina un mensaje
+   */
+  deleteMessage: async (id) => {
+    try {
+      const response = await API.delete(ENDPOINTS.MESSAGE_BY_ID(id));
+      return response.data;
+    } catch (error) {
+      handleError(error, `eliminar mensaje con ID ${id}`);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene historial de mensajes por contexto
+   */
+  getMessageHistory: async (contextType, contextId = null, limit = 50, offset = 0) => {
+    try {
+      const params = new URLSearchParams({
+        contextType,
+        limit: limit.toString(),
+        offset: offset.toString()
+      });
+
+      if (contextId !== null) {
+        params.append('contextId', contextId.toString());
+      }
+
+      const response = await API.get(`${ENDPOINTS.MESSAGES}/history?${params}`);
+      return response.data;
+    } catch (error) {
+      handleError(error, `obtener historial de mensajes`);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene mensajes de una publicación
+   */
+  getMessagesByPost: async (postId) => {
+    try {
+      const response = await API.get(`${ENDPOINTS.MESSAGES}/by-post/${postId}`);
+      return response.data;
+    } catch (error) {
+      handleError(error, `obtener mensajes de la publicación ${postId}`);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene mensajes de un grupo
+   */
+  getMessagesByGroup: async (groupId) => {
+    try {
+      const response = await API.get(`${ENDPOINTS.MESSAGES}/by-group/${groupId}`);
+      return response.data;
+    } catch (error) {
+      handleError(error, `obtener mensajes del grupo ${groupId}`);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene mensajes del foro general
+   */
+  getForumMessages: async (limit = 50, offset = 0) => {
+    try {
+      return await communityService.getMessageHistory('forum', null, limit, offset);
+    } catch (error) {
+      handleError(error, 'obtener mensajes del foro');
+      throw error;
+    }
+  },
 };
