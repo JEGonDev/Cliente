@@ -111,14 +111,11 @@ export const useCompleteMessage = () => {
   /**
    * Crear mensaje
    */
-  const handleCreateMessage = useCallback(async (e) => {
-    if (e) e.preventDefault();
-
+  const handleCreateMessage = useCallback(async (messageData) => {
     setSuccessMessage('');
-    if (!validateForm()) return null;
 
     try {
-      const newMessage = await createMessage(formData);
+      const newMessage = await createMessage(messageData);
       if (newMessage) {
         setSuccessMessage('Mensaje enviado correctamente');
         resetContent();
@@ -129,7 +126,7 @@ export const useCompleteMessage = () => {
       setFormErrors({ general: error.message || 'Error al crear el mensaje' });
       return null;
     }
-  }, [formData, validateForm, createMessage, resetContent]);
+  }, [createMessage, resetContent]);
 
   /**
    * Eliminar mensaje con verificación de permisos
