@@ -1,8 +1,9 @@
-import React, { useState, useContext, useEffect } from 'react';
-import { MoreVertical, Calendar, Trash, Edit, User } from 'lucide-react';
+import { useState, useContext, useEffect } from 'react';
+import {Trash} from 'lucide-react';
 import { AuthContext } from '../../authentication/context/AuthContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { profileService } from '../../profile/services/profileService';
 
 /**
  * Componente para mostrar un mensaje individual en el foro
@@ -39,25 +40,27 @@ export const MessageCard = ({ message, onDelete, onEdit }) => {
     }
   };
 
-  // Simular carga de nombre de usuario
+  // Cargar información del usuario
   useEffect(() => {
-    const realName = message.author;
-    setUserName(realName || `Usuario #${userId}`);
-    setIsLoadingUser(false);
-  }, [userId, message.author]);
+    const fetchUserInfo = async () => {
+      setIsLoadingUser(true);
+      try {
+        if (userId) {
+          const userData = await profileService.getUserById(userId);
+          // Intentar obtener el nombre completo o username
+          const displayName = userData.username;
+          setUserName(displayName || `Usuario #${userId}`);
+        }
+      } catch (error) {
+        console.error('Error al cargar información del usuario:', error);
+        setUserName(`Usuario #${userId}`);
+      } finally {
+        setIsLoadingUser(false);
+      }
+    };
 
-  // Generar avatar con iniciales
-  const getAvatarInitials = () => {
-    if (userName) {
-      return userName
-        .split(' ')
-        .map(word => word.charAt(0))
-        .join('')
-        .toUpperCase()
-        .substring(0, 2);
-    }
-    return 'U';
-  };
+    fetchUserInfo();
+  }, [userId]);
 
   const handleDelete = () => {
     if (window.confirm('¿Estás seguro de que deseas eliminar este mensaje?')) {
