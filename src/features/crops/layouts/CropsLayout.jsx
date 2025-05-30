@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { CropCard } from '../ui/CropCard';
@@ -6,6 +6,7 @@ import { useMonitoring } from '../hooks/useMonitoring';
 
 export const CropsLayout = () => {
   const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Usar el contexto de monitoreo en lugar de datos mock
   const {
@@ -18,17 +19,28 @@ export const CropsLayout = () => {
 
   // Cargar cultivos al montar el componente y configurar actualización periódica
   useEffect(() => {
+    let intervalId = null;
+
     // Carga inicial
     fetchUserCrops();
 
-    // Configurar intervalo de actualización cada 5 segundos
-    const intervalId = setInterval(() => {
-      fetchUserCrops();
-    }, 5000); // 5000ms = 5 segundos
+    // Solo configurar el intervalo si no hay modales abiertos
+    if (!isModalOpen) {
+      intervalId = setInterval(() => {
+        // Solo actualizar si el documento está visible
+        if (!document.hidden) {
+          fetchUserCrops();
+        }
+      }, 5000);
+    }
 
     // Limpiar intervalo al desmontar el componente
-    return () => clearInterval(intervalId);
-  }, [fetchUserCrops]);
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [fetchUserCrops, isModalOpen]);
 
   const handleCardClick = (crop) => {
     selectCrop(crop);
@@ -51,60 +63,60 @@ export const CropsLayout = () => {
     );
   }
 
-  // Estado de error
-  if (error) {
-    return (
-      <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-red-700">Error: {error}</p>
-          <button
-            onClick={fetchUserCrops}
-            className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-          >
-            Reintentar
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="p-6">
-      {/* Header con título y botón de agregar */}
+      {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Cultivos</h1>
-
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Cultivos</h1>
+          <p className="text-gray-600">Gestiona tus cultivos y su monitoreo</p>
+        </div>
         <button
           onClick={handleAddCrop}
-          className="inline-flex items-center bg-primary px-4 py-2 bg-green-800 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-green-700 transition-colors"
         >
-          <Plus className="h-5 w-5 mr-2" />
+          <Plus size={20} />
           Nuevo cultivo
         </button>
       </div>
 
-      {/* Lista de cultivos */}
-      {crops.length === 0 ? (
+      {/* Lista vertical de cultivos */}
+      <div className="flex flex-col gap-4">
+        {crops.map(crop => (
+          <CropCard
+            key={crop.id}
+            crop={crop}
+            onClick={handleCardClick}
+            onModalOpen={() => setIsModalOpen(true)}
+            onModalClose={() => setIsModalOpen(false)}
+          />
+        ))}
+      </div>
+
+      {/* Mensaje cuando no hay cultivos */}
+      {crops.length === 0 && !loading && (
         <div className="text-center py-12">
-          <div className="text-gray-400 text-4xl mb-4">🌱</div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No tienes cultivos registrados
+          <div className="text-gray-400 text-6xl mb-4">🌱</div>
+          <h3 className="text-xl font-medium text-gray-900 mb-2">
+            No hay cultivos activos
           </h3>
-          <p className="text-gray-600 mb-4">
-            Comienza creando tu primer cultivo hidropónico
+          <p className="text-gray-600 mb-6">
+            Comienza creando tu primer cultivo para empezar a monitorearlo
           </p>
           <button
             onClick={handleAddCrop}
-            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-green-700"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-green-700 transition-colors"
           >
+            <Plus size={20} />
             Crear primer cultivo
           </button>
         </div>
-      ) : (
-        <div className="flex flex-col gap-4 w-full">
-          {crops.map((crop) => (
-            <CropCard key={crop.id} crop={crop} onClick={handleCardClick} />
-          ))}
+      )}
+
+      {/* Mensaje de error */}
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg mt-6">
+          <p className="text-red-800">{error}</p>
         </div>
       )}
     </div>
