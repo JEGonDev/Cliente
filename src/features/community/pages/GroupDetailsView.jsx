@@ -11,6 +11,7 @@ import { MessageList } from "../ui/MessageList";
 import { MessageForm } from "../ui/MessageForm";
 import { useCompleteMessage } from "../hooks/useCompleteMessage";
 import { websocketService } from "../../../common/services/webSocketService";
+import { PostFormModal } from "../ui/PostFormModal";
 
 export const GroupDetailsView = () => {
   const { groupId } = useParams();
@@ -21,6 +22,7 @@ export const GroupDetailsView = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [activeTab, setActiveTab] = useState("messages"); // "messages" o "threads"
+  const [showPostModal, setShowPostModal] = useState(false);
 
   // Estado para WebSocket
   const [wsConnected, setWsConnected] = useState(false);
@@ -166,6 +168,18 @@ export const GroupDetailsView = () => {
       fetchGroups();
       setShowDeleteConfirmation(false);
     }
+  };
+
+  // Handler para abrir el modal de posts
+  const handleAttachmentClick = () => {
+    setShowPostModal(true);
+  };
+
+  // Handler para cuando se crea un post
+  const handlePostCreated = (newPost) => {
+    setShowPostModal(false);
+    // Recargar mensajes después de crear un post
+    loadMessagesByType('group', groupId);
   };
 
   // Estados de carga y error
@@ -354,6 +368,7 @@ export const GroupDetailsView = () => {
                 placeholder="Comparte algo con el grupo..."
                 disabled={!wsConnected}
                 showAttachment={true}
+                onAttachmentClick={handleAttachmentClick}
               />
             </div>
           </div>
@@ -419,6 +434,19 @@ export const GroupDetailsView = () => {
           variant="danger"
           onConfirm={handleConfirmDelete}
           onCancel={() => setShowDeleteConfirmation(false)}
+        />
+      )}
+
+      {/* Modal para crear post */}
+      {showPostModal && (
+        <PostFormModal
+          onClose={() => setShowPostModal(false)}
+          onPostCreated={handlePostCreated}
+          context={{
+            type: 'group',
+            id: parseInt(groupId),
+            name: group.name
+          }}
         />
       )}
     </div>

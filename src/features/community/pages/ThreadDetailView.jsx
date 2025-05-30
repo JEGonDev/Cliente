@@ -11,6 +11,7 @@ import { MessageList } from "../ui/MessageList";
 import { MessageForm } from "../ui/MessageForm";
 import { useCompleteMessage } from "../hooks/useCompleteMessage";
 import { websocketService } from "../../../common/services/webSocketService";
+import { PostFormModal } from "../ui/PostFormModal";
 
 export const ThreadDetailView = () => {
   const { isAdmin, isModerator } = useContext(AuthContext);
@@ -186,6 +187,20 @@ export const ThreadDetailView = () => {
     resetForm();
   };
 
+  const [showPostModal, setShowPostModal] = useState(false);
+
+  // Handler para abrir el modal de posts
+  const handleAttachmentClick = () => {
+    setShowPostModal(true);
+  };
+
+  // Handler para cuando se crea un post
+  const handlePostCreated = (newPost) => {
+    setShowPostModal(false);
+    // Recargar mensajes después de crear un post
+    loadMessagesByType('thread', threadId);
+  };
+
   // Estados de carga y error
   if (loading) {
     return (
@@ -324,6 +339,7 @@ export const ThreadDetailView = () => {
                   placeholder="Escribe un mensaje en este hilo..."
                   disabled={!wsConnected}
                   showAttachment={true}
+                  onAttachmentClick={handleAttachmentClick}
                 />
               </div>
             </div>
@@ -350,6 +366,19 @@ export const ThreadDetailView = () => {
           isLoading={isDeleting}
           onConfirm={handleDeleteConfirm}
           onClose={() => setIsDeleteDialogOpen(false)}
+        />
+      )}
+
+      {/* Modal para crear post */}
+      {showPostModal && (
+        <PostFormModal
+          onClose={() => setShowPostModal(false)}
+          onPostCreated={handlePostCreated}
+          context={{
+            type: 'thread',
+            id: parseInt(threadId),
+            name: thread.title
+          }}
         />
       )}
     </>

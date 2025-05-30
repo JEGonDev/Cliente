@@ -11,13 +11,15 @@ import { AuthContext } from '../../authentication/context/AuthContext';
  * @param {string} props.placeholder - Texto placeholder del textarea
  * @param {boolean} props.disabled - Si el formulario está deshabilitado
  * @param {boolean} props.showAttachment - Si debe mostrar el botón de adjuntar archivos
+ * @param {Function} props.onAttachmentClick - Función a ejecutar cuando se hace clic en el botón de adjuntar
  */
 export const MessageForm = ({
   onSendMessage,
   isLoading = false,
   placeholder = "Escribe tu mensaje aquí...",
   disabled = false,
-  showAttachment = false
+  showAttachment = false,
+  onAttachmentClick
 }) => {
   const { user, isAuthenticated } = useContext(AuthContext);
   const [message, setMessage] = useState('');
@@ -90,8 +92,9 @@ export const MessageForm = ({
           {showAttachment && (
             <button
               type="button"
+              onClick={onAttachmentClick}
               className="flex-shrink-0 rounded-xl p-2 text-gray-500 hover:bg-gray-100 transition-colors"
-              title="Adjuntar archivo"
+              title="Crear publicación con contenido multimedia"
             >
               <Paperclip className="h-5 w-5" />
             </button>
