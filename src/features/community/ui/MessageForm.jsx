@@ -43,8 +43,8 @@ export const MessageForm = ({
 
   if (!isAuthenticated) {
     return (
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
-        <p className="text-gray-600">
+      <div className="bg-gray-50 border-t border-gray-200 p-4">
+        <p className="text-center text-gray-600">
           <span className="font-medium">Inicia sesión</span> para participar en la conversación
         </p>
       </div>
@@ -53,7 +53,7 @@ export const MessageForm = ({
 
   if (disabled) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+      <div className="bg-red-50 border-t border-red-200 p-4">
         <div className="flex items-center justify-center gap-2 text-red-600">
           <WifiOff className="w-4 h-4" />
           <p className="text-sm">
@@ -65,68 +65,43 @@ export const MessageForm = ({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-      {/* Header del formulario más compacto */}
-      <div className="flex items-center space-x-3 px-4 py-3 border-b border-gray-100">
-        <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-medium">
-          {user?.firstName?.charAt(0) || user?.username?.charAt(0) || 'U'}
-        </div>
-        <span className="text-sm font-medium text-gray-900">
-          {user?.firstName && user?.lastName
-            ? `${user.firstName} ${user.lastName}`
-            : user?.username || 'Usuario'
-          }
-        </span>
+    <form
+      onSubmit={handleSubmit}
+      className="border-t border-gray-200 bg-white px-4 py-3"
+    >
+      <div className={`flex items-end gap-2 rounded-2xl border ${isFocused ? 'border-primary' : 'border-gray-200'} bg-white p-2 transition-colors`}>
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={handleKeyPress}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          placeholder={placeholder}
+          rows={1}
+          className="flex-1 resize-none border-0 bg-transparent p-1 focus:ring-0 text-sm"
+          style={{
+            minHeight: '24px',
+            maxHeight: '120px'
+          }}
+        />
+        <button
+          type="submit"
+          disabled={isLoading || !message.trim()}
+          className={`flex-shrink-0 rounded-xl p-2 transition-colors ${message.trim()
+              ? 'bg-primary text-white hover:bg-green-700'
+              : 'bg-gray-100 text-gray-400'
+            }`}
+        >
+          {isLoading ? (
+            <Loader className="h-5 w-5 animate-spin" />
+          ) : (
+            <Send className="h-5 w-5" />
+          )}
+        </button>
       </div>
-
-      {/* Formulario */}
-      <form onSubmit={handleSubmit} className="p-4">
-        <div className="space-y-3">
-          <div className="relative">
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              placeholder={placeholder}
-              className={`w-full p-3 border rounded-lg resize-none transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${isFocused ? 'border-primary' : 'border-gray-300'
-                }`}
-              rows={2}
-              maxLength={1000}
-              disabled={isLoading || disabled}
-            />
-
-            {/* Contador de caracteres */}
-            <div className="absolute bottom-2 right-2 text-xs text-gray-400">
-              {message.length}/1000
-            </div>
-          </div>
-
-          {/* Footer con botones */}
-          <div className="flex items-center justify-between">
-            <div className="text-xs text-gray-500">
-              <kbd className="px-1.5 py-0.5 text-xs bg-gray-100 border border-gray-300 rounded">Ctrl</kbd> + <kbd className="px-1.5 py-0.5 text-xs bg-gray-100 border border-gray-300 rounded">Enter</kbd> para enviar
-            </div>
-
-            <button
-              type="submit"
-              disabled={!message.trim() || isLoading || disabled}
-              className={`flex items-center space-x-2 px-6 py-2 rounded-lg text-sm font-medium transition-colors ${!message.trim() || isLoading || disabled
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-primary text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
-                }`}
-            >
-              {isLoading ? (
-                <Loader className="w-4 h-4 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
-              <span>{isLoading ? 'Enviando...' : 'Enviar'}</span>
-            </button>
-          </div>
-        </div>
-      </form>
-    </div>
+      <p className="mt-2 text-xs text-gray-500">
+        Presiona Ctrl + Enter para enviar
+      </p>
+    </form>
   );
 };

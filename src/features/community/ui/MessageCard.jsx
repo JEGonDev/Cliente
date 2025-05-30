@@ -27,21 +27,23 @@ export const MessageCard = ({ message, onDelete, onEdit }) => {
   // Verificación de permisos para eliminar
   const canDeleteMessage = isAdmin || isModerator || (user && user.id === userId);
 
+  // Verificar si el mensaje es del usuario actual
+  const isCurrentUser = user && user.id === userId;
+
   // Formatear fecha relativa
   const getRelativeTime = () => {
     try {
-      return formatDistanceToNow(new Date(messageDate), { 
-        addSuffix: true, 
-        locale: es 
+      return formatDistanceToNow(new Date(messageDate), {
+        addSuffix: true,
+        locale: es
       });
     } catch (error) {
       return 'Hace un momento';
     }
   };
 
-  // Simular carga de nombre de usuario (en el futuro podrías cargar desde una API)
+  // Simular carga de nombre de usuario
   useEffect(() => {
-    // Por ahora usaremos un nombre genérico basado en el userId
     setUserName(message.author || message.userName || `Usuario #${userId}`);
     setIsLoadingUser(false);
   }, [userId, message.author, message.userName]);
@@ -66,73 +68,50 @@ export const MessageCard = ({ message, onDelete, onEdit }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-sm transition-shadow">
-      {/* Header del mensaje */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center space-x-3">
-          {/* Avatar */}
-          <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-medium">
-            {isLoadingUser ? '...' : getAvatarInitials()}
+    <div className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} mb-4 group`}>
+      {/* Avatar y mensaje para otros usuarios */}
+      {!isCurrentUser && (
+        <div className="flex items-start space-x-2 max-w-[80%]">
+          <div className="flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-medium">
+              {isLoadingUser ? '...' : getAvatarInitials()}
+            </div>
           </div>
-          
-          {/* Información del usuario y fecha */}
           <div className="flex flex-col">
-            <span className="text-sm font-medium text-gray-900">
-              {isLoadingUser ? 'Cargando...' : userName}
-            </span>
-            <div className="flex items-center text-xs text-gray-500">
-              <Calendar className="w-3 h-3 mr-1" />
-              <span>{getRelativeTime()}</span>
+            <div className="flex items-baseline space-x-2">
+              <span className="text-sm font-medium text-gray-900">
+                {isLoadingUser ? 'Cargando...' : userName}
+              </span>
+              <span className="text-xs text-gray-500">{getRelativeTime()}</span>
+            </div>
+            <div className="mt-1 bg-gray-100 rounded-2xl rounded-tl-none px-4 py-2 text-sm text-gray-800">
+              {content}
             </div>
           </div>
         </div>
+      )}
 
-        {/* Menú de opciones */}
-        {canDeleteMessage && (
-          <div className="relative">
-            <button
-              className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600"
-              onClick={() => setShowOptions(!showOptions)}
-            >
-              <MoreVertical className="w-4 h-4" />
-            </button>
-
-            {showOptions && (
-              <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-                {/* Opción editar (comentada para futura implementación) */}
-                {/* <button
-                  onClick={() => {
-                    setShowOptions(false);
-                    onEdit && onEdit(message);
-                  }}
-                  className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                >
-                  <Edit className="w-3 h-3 mr-2" />
-                  Editar
-                </button> */}
-
+      {/* Mensaje para el usuario actual */}
+      {isCurrentUser && (
+        <div className="flex items-start space-x-2 max-w-[80%]">
+          <div className="flex flex-col items-end">
+            <div className="flex items-baseline space-x-2 order-1">
+              <span className="text-xs text-gray-500">{getRelativeTime()}</span>
+              {canDeleteMessage && (
                 <button
-                  onClick={() => {
-                    setShowOptions(false);
-                    handleDelete();
-                  }}
-                  className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
+                  onClick={handleDelete}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-600"
                 >
-                  <Trash className="w-3 h-3 mr-2" />
-                  Eliminar
+                  <Trash className="w-3 h-3" />
                 </button>
-              </div>
-            )}
+              )}
+            </div>
+            <div className="mt-1 bg-primary text-white rounded-2xl rounded-tr-none px-4 py-2 text-sm">
+              {content}
+            </div>
           </div>
-        )}
-      </div>
-
-      {/* Contenido del mensaje */}
-      <div className="pl-11">
-        <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-line">
-          {content}
-        </p>
-      </div>
+        </div>
+      )}
     </div>
   );
 };

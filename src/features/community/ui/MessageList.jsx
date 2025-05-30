@@ -13,8 +13,8 @@ import { MessageCircle } from 'lucide-react';
  * @param {Function} props.onRefresh - Función para refrescar mensajes
  * @param {boolean} props.autoScroll - Si debe hacer scroll automático al final
  */
-export const MessageList = ({ 
-  messages = [], 
+export const MessageList = ({
+  messages = [],
   isLoading = false,
   error = null,
   onDeleteMessage,
@@ -49,7 +49,7 @@ export const MessageList = ({
 
   if (isLoading && messages.length === 0) {
     return (
-      <div className="flex justify-center items-center py-12">
+      <div className="flex justify-center items-center h-full min-h-[200px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mx-auto mb-3"></div>
           <p className="text-gray-600">Cargando mensajes...</p>
@@ -94,7 +94,7 @@ export const MessageList = ({
   return (
     <div className="h-full flex flex-col" ref={containerRef}>
       {/* Lista de mensajes */}
-      <div className="flex-1 space-y-3 p-4">
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
         {messages.map((message) => (
           <MessageCard
             key={message.id || message.message_id}
@@ -102,6 +102,7 @@ export const MessageList = ({
             onDelete={handleDeleteMessage}
           />
         ))}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Indicador de carga para nuevos mensajes */}
@@ -113,9 +114,6 @@ export const MessageList = ({
           </div>
         </div>
       )}
-
-      {/* Referencia para auto-scroll */}
-      <div ref={messagesEndRef} />
     </div>
   );
 };
