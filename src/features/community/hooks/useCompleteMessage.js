@@ -148,13 +148,10 @@ export const useCompleteMessage = () => {
         return false;
       }
 
-      if (window.confirm('¿Estás seguro de que deseas eliminar este mensaje?')) {
-        const success = await deleteMessage(messageId);
-        if (success) {
-          setSuccessMessage('Mensaje eliminado correctamente');
-          return true;
-        }
-        return false;
+      const success = await deleteMessage(messageId);
+      if (success) {
+        setSuccessMessage('Mensaje eliminado correctamente');
+        return true;
       }
       return false;
     } catch (error) {
