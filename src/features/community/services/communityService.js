@@ -163,14 +163,8 @@ export const communityService = {
    * @param {number|string} threadId
    * @returns {Promise<Object>} Objeto { message, data: Array<Message> }
    */
-  getMessagesByThreadId: async (threadId) => {
-    try {
-      const response = await API.get(`/messages/by-thread/${threadId}`);
-      return response.data;
-    } catch (error) {
-      handleError(error, `obtener mensajes del hilo ${threadId}`);
-      throw error;
-    }
+  getMessagesByThreadId: async (threadId, limit = 50, offset = 0) => {
+    return await communityService.getMessageHistory('thread', threadId, limit, offset);
   },
 
   // ==================== Peticiones para grupos ====================
@@ -519,10 +513,9 @@ export const communityService = {
   /**
    * Obtiene mensajes de una publicación
    */
-  getMessagesByPost: async (postId) => {
+  getMessagesByPost: async (postId, limit = 50, offset = 0) => {
     try {
-      const response = await API.get(`${ENDPOINTS.MESSAGES}/by-post/${postId}`);
-      return response.data;
+      return await communityService.getMessageHistory('post', postId, limit, offset);
     } catch (error) {
       handleError(error, `obtener mensajes de la publicación ${postId}`);
       throw error;
@@ -532,10 +525,9 @@ export const communityService = {
   /**
    * Obtiene mensajes de un grupo
    */
-  getMessagesByGroup: async (groupId) => {
+  getMessagesByGroup: async (groupId, limit = 50, offset = 0) => {
     try {
-      const response = await API.get(`${ENDPOINTS.MESSAGES}/by-group/${groupId}`);
-      return response.data;
+      return await communityService.getMessageHistory('group', groupId, limit, offset);
     } catch (error) {
       handleError(error, `obtener mensajes del grupo ${groupId}`);
       throw error;
