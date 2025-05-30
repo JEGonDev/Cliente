@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { Send, Loader, WifiOff } from 'lucide-react';
+import { Send, Loader, WifiOff, Paperclip } from 'lucide-react';
 import { AuthContext } from '../../authentication/context/AuthContext';
 
 /**
@@ -10,12 +10,14 @@ import { AuthContext } from '../../authentication/context/AuthContext';
  * @param {boolean} props.isLoading - Estado de carga del envío
  * @param {string} props.placeholder - Texto placeholder del textarea
  * @param {boolean} props.disabled - Si el formulario está deshabilitado
+ * @param {boolean} props.showAttachment - Si debe mostrar el botón de adjuntar archivos
  */
 export const MessageForm = ({
   onSendMessage,
   isLoading = false,
   placeholder = "Escribe tu mensaje aquí...",
-  disabled = false
+  disabled = false,
+  showAttachment = false
 }) => {
   const { user, isAuthenticated } = useContext(AuthContext);
   const [message, setMessage] = useState('');
@@ -84,20 +86,31 @@ export const MessageForm = ({
             maxHeight: '120px'
           }}
         />
-        <button
-          type="submit"
-          disabled={isLoading || !message.trim()}
-          className={`flex-shrink-0 rounded-xl p-2 transition-colors ${message.trim()
+        <div className="flex items-center gap-2">
+          {showAttachment && (
+            <button
+              type="button"
+              className="flex-shrink-0 rounded-xl p-2 text-gray-500 hover:bg-gray-100 transition-colors"
+              title="Adjuntar archivo"
+            >
+              <Paperclip className="h-5 w-5" />
+            </button>
+          )}
+          <button
+            type="submit"
+            disabled={isLoading || !message.trim()}
+            className={`flex-shrink-0 rounded-xl p-2 transition-colors ${message.trim()
               ? 'bg-primary text-white hover:bg-green-700'
               : 'bg-gray-100 text-gray-400'
-            }`}
-        >
-          {isLoading ? (
-            <Loader className="h-5 w-5 animate-spin" />
-          ) : (
-            <Send className="h-5 w-5" />
-          )}
-        </button>
+              }`}
+          >
+            {isLoading ? (
+              <Loader className="h-5 w-5 animate-spin" />
+            ) : (
+              <Send className="h-5 w-5" />
+            )}
+          </button>
+        </div>
       </div>
       <p className="mt-2 text-xs text-gray-500">
         Presiona Ctrl + Enter para enviar

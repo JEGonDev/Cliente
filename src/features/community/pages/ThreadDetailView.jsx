@@ -323,6 +323,7 @@ export const ThreadDetailView = () => {
                   isLoading={false}
                   placeholder="Escribe un mensaje en este hilo..."
                   disabled={!wsConnected}
+                  showAttachment={true}
                 />
               </div>
             </div>
