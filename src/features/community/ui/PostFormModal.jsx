@@ -38,8 +38,7 @@ export const PostFormModal = ({
     successMessage
   } = usePost();
 
-  // Estados locales para manejo de grupos y archivos
-  const [groups, setGroups] = useState([]);
+  // Estados locales para manejo de archivos
   const [file, setFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [isVideo, setIsVideo] = useState(false);
@@ -64,30 +63,6 @@ export const PostFormModal = ({
     }
   }, [context, setFormData]);
 
-  // Solo cargar los grupos si estamos en el contexto general y mostraremos el selector
-  useEffect(() => {
-    if (context.type === 'general') {
-      const fetchGroups = async () => {
-        try {
-          const groupsData = await communityService.getAllGroups();
-          // Manejar diferentes formatos de respuesta
-          const groupsList = Array.isArray(groupsData)
-            ? groupsData
-            : Array.isArray(groupsData?.data)
-              ? groupsData.data
-              : [];
-
-          setGroups(groupsList);
-        } catch (error) {
-          console.error("Error al cargar grupos:", error);
-          setGroups([]);
-        }
-      };
-
-      fetchGroups();
-    }
-  }, [context.type]);
-
   // Si hay un post para editar, cargar sus datos
   useEffect(() => {
     if (postToEdit) {
@@ -108,53 +83,35 @@ export const PostFormModal = ({
     };
   }, [filePreview]);
 
-  // Sobreescribir el manejador de cambios para mantener el contexto
+  // Handler para cambios en el formulario
   const handleChange = (e) => {
-    // Si estamos en un contexto específico y el campo es relevante al contexto,
-    // no permitimos cambiarlo
-    if ((context.type === 'group' && e.target.name === 'groupId') ||
-      (context.type === 'thread' && e.target.name === 'threadId')) {
-      return; // No permitir cambiar estos campos
-    }
-
-    // Para todos los demás campos, usar el manejador original
     originalHandleChange(e);
   };
 
-  // Manejador para archivos con vista previa
+  // Handler para cambios de archivo
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
 
-    // Limpiar preview anterior si existe
-    if (filePreview) {
-      URL.revokeObjectURL(filePreview);
-    }
+    // Validar tipo de archivo
+    const isVideoFile = selectedFile.type.startsWith('video/') ||
+      selectedFile.name.match(/\.(mkv|webm)$/i);
 
-    // Verificar si el archivo es un video
-    const isVideoFile =
-      selectedFile.type.startsWith('video/') ||
-      selectedFile.name.endsWith('.mkv') ||
-      selectedFile.name.endsWith('.mp4') ||
-      selectedFile.name.endsWith('.webm');
+    // Crear URL para previsualización
+    const previewUrl = URL.createObjectURL(selectedFile);
 
-    // Establecer estados del archivo
     setFile(selectedFile);
-    setFilePreview(URL.createObjectURL(selectedFile));
+    setFilePreview(previewUrl);
     setIsVideo(isVideoFile);
 
-    // Disparar el cambio al hook original
-    const syntheticEvent = {
-      target: {
-        name: 'file',
-        type: 'file',
-        files: [selectedFile],
-      },
-    };
-    originalHandleChange(syntheticEvent);
+    // Actualizar formData
+    setFormData(prev => ({
+      ...prev,
+      file: selectedFile
+    }));
   };
 
-  // Función para eliminar el archivo seleccionado
+  // Handler para eliminar archivo
   const handleRemoveFile = () => {
     if (filePreview) {
       URL.revokeObjectURL(filePreview);
@@ -162,13 +119,13 @@ export const PostFormModal = ({
     setFile(null);
     setFilePreview(null);
     setIsVideo(false);
-
-    // Limpiar el input de archivo
-    const fileInput = document.querySelector('input[type="file"]');
-    if (fileInput) fileInput.value = '';
+    setFormData(prev => ({
+      ...prev,
+      file: null
+    }));
   };
 
-  // Manejador para enviar el formulario
+  // Handler para envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -356,87 +313,36 @@ export const PostFormModal = ({
                 </label>
               </div>
             ) : (
-              /* Mostrar archivo seleccionado con vista previa */
-              <div className="relative border border-gray-200 rounded-md p-3 bg-gray-50">
-                <div className="flex items-center">
-                  {/* Icono según tipo de archivo */}
+              <div className="relative border rounded-md overflow-hidden">
+                {/* Vista previa del archivo */}
+                <div className="aspect-video bg-gray-100 flex items-center justify-center">
                   {isVideo ? (
-                    <Film className="text-gray-500 mr-2" size={18} />
+                    <div className="flex items-center gap-2 text-gray-500">
+                      <Film size={24} />
+                      <span>Video seleccionado</span>
+                    </div>
                   ) : (
-                    <Image className="text-gray-500 mr-2" size={18} />
+                    <img
+                      src={filePreview}
+                      alt="Vista previa"
+                      className="max-h-full object-contain"
+                    />
                   )}
-                  <span className="text-sm text-gray-600 truncate flex-1">
-                    {file.name}
-                  </span>
-                  {/* Botón para eliminar archivo */}
-                  <button
-                    type="button"
-                    onClick={handleRemoveFile}
-                    className="text-gray-500 hover:text-red-500"
-                    disabled={isSubmitting}
-                  >
-                    <X size={18} />
-                  </button>
                 </div>
 
-                {/* Vista previa del archivo seleccionado */}
-                {filePreview && (
-                  <div className="mt-2 border rounded overflow-hidden max-h-40">
-                    {isVideo ? (
-                      <video
-                        src={filePreview}
-                        controls
-                        className="w-full h-40 object-cover"
-                      />
-                    ) : (
-                      <img
-                        src={filePreview}
-                        alt="Vista previa"
-                        className="w-full h-40 object-cover"
-                      />
-                    )}
-                  </div>
-                )}
+                {/* Botón para eliminar archivo */}
+                <button
+                  type="button"
+                  onClick={handleRemoveFile}
+                  className="absolute top-2 right-2 p-1 bg-white rounded-full shadow-md hover:bg-gray-100"
+                  title="Eliminar archivo"
+                >
+                  <X size={16} />
+                </button>
               </div>
             )}
-
-            {/* Texto informativo sobre el estado del archivo */}
-            <p className="text-xs text-gray-500 italic">
-              {!file ?
-                "No se enviará ningún contenido multimedia con esta publicación." :
-                "Se incluirá este archivo con la publicación."
-              }
-            </p>
           </div>
-
-          {/* Mostrar errores de archivo si existen */}
-          {formErrors.file && (
-            <p className="mt-1 text-sm text-red-600">{formErrors.file}</p>
-          )}
         </div>
-
-        {/* Campo: Selector de grupo (solo para contexto general) */}
-        {context.type === 'general' && groups.length > 0 && (
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Publicar en grupo (opcional)
-            </label>
-            <select
-              name="groupId"
-              value={formData.groupId || ""}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded focus:ring-primary focus:border-primary"
-              disabled={isSubmitting}
-            >
-              <option value="">Publicación general</option>
-              {groups.map(group => (
-                <option key={group.id} value={group.id}>
-                  {group.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
 
         {/* Botones de acción del formulario */}
         <div className="flex justify-end gap-2">
