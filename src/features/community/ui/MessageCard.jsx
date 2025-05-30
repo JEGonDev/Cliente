@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { MoreVertical, Calendar, Trash, Edit, User } from 'lucide-react';
 import { AuthContext } from '../../authentication/context/AuthContext';
-import { formatDistanceToNow } from 'date-fns';
+import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 /**
@@ -30,25 +30,21 @@ export const MessageCard = ({ message, onDelete, onEdit }) => {
   // Verificar si el mensaje es del usuario actual
   const isCurrentUser = user && user.id === userId;
 
-  // Formatear fecha relativa
-  const getRelativeTime = () => {
+  // Formatear hora exacta
+  const getFormattedTime = () => {
     try {
-      return formatDistanceToNow(new Date(messageDate), {
-        addSuffix: true,
-        locale: es
-      });
-    } catch (error) {
-      return 'Hace un momento';
+      return format(new Date(messageDate), 'h:mm a', { locale: es });
+    } catch {
+      return '--:--';
     }
   };
 
   // Simular carga de nombre de usuario
   useEffect(() => {
-    // Intentar obtener el nombre real del usuario del mensaje
     const realName = message.author;
     setUserName(realName || `Usuario #${userId}`);
     setIsLoadingUser(false);
-  }, [userId, message.author, message.userName, message.user]);
+  }, [userId, message.author]);
 
   // Generar avatar con iniciales
   const getAvatarInitials = () => {
@@ -85,7 +81,7 @@ export const MessageCard = ({ message, onDelete, onEdit }) => {
                 {content}
               </p>
             </div>
-            <span className="text-xs text-gray-500 mt-1 ml-2">{getRelativeTime()}</span>
+            <span className="text-xs text-gray-500 mt-1 ml-2">{getFormattedTime()}</span>
           </div>
         </div>
       )}
@@ -100,7 +96,7 @@ export const MessageCard = ({ message, onDelete, onEdit }) => {
               </p>
             </div>
             <div className="flex items-center space-x-2 mt-1 mr-2">
-              <span className="text-xs text-gray-500">{getRelativeTime()}</span>
+              <span className="text-xs text-gray-500">{getFormattedTime()}</span>
               {canDeleteMessage && (
                 <button
                   onClick={handleDelete}
