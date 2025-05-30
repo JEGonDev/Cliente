@@ -67,7 +67,7 @@ export const MessageForm = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="border-t border-gray-200 bg-white px-4 py-3"
+      className="border-t border-gray-200 bg-white px-4 py-3 pb-0"
     >
       <div className={`flex items-end gap-2 rounded-2xl border ${isFocused ? 'border-primary' : 'border-gray-200'} bg-white p-2 transition-colors`}>
         <textarea
