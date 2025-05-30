@@ -189,40 +189,35 @@ export const ThreadDetailView = () => {
 
   return (
     <>
-      <section className="max-w-5xl mx-auto px-4 py-8">
-        {/* Header con información del grupo */}
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6">
-          <div className="flex items-center gap-2 bg-gray-100 rounded px-4 py-2 min-h-[40px] w-full md:w-auto md:flex-1">
-            <Hash className="text-3xl text-gray-700" />
-            <h1 className="text-2xl md:text-3xl font-bold">
-              {selectedGroup?.name || thread.groupName || "Grupo desconocido"}
-            </h1>
-            <ChevronRightIcon className="text-3xl text-gray-700" />
-            <h1 className="text-2xl md:text-3xl font-bold">
-              {thread.title || "Título del hilo no disponible"}
-            </h1>
+      <section className="h-screen flex flex-col">
+        {/* Header con información del grupo y título - Más compacto */}
+        <div className="bg-white border-b border-gray-200 px-4 py-3">
+          <div className="flex items-center gap-2 max-w-5xl mx-auto">
+            <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="mr-2">
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <div className="flex items-center gap-2 text-gray-600">
+              <Hash className="w-5 h-5" />
+              <span className="font-medium">
+                {selectedGroup?.name || thread.groupName || "Grupo desconocido"}
+              </span>
+              <ChevronRightIcon className="w-5 h-5" />
+              <h1 className="font-bold text-gray-900">
+                {thread.title || "Título del hilo no disponible"}
+              </h1>
+            </div>
           </div>
         </div>
 
-        <div className="w-full max-w-4xl mx-auto">
-          {/* Botón volver */}
-          <div className="mb-6">
-            <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Volver
-            </Button>
-          </div>
-
-          {/* Card principal del hilo */}
-          <div className="w-full bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden mb-8">
-            <article className="flex-1 p-6">
-              <div className="flex items-start gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h2 className="text-lg font-bold text-gray-900 truncate">
-                      {thread.title}
-                    </h2>
-                    <time className="text-sm text-gray-500">
+        {/* Contenedor principal con scroll */}
+        <div className="flex-1 overflow-hidden">
+          <div className="h-full max-w-5xl mx-auto px-4 flex flex-col">
+            {/* Tarjeta del hilo - Más compacta */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 my-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
+                    <time>
                       {new Date(thread.creation_date || thread.creationDate || thread.createdAt).toLocaleDateString("es-ES", {
                         year: "numeric",
                         month: "short",
@@ -232,33 +227,31 @@ export const ThreadDetailView = () => {
                       })}
                     </time>
                   </div>
-                  <p className="text-gray-700">{thread.content}</p>
+                  <p className="text-gray-700 text-sm">{thread.content}</p>
                 </div>
+
+                {/* Acciones de administración */}
+                {(canUpdateThread(thread) || canDeleteThread(thread)) && (
+                  <div className="flex gap-2 flex-shrink-0">
+                    {canUpdateThread(thread) && (
+                      <Button variant="ghost" size="sm" onClick={handleEditClick}>
+                        Editar
+                      </Button>
+                    )}
+                    {canDeleteThread(thread) && (
+                      <Button variant="ghost" size="sm" onClick={() => setIsDeleteDialogOpen(true)} className="text-red-600 hover:text-red-700">
+                        Eliminar
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
+            </div>
 
-              {/* Acciones de administración */}
-              {(canUpdateThread(thread) || canDeleteThread(thread)) && (
-                <div className="flex justify-end gap-2 mt-4">
-                  {canUpdateThread(thread) && (
-                    <Button variant="primary" size="sm" onClick={handleEditClick}>
-                      Editar
-                    </Button>
-                  )}
-                  {canDeleteThread(thread) && (
-                    <Button variant="danger" size="sm" onClick={() => setIsDeleteDialogOpen(true)}>
-                      Eliminar
-                    </Button>
-                  )}
-                </div>
-              )}
-            </article>
-          </div>
-
-          {/* Sección de mensajes */}
-          <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
-            <div className="flex flex-col h-[calc(100vh-500px)] max-h-[600px]">
+            {/* Sección de mensajes - Ahora con más espacio */}
+            <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col min-h-0">
               {/* Lista de mensajes - Área scrolleable */}
-              <div className="flex-1 overflow-y-auto mb-4 p-4">
+              <div className="flex-1 overflow-y-auto p-4">
                 <MessageList
                   messages={getMessagesByType('thread', parseInt(threadId))}
                   isLoading={messagesLoading}
@@ -270,7 +263,7 @@ export const ThreadDetailView = () => {
               </div>
 
               {/* Formulario para enviar mensaje - Fijo en la parte inferior */}
-              <div className="flex-shrink-0 border-t border-gray-200 p-4">
+              <div className="border-t border-gray-200">
                 <MessageForm
                   onSendMessage={handleSendMessage}
                   isLoading={false}
