@@ -75,9 +75,6 @@ export const MessageCard = ({ message, onDelete, onEdit }) => {
       {!isCurrentUser && (
         <div className="flex items-start space-x-2 max-w-[80%]">
           <div className="flex-shrink-0">
-            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-medium">
-              {isLoadingUser ? '...' : getAvatarInitials()}
-            </div>
           </div>
           <div className="flex flex-col">
             <div className="bg-secondary border border-blue-100 rounded-2xl rounded-tl-none px-4 py-2 shadow-sm">
@@ -98,9 +95,6 @@ export const MessageCard = ({ message, onDelete, onEdit }) => {
         <div className="flex items-start space-x-2 max-w-[80%]">
           <div className="flex flex-col items-end">
             <div className="bg-primary text-white rounded-2xl rounded-tr-none px-4 py-2">
-              <p className="text-xs font-medium text-white/90 mb-1">
-                Tú
-              </p>
               <p className="text-sm">
                 {content}
               </p>
