@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { useMonitoring } from '../hooks/useMonitoring';
+import { useState } from 'react';
 
 /**
  * Componente para seleccionar el rango de tiempo en visualizaciones en tiempo real
@@ -9,16 +9,10 @@ import { useMonitoring } from '../hooks/useMonitoring';
  * @param {Function} props.onChange - Función a llamar cuando cambia el rango
  */
 export const TimeSelector = ({
-  activeRange,
-  onChange = () => { }
+  activeRange = '6H',
+  onChange = () => {}
 }) => {
-  const {
-    timeRange: contextTimeRange,
-    changeTimeRange
-  } = useMonitoring();
-
-  // Usar el rango del contexto si no se proporciona uno específico
-  const selectedRange = activeRange || contextTimeRange;
+  const [selectedRange, setSelectedRange] = useState(activeRange);
 
   const ranges = [
     { id: '1H', label: '1H' },
@@ -27,10 +21,7 @@ export const TimeSelector = ({
   ];
 
   const handleClick = (id) => {
-    // Actualizar en el contexto
-    changeTimeRange(id);
-
-    // Llamar al callback si se proporciona
+    setSelectedRange(id);
     onChange(id);
   };
 
@@ -40,9 +31,9 @@ export const TimeSelector = ({
         <button
           key={range.id}
           type="button"
-          className={`px-4 py-1 text-sm font-medium transition-colors
+          className={`px-4 py-1 text-sm font-medium 
             ${range.id === selectedRange
-              ? 'bg-primary text-white'
+              ? 'bg-primary text-white' 
               : 'bg-white text-gray-700 hover:bg-gray-50'}
             ${range.id === '1H' ? 'rounded-l-md' : ''}
             ${range.id === '24H' ? 'rounded-r-md' : ''}

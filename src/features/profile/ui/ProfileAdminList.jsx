@@ -201,7 +201,7 @@ export const ProfileAdminList = () => {
           <div className="mt-6 pt-4 border-t space-y-2">
             <button 
               onClick={onEdit}
-              className="w-full flex items-center justify-center px-4 py-2 border border-green-300 rounded-md text-sm text-green-700 hover:bg-green-50"
+              className="w-full flex items-center justify-center px-4 py-2 border border-green-300 rounded-md text-sm text-green hover:bg-primary"
             >
               <Edit size={16} className="mr-2" />
               Editar Usuario

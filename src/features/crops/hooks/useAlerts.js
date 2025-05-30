@@ -18,7 +18,7 @@ export const useAlerts = () => {
   const fetchUserAlerts = useCallback(async () => {
     setLoading(true);
     setError(null);
-
+    
     try {
       const response = await cropService.getUserAlerts();
       setAlerts(response.data || []);
@@ -37,10 +37,10 @@ export const useAlerts = () => {
    */
   const fetchAlertsByCropId = useCallback(async (cropId) => {
     if (!cropId) return;
-
+    
     setLoading(true);
     setError(null);
-
+    
     try {
       const response = await cropService.getAlertsByCropId(cropId);
       setAlerts(response.data || []);
@@ -59,10 +59,10 @@ export const useAlerts = () => {
    */
   const fetchAlertById = useCallback(async (alertId) => {
     if (!alertId) return;
-
+    
     setLoading(true);
     setError(null);
-
+    
     try {
       const response = await cropService.getAlertById(alertId);
       setSelectedAlert(response.data || null);
@@ -82,19 +82,19 @@ export const useAlerts = () => {
    */
   const deleteAlert = useCallback(async (alertId) => {
     if (!alertId) return false;
-
+    
     setLoading(true);
     setError(null);
-
+    
     try {
       await cropService.deleteAlert(alertId);
       // Actualizar la lista de alertas
       setAlerts(prevAlerts => prevAlerts.filter(alert => alert.id !== alertId));
-
+      
       if (selectedAlert && selectedAlert.id === alertId) {
         setSelectedAlert(null);
       }
-
+      
       return true;
     } catch (err) {
       console.error(`Error al eliminar alerta ${alertId}:`, err);

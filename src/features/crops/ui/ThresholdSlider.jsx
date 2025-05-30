@@ -1,5 +1,4 @@
 import PropTypes from 'prop-types';
-import { useMonitoring } from '../hooks/useMonitoring';
 
 /**
  * Componente para mostrar umbrales como sliders visuales siguiendo el diseño específico
@@ -10,102 +9,40 @@ import { useMonitoring } from '../hooks/useMonitoring';
  * @param {Function} props.onEditClick - Callback para abrir modal de edición
  */
 export const ThresholdSlider = ({ thresholds, onEditClick }) => {
-  const { selectedCrop, loading } = useMonitoring();
-
-  // Configuración visual exacta según el diseño
+  // Configuración visual exacta según el diseño de la imagen
   const thresholdConfig = {
     temperature: {
       label: 'Temperatura',
       unit: '°C',
       icon: '🌡️',
-      gradientColors: ['#A0522D', '#E0B887', '#043707'],
+      // Colores del gradiente de la paleta armonizada
+      gradientColors: ['#A0522D', '#E0B887', '#043707'], 
+      // Color para los marcadores (círculos)
       markerColor: '#A0522D'
     },
     humidity: {
       label: 'Humedad',
       unit: '%',
       icon: '💧',
+      // Colores del gradiente de la paleta armonizada
       gradientColors: ['#4F6D7A', '#8A9A5B', '#D0D6B5'],
-      markerColor: '#4F6D7A'
+      markerColor: '#4F6D7A' 
     },
     ec: {
       label: 'Conductividad (EC)',
       unit: '',
       icon: '⚡',
-      gradientColors: ['#2F4F4F', '#556B2F', '#FFD700'],
-      markerColor: '#2F4F4F'
+      // Colores del gradiente de la paleta armonizada
+      gradientColors: ['#2F4F4F', '#556B2F', '#FFD700'], 
+    
+      markerColor: '#2F4F4F' 
     }
   };
 
-  // Mostrar estado de carga
-  if (loading) {
-    return (
-      <div className="bg-white rounded-lg p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-6">Umbrales configurados</h2>
-        <div className="flex items-center justify-center h-32">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-          <span className="ml-2 text-gray-600">Cargando umbrales...</span>
-        </div>
-      </div>
-    );
-  }
-
-  // Mostrar mensaje si no hay cultivo seleccionado
-  if (!selectedCrop) {
-    return (
-      <div className="bg-white rounded-lg p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-6">Umbrales configurados</h2>
-        <div className="text-center py-8">
-          <div className="text-gray-400 text-4xl mb-4">⚙️</div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No hay cultivo seleccionado
-          </h3>
-          <p className="text-gray-600">
-            Selecciona un cultivo para ver y editar sus umbrales configurados
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Verificar si hay umbrales configurados
-  if (!thresholds || Object.keys(thresholds).length === 0) {
-    return (
-      <div className="bg-white rounded-lg p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-6">Umbrales configurados</h2>
-        <div className="text-center py-8">
-          <div className="text-gray-400 text-4xl mb-4">📊</div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No hay umbrales configurados
-          </h3>
-          <p className="text-gray-600 mb-4">
-            Configure umbrales para el cultivo "{selectedCrop.name}" para recibir alertas automáticas
-          </p>
-          <button
-            onClick={onEditClick}
-            className="px-4 py-2 bg-primary text-white rounded hover:bg-green-700 transition-colors"
-          >
-            Configurar umbrales
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-white rounded-lg p-6">
-      {/* Título principal con información del cultivo */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-lg font-medium text-gray-900">Umbrales configurados</h2>
-          <p className="text-sm text-gray-600">
-            Cultivo: <span className="font-medium">{selectedCrop.name}</span>
-          </p>
-        </div>
-        <div className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-          ✓ Configurado
-        </div>
-      </div>
+      {/* Título principal */}
+      <h2 className="text-lg font-medium text-gray-900 mb-6">Umbrales configurados</h2>
 
       {/* Grid de sliders */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
@@ -113,10 +50,7 @@ export const ThresholdSlider = ({ thresholds, onEditClick }) => {
           const config = thresholdConfig[key];
           if (!config) return null;
 
-          // Validar que min y max sean números válidos
-          const minValue = typeof min === 'number' ? min : 0;
-          const maxValue = typeof max === 'number' ? max : 0;
-
+          // Creamos la cadena de estilo para el gradiente lineal
           const gradientStyle = {
             background: `linear-gradient(to right, ${config.gradientColors.join(', ')})`
           };
@@ -131,22 +65,20 @@ export const ThresholdSlider = ({ thresholds, onEditClick }) => {
               {/* Slider visual */}
               <div className="relative">
                 <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                  {/* Barra de color con gradiente*/}
                   <div className="h-full rounded-full" style={gradientStyle}></div>
                 </div>
 
-                {/* Marcadores de posición */}
+                {/* Marcadores de posición (círculos) */}
                 <div className="relative mt-1">
+                  {/* Marcador izquierdo (mínimo)*/}
                   <div className="absolute left-0 transform -translate-x-1/2">
-                    <div
-                      className="w-3 h-3 rounded-full border-2 border-white shadow-sm"
-                      style={{ backgroundColor: config.markerColor }}
-                    ></div>
+                    <div className={`w-3 h-3 rounded-full border-2 border-white shadow-sm`} style={{ backgroundColor: config.markerColor }}></div>
                   </div>
+
+                  {/* Marcador derecho (máximo)*/}
                   <div className="absolute right-0 transform translate-x-1/2">
-                    <div
-                      className="w-3 h-3 rounded-full border-2 border-white shadow-sm"
-                      style={{ backgroundColor: config.markerColor }}
-                    ></div>
+                    <div className={`w-3 h-3 rounded-full border-2 border-white shadow-sm`} style={{ backgroundColor: config.markerColor }}></div>
                   </div>
                 </div>
               </div>
@@ -156,13 +88,13 @@ export const ThresholdSlider = ({ thresholds, onEditClick }) => {
                 <div>
                   <span className="block">Mínimo: </span>
                   <span className="font-medium text-gray-900">
-                    {minValue}{config.unit}
+                    {min}{config.unit}
                   </span>
                 </div>
                 <div className="text-right">
                   <span className="block">Máximo: </span>
                   <span className="font-medium text-gray-900">
-                    {maxValue}{config.unit}
+                    {max}{config.unit}
                   </span>
                 </div>
               </div>
@@ -171,15 +103,7 @@ export const ThresholdSlider = ({ thresholds, onEditClick }) => {
         })}
       </div>
 
-      {/* Información adicional */}
-      <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
-        <p className="text-sm text-blue-700">
-          <strong>💡 Información:</strong> Los umbrales configurados generarán alertas automáticas
-          cuando los valores de los sensores superen estos límites.
-        </p>
-      </div>
-
-      {/* Botón para editar umbrales */}
+      {/* Botón/enlace para editar umbrales */}
       <div className="border-t border-gray-200 pt-4">
         <button
           onClick={onEditClick}
@@ -196,17 +120,17 @@ export const ThresholdSlider = ({ thresholds, onEditClick }) => {
 ThresholdSlider.propTypes = {
   thresholds: PropTypes.shape({
     temperature: PropTypes.shape({
-      min: PropTypes.number,
-      max: PropTypes.number,
-    }),
+      min: PropTypes.number.isRequired,
+      max: PropTypes.number.isRequired,
+    }).isRequired,
     humidity: PropTypes.shape({
-      min: PropTypes.number,
-      max: PropTypes.number,
-    }),
+      min: PropTypes.number.isRequired,
+      max: PropTypes.number.isRequired,
+    }).isRequired,
     ec: PropTypes.shape({
-      min: PropTypes.number,
-      max: PropTypes.number,
-    }),
-  }),
+      min: PropTypes.number.isRequired,
+      max: PropTypes.number.isRequired,
+    }).isRequired,
+  }).isRequired,
   onEditClick: PropTypes.func.isRequired,
 };

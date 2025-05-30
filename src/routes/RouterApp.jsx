@@ -7,6 +7,11 @@ import { LoginPage } from "../features/authentication/pages/LoginPage";
 import { RegisterPage } from "../features/authentication/pages/RegisterPage";
 import { ForgotPasswordPage } from "../features/authentication/pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "../features/authentication/pages/ResetPasswordPage";
+
+// Importaciones del modulo de administracion
+import { AdminPage } from "../pages/AdminPage";
+import { AdminCommunityPage } from "../features/community/pages/AdminCommunityPage";
+import { AdminRegisterForm } from "../features/authentication/layouts/AdminRegisterForm";
 // Importaciones del modulo de comunidad
 import { CommunityLayout } from "../features/community/layouts/CommunityLayout";
 import { PostListView } from "../features/community/pages/PostListView";
@@ -43,6 +48,20 @@ export const RouterApp = () => {
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="*" element={<NotFoundPage />} />
 
+      {/* Rutas del modulo de monitoreo */}
+      <Route path="/monitoring" element={<MonitoringPage />} />
+      <Route path="/monitoring/history" element={<DataHistoryPage />} />
+      <Route path="/monitoring/alerts" element={<AlertsPage />} />
+      <Route path="/monitoring/crops" element={<CropsPage />} />
+      <Route
+        path="/monitoring/crops/:cultivoId/real-time"
+        element={<RealTimeMonitoringPage />}
+      />
+      <Route
+        path="/monitoring/crops/create"
+        element={<CreateCultivationPage />}
+      />
+
       {/* Rutas protegidas: */}
       <Route element={<ProtectedRoutes />}>
         {/* Rutas del modulo educativo */}
@@ -55,14 +74,6 @@ export const RouterApp = () => {
           path="/education/module-form/:moduleId?"
           element={<ModuleFormPage />}
         />
-
-        {/* Rutas del modulo de monitoreo */}
-        <Route path="/monitoring" element={<MonitoringPage />} />
-        <Route path="/monitoring/history" element={<DataHistoryPage />} />
-        <Route path="/monitoring/alerts" element={<AlertsPage />} />
-        <Route path="/monitoring/crops" element={<CropsPage />} />
-        <Route path="/monitoring/crops/:cultivoId/real-time" element={<RealTimeMonitoringPage />} />
-        <Route path="/monitoring/crops/create" element={<CreateCultivationPage />} />
 
         {/* Rutas del modulo de comunidad */}
         <Route path="/comunity" element={<CommunityLayout />}>
@@ -82,6 +93,10 @@ export const RouterApp = () => {
         <Route path="/profile/edit" element={<ProfileEditPage />} />
         <Route path="/profile/admin" element={<ProfileAdminPage />} />
 
+        {/* Rutas del modulo de administracion */}
+        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin/community" element={<AdminCommunityPage />} />
+        <Route path="/admin/register" element={<AdminRegisterForm />} />
       </Route>
     </Routes>
   );
