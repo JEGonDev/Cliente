@@ -154,13 +154,16 @@ export const useForumMessages = () => {
       return false;
     }
 
-    try {
-      // Enviar comando de eliminación por WebSocket
-      websocketService.send('/app/message/forum/delete', {
-        messageId: messageId
-      });
+    if (!messageId) {
+      setError('ID de mensaje inválido');
+      return false;
+    }
 
-      // Actualizar UI optimistamente
+    try {
+      // Llamada al servidor para eliminar el mensaje
+      await communityService.deleteMessage(messageId);
+
+      // Actualizar UI después de borrado exitoso
       setMessages(prevMessages =>
         prevMessages.filter(message =>
           message.id !== messageId && message.message_id !== messageId
