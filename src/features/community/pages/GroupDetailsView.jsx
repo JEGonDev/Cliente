@@ -12,6 +12,8 @@ import { MessageForm } from "../ui/MessageForm";
 import { useCompleteMessage } from "../hooks/useCompleteMessage";
 import { websocketService } from "../../../common/services/webSocketService";
 import { PostFormModal } from "../ui/PostFormModal";
+import { GroupContentList } from "../ui/GroupContentList";
+import { communityService } from "../services/communityService";
 
 export const GroupDetailsView = () => {
   const { groupId } = useParams();
@@ -176,10 +178,27 @@ export const GroupDetailsView = () => {
   };
 
   // Handler para cuando se crea un post
-  const handlePostCreated = (newPost) => {
+  const handlePostCreated = async (newPost) => {
     setShowPostModal(false);
-    // Recargar mensajes después de crear un post
-    loadMessagesByType('group', groupId);
+    try {
+      // Recargar posts del grupo directamente
+      await communityService.getPostsByGroup(groupId);
+      // Recargar la vista completa
+      loadMessagesByType('group', groupId);
+    } catch (error) {
+      console.error('Error al actualizar posts:', error);
+    }
+  };
+
+  // Handler para eliminar post
+  const handleDeletePost = async (postId) => {
+    try {
+      await communityService.deletePost(postId);
+      // Recargar posts después de eliminar
+      loadMessagesByType('group', groupId);
+    } catch (error) {
+      console.error('Error al eliminar post:', error);
+    }
   };
 
   // Estados de carga y error
@@ -346,17 +365,18 @@ export const GroupDetailsView = () => {
       {/* Contenido de las pestañas */}
       <div className="space-y-6">
         {activeTab === "messages" ? (
-          // Sección de Mensajes
+          // Sección de Mensajes y Posts
           <div className="flex flex-col h-[calc(100vh-400px)] max-h-[600px]">
-            {/* Lista de mensajes - Área scrolleable */}
+            {/* Lista unificada de mensajes y posts - Área scrolleable */}
             <div className="flex-1 overflow-y-auto mb-4">
-              <MessageList
+              <GroupContentList
+                groupId={parseInt(groupId)}
                 messages={getMessagesByType('group', parseInt(groupId))}
                 isLoading={messagesLoading}
                 error={messagesError}
                 onDeleteMessage={handleDeleteMessage}
+                onDeletePost={handleDeletePost}
                 onRefresh={() => loadMessagesByType('group', groupId)}
-                autoScroll={true}
               />
             </div>
 
@@ -452,3 +472,5 @@ export const GroupDetailsView = () => {
     </div>
   );
 };
+
+export default GroupDetailsView;

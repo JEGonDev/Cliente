@@ -25,10 +25,18 @@ export const communityService = {
   getPostsByGroup: async (groupId) => {
     try {
       const response = await API.get(`/posts/by-group/${groupId}`);
-      return response.data;
+
+      // Manejar diferentes formatos de respuesta
+      if (response.data && response.data.data) {
+        return { data: response.data.data };
+      } else if (Array.isArray(response.data)) {
+        return { data: response.data };
+      }
+
+      return { data: [] };
     } catch (error) {
       handleError(error, `obtener publicaciones del grupo ${groupId}`);
-      throw error;
+      return { data: [] }; // Retornar array vacío en caso de error
     }
   },
 
