@@ -8,12 +8,12 @@ import { MonitoringContext } from '../context/MonitoringContext';
  */
 export const useMonitoring = () => {
   const context = useContext(MonitoringContext);
-  
+
   if (!context) {
     throw new Error(
       'useMonitoring debe ser utilizado dentro de un MonitoringProvider'
     );
   }
-  
+
   return context;
 };
