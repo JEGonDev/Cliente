@@ -10,6 +10,7 @@ import { ThreadDeleteDialog } from "../ui/ThreadDeleteDialog";
 import { MessageList } from "../ui/MessageList";
 import { MessageForm } from "../ui/MessageForm";
 import { useCompleteMessage } from "../hooks/useCompleteMessage";
+import { websocketService } from "../../../common/services/webSocketService";
 
 export const ThreadDetailView = () => {
   const { isAdmin, isModerator } = useContext(AuthContext);
@@ -21,6 +22,10 @@ export const ThreadDetailView = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Estado para WebSocket
+  const [wsConnected, setWsConnected] = useState(false);
+  const [wsSubscriptionId, setWsSubscriptionId] = useState(null);
 
   // Hook de hilos
   const {
@@ -68,22 +73,71 @@ export const ThreadDetailView = () => {
   // Hook de grupo
   const { selectedGroup, groupLoading, groupError } = useGroup(thread?.groupId);
 
+  // Conectar al WebSocket y suscribirse al topic de mensajes del hilo
+  useEffect(() => {
+    const connectWebSocket = async () => {
+      try {
+        // Conectar al WebSocket si no está conectado
+        if (!websocketService.isConnected()) {
+          await websocketService.connect(
+            () => console.log('✅ WebSocket conectado en ThreadDetailView'),
+            (error) => console.error('❌ Error WebSocket en ThreadDetailView:', error)
+          );
+        }
+
+        // Desuscribirse si ya había una suscripción
+        if (wsSubscriptionId) {
+          websocketService.unsubscribe(wsSubscriptionId);
+        }
+
+        // Suscribirse al topic de mensajes del hilo
+        const subscriptionId = websocketService.subscribe(
+          `/topic/message/thread/${threadId}`,
+          (message) => {
+            console.log('📨 Mensaje recibido por WebSocket:', message);
+            // Recargar mensajes cuando se recibe uno nuevo
+            loadMessagesByType('thread', threadId);
+          }
+        );
+
+        setWsSubscriptionId(subscriptionId);
+        setWsConnected(true);
+      } catch (error) {
+        console.error('Error al conectar WebSocket:', error);
+        setWsConnected(false);
+      }
+    };
+
+    if (threadId) {
+      connectWebSocket();
+    }
+
+    return () => {
+      if (wsSubscriptionId) {
+        websocketService.unsubscribe(wsSubscriptionId);
+      }
+    };
+  }, [threadId]);
+
   // Handlers para mensajes
   const handleSendMessage = async (content) => {
     if (!content?.trim()) return;
 
-    const messageData = {
-      content: content.trim(),
-      threadId: parseInt(threadId),
-      postId: null,
-      groupId: null
-    };
+    try {
+      // Enviar mensaje a través de WebSocket
+      websocketService.send(`/app/message/thread/${threadId}`, {
+        content: content.trim(),
+        threadId: parseInt(threadId),
+        postId: null,
+        groupId: null,
+        messageId: null,
+        creationDate: null
+      });
 
-    const result = await handleCreateMessage(messageData);
-
-    if (result) {
-      // Recargar mensajes después de enviar uno nuevo
-      loadMessagesByType('thread', threadId);
+      return true;
+    } catch (error) {
+      console.error('Error al enviar mensaje:', error);
+      return false;
     }
   };
 
@@ -268,6 +322,7 @@ export const ThreadDetailView = () => {
                   onSendMessage={handleSendMessage}
                   isLoading={false}
                   placeholder="Escribe un mensaje en este hilo..."
+                  disabled={!wsConnected}
                 />
               </div>
             </div>
