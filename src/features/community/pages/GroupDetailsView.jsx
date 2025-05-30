@@ -180,14 +180,8 @@ export const GroupDetailsView = () => {
   // Handler para cuando se crea un post
   const handlePostCreated = async (newPost) => {
     setShowPostModal(false);
-    try {
-      // Recargar posts del grupo directamente
-      await communityService.getPostsByGroup(groupId);
-      // Recargar la vista completa
-      loadMessagesByType('group', groupId);
-    } catch (error) {
-      console.error('Error al actualizar posts:', error);
-    }
+    // No necesitamos hacer nada más aquí, el indicador de nuevo contenido
+    // se activará automáticamente en el siguiente intervalo de verificación
   };
 
   // Handler para eliminar post
@@ -199,6 +193,11 @@ export const GroupDetailsView = () => {
     } catch (error) {
       console.error('Error al eliminar post:', error);
     }
+  };
+
+  // Handler para refrescar el contenido
+  const handleRefreshContent = async () => {
+    await loadMessagesByType('group', groupId);
   };
 
   // Estados de carga y error
@@ -376,7 +375,7 @@ export const GroupDetailsView = () => {
                 error={messagesError}
                 onDeleteMessage={handleDeleteMessage}
                 onDeletePost={handleDeletePost}
-                onRefresh={() => loadMessagesByType('group', groupId)}
+                onRefresh={handleRefreshContent}
               />
             </div>
 

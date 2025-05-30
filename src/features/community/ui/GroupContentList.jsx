@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { MessageCard } from './MessageCard';
 import { PostCard } from './PostCard';
 import { communityService } from '../services/communityService';
+import { RefreshCw } from 'lucide-react';
+import PropTypes from 'prop-types';
 
 /**
  * Componente que muestra una lista unificada de mensajes y posts de un grupo
@@ -19,6 +21,17 @@ export const GroupContentList = ({
   const [posts, setPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [postsError, setPostsError] = useState(null);
+  const [hasNewContent, setHasNewContent] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const contentEndRef = useRef(null);
+  const prevContentLengthRef = useRef(0);
+
+  // Función para hacer scroll al final
+  const scrollToBottom = (behavior = 'smooth') => {
+    if (contentEndRef.current) {
+      contentEndRef.current.scrollIntoView({ behavior, block: 'end' });
+    }
+  };
 
   // Función para cargar posts
   const fetchGroupPosts = async () => {
@@ -26,6 +39,7 @@ export const GroupContentList = ({
     try {
       const response = await communityService.getPostsByGroup(groupId);
       setPosts(response?.data || []);
+      setHasNewContent(false);
     } catch (err) {
       console.error('Error al cargar posts del grupo:', err);
       setPostsError(err?.message || 'Error al cargar publicaciones');
@@ -41,10 +55,51 @@ export const GroupContentList = ({
     }
   }, [groupId]);
 
-  // Recargar posts cuando cambian los mensajes
+  // Verificar si hay nuevo contenido cada 30 segundos
   useEffect(() => {
-    fetchGroupPosts();
-  }, [messages.length]); // Solo recargar cuando cambia el número de mensajes
+    const checkNewContent = async () => {
+      try {
+        const response = await communityService.getPostsByGroup(groupId);
+        const newPosts = response?.data || [];
+        if (newPosts.length > posts.length) {
+          setHasNewContent(true);
+        }
+      } catch (error) {
+        console.error('Error al verificar nuevo contenido:', error);
+      }
+    };
+
+    const interval = setInterval(checkNewContent, 30000);
+    return () => clearInterval(interval);
+  }, [groupId, posts.length]);
+
+  // Efecto para hacer scroll al final cuando hay nuevo contenido
+  useEffect(() => {
+    const currentContentLength = messages.length + posts.length;
+
+    // Si hay más contenido que antes, hacer scroll al final
+    if (currentContentLength > prevContentLengthRef.current) {
+      scrollToBottom();
+    }
+
+    // Actualizar la referencia del tamaño anterior
+    prevContentLengthRef.current = currentContentLength;
+  }, [messages.length, posts.length]);
+
+  // Función para manejar la actualización manual
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await fetchGroupPosts();
+      if (onRefresh) {
+        await onRefresh();
+      }
+      // Hacer scroll al final después de actualizar
+      setTimeout(() => scrollToBottom('auto'), 100);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // Combinar y ordenar mensajes y posts por tiempo de creación
   const sortedContent = React.useMemo(() => {
@@ -94,7 +149,7 @@ export const GroupContentList = ({
         <p className="text-red-500 text-sm mt-1">{error || postsError}</p>
         {onRefresh && (
           <button
-            onClick={onRefresh}
+            onClick={handleRefresh}
             className="mt-3 text-primary hover:text-green-700 text-sm font-medium"
           >
             Intentar nuevamente
@@ -120,25 +175,53 @@ export const GroupContentList = ({
   }
 
   return (
-    <div className="space-y-4">
-      {sortedContent.map((item) => (
-        <div key={`${item.type}-${item.id}`} className="animate-fadeIn">
-          {item.type === 'message' ? (
-            <MessageCard
-              message={item}
-              onDelete={onDeleteMessage}
-            />
-          ) : (
-            <PostCard
-              post={item}
-              onDelete={onDeletePost}
-              showInGroup={true}
-            />
-          )}
-        </div>
-      ))}
+    <div className="relative">
+      {/* Botón de actualización */}
+      {hasNewContent && (
+        <button
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="sticky top-0 left-0 right-0 w-full bg-primary text-white py-2 px-4 rounded-md shadow-md hover:bg-green-600 transition-colors duration-200 flex items-center justify-center gap-2 z-10 mb-4"
+        >
+          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <span>{isRefreshing ? 'Actualizando...' : 'Hay nuevas publicaciones disponibles'}</span>
+        </button>
+      )}
+
+      {/* Lista de contenido */}
+      <div className="space-y-4">
+        {sortedContent.map((item) => (
+          <div key={`${item.type}-${item.id}`} className="animate-fadeIn">
+            {item.type === 'message' ? (
+              <MessageCard
+                message={item}
+                onDelete={onDeleteMessage}
+              />
+            ) : (
+              <PostCard
+                post={item}
+                onDelete={onDeletePost}
+                showInGroup={true}
+              />
+            )}
+          </div>
+        ))}
+        {/* Elemento de referencia para el scroll */}
+        <div ref={contentEndRef} />
+      </div>
     </div>
   );
+};
+
+// Agregar PropTypes para validación
+GroupContentList.propTypes = {
+  groupId: PropTypes.number.isRequired,
+  messages: PropTypes.array,
+  isLoading: PropTypes.bool,
+  error: PropTypes.string,
+  onDeleteMessage: PropTypes.func,
+  onDeletePost: PropTypes.func,
+  onRefresh: PropTypes.func
 };
 
 export default GroupContentList; 
