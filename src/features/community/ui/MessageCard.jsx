@@ -44,9 +44,11 @@ export const MessageCard = ({ message, onDelete, onEdit }) => {
 
   // Simular carga de nombre de usuario
   useEffect(() => {
-    setUserName(message.author || message.userName || `Usuario #${userId}`);
+    // Intentar obtener el nombre real del usuario del mensaje
+    const realName = message.author || message.userName || message.user?.name;
+    setUserName(realName || `Usuario #${userId}`);
     setIsLoadingUser(false);
-  }, [userId, message.author, message.userName]);
+  }, [userId, message.author, message.userName, message.user]);
 
   // Generar avatar con iniciales
   const getAvatarInitials = () => {
@@ -78,15 +80,15 @@ export const MessageCard = ({ message, onDelete, onEdit }) => {
             </div>
           </div>
           <div className="flex flex-col">
-            <div className="flex items-baseline space-x-2">
-              <span className="text-sm font-medium text-gray-900">
+            <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-none px-4 py-2">
+              <p className="text-xs font-medium text-gray-600 mb-1">
                 {isLoadingUser ? 'Cargando...' : userName}
-              </span>
-              <span className="text-xs text-gray-500">{getRelativeTime()}</span>
+              </p>
+              <p className="text-sm text-gray-800">
+                {content}
+              </p>
             </div>
-            <div className="mt-1 bg-gray-100 rounded-2xl rounded-tl-none px-4 py-2 text-sm text-gray-800">
-              {content}
-            </div>
+            <span className="text-xs text-gray-500 mt-1 ml-2">{getRelativeTime()}</span>
           </div>
         </div>
       )}
@@ -95,7 +97,15 @@ export const MessageCard = ({ message, onDelete, onEdit }) => {
       {isCurrentUser && (
         <div className="flex items-start space-x-2 max-w-[80%]">
           <div className="flex flex-col items-end">
-            <div className="flex items-baseline space-x-2 order-1">
+            <div className="bg-primary text-white rounded-2xl rounded-tr-none px-4 py-2">
+              <p className="text-xs font-medium text-white/90 mb-1">
+                Tú
+              </p>
+              <p className="text-sm">
+                {content}
+              </p>
+            </div>
+            <div className="flex items-center space-x-2 mt-1 mr-2">
               <span className="text-xs text-gray-500">{getRelativeTime()}</span>
               {canDeleteMessage && (
                 <button
@@ -105,9 +115,6 @@ export const MessageCard = ({ message, onDelete, onEdit }) => {
                   <Trash className="w-3 h-3" />
                 </button>
               )}
-            </div>
-            <div className="mt-1 bg-primary text-white rounded-2xl rounded-tr-none px-4 py-2 text-sm">
-              {content}
             </div>
           </div>
         </div>
