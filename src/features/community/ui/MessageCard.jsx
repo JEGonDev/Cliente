@@ -19,10 +19,10 @@ export const MessageCard = ({ message, onDelete, onEdit }) => {
   const [isLoadingUser, setIsLoadingUser] = useState(true);
 
   // Identificadores normalizados
-  const messageId = message.id || message.message_id;
-  const userId = message.userId || message.user_id;
+  const messageId = message.id;
+  const userId = message.userId;
   const content = message.content || '';
-  const messageDate = message.messageDate || message.creation_date || message.created_at || new Date().toISOString();
+  const messageDate = message.creationDate || new Date().toISOString();
 
   // Verificación de permisos para eliminar
   const canDeleteMessage = isAdmin || isModerator || (user && user.id === userId);
@@ -45,7 +45,7 @@ export const MessageCard = ({ message, onDelete, onEdit }) => {
   // Simular carga de nombre de usuario
   useEffect(() => {
     // Intentar obtener el nombre real del usuario del mensaje
-    const realName = message.author || message.userName || message.user?.name;
+    const realName = message.author;
     setUserName(realName || `Usuario #${userId}`);
     setIsLoadingUser(false);
   }, [userId, message.author, message.userName, message.user]);
@@ -80,8 +80,8 @@ export const MessageCard = ({ message, onDelete, onEdit }) => {
             </div>
           </div>
           <div className="flex flex-col">
-            <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-none px-4 py-2">
-              <p className="text-xs font-medium text-gray-600 mb-1">
+            <div className="bg-secondary border border-blue-100 rounded-2xl rounded-tl-none px-4 py-2 shadow-sm">
+              <p className="text-xs font-medium text-blue-700 mb-1">
                 {isLoadingUser ? 'Cargando...' : userName}
               </p>
               <p className="text-sm text-gray-800">
