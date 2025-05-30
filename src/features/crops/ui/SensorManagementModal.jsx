@@ -23,6 +23,7 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
   const [activeTab, setActiveTab] = useState('associated'); // 'associated' | 'available' | 'create'
   const [showThresholdConfig, setShowThresholdConfig] = useState(false);
   const [selectedSensorForThresholds, setSelectedSensorForThresholds] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Estados para creación de sensor
   const [newSensorData, setNewSensorData] = useState({
@@ -34,60 +35,104 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
     }
   });
 
+  // Efecto para cargar datos cuando se abre el modal
   useEffect(() => {
-    if (isOpen && crop) {
-      loadSensorsData();
-    }
-  }, [isOpen, crop]);
+    let isMounted = true;
 
-  const loadSensorsData = async () => {
-    try {
-      // Cargar sensores del cultivo
-      await fetchSensorsByCropId(crop.id);
-      
-      // Cargar todos los sensores del usuario
-      await fetchUserSensors();
-      
-      // Filtrar sensores disponibles (no asociados al cultivo actual)
-      const associatedSensorIds = sensors
-        .filter(s => s.cropId === crop.id)
-        .map(s => s.id);
-      
-      const available = sensors.filter(s => !associatedSensorIds.includes(s.id));
-      setAvailableSensors(available);
-      setCropSensors(sensors.filter(s => s.cropId === crop.id));
-    } catch (error) {
-      console.error('Error cargando datos de sensores:', error);
-    }
-  };
+    const loadData = async () => {
+      if (!isOpen || !crop || isLoading) return;
+
+      setIsLoading(true);
+      try {
+        // Cargar datos en paralelo
+        const [cropSensorsResult] = await Promise.all([
+          fetchSensorsByCropId(crop.id),
+          fetchUserSensors()
+        ]);
+
+        if (!isMounted) return;
+
+        // Filtrar sensores disponibles (no asociados al cultivo actual)
+        const associatedSensorIds = sensors
+          .filter(s => s.cropId === crop.id)
+          .map(s => s.id);
+
+        const available = sensors.filter(s => !associatedSensorIds.includes(s.id));
+
+        setAvailableSensors(available);
+        setCropSensors(cropSensorsResult || []);
+      } catch (error) {
+        console.error('Error cargando datos de sensores:', error);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen, crop?.id]);
 
   const handleAssociateSensor = async (sensorId) => {
     try {
+      setIsLoading(true);
       await addSensorToCropWithThresholds(crop.id, sensorId, {
         minThreshold: 0,
         maxThreshold: 100
       });
-      await loadSensorsData();
+
+      // Recargar datos después de asociar
+      const [cropSensorsResult] = await Promise.all([
+        fetchSensorsByCropId(crop.id),
+        fetchUserSensors()
+      ]);
+
+      const associatedSensorIds = cropSensorsResult.map(s => s.id);
+      const available = sensors.filter(s => !associatedSensorIds.includes(s.id));
+
+      setAvailableSensors(available);
+      setCropSensors(cropSensorsResult);
     } catch (error) {
       console.error('Error asociando sensor:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleRemoveSensor = async (sensorId) => {
     if (window.confirm('¿Estás seguro de desasociar este sensor del cultivo?')) {
       try {
+        setIsLoading(true);
         await removeSensorFromCrop(crop.id, sensorId);
-        await loadSensorsData();
+
+        // Recargar datos después de desasociar
+        const [cropSensorsResult] = await Promise.all([
+          fetchSensorsByCropId(crop.id),
+          fetchUserSensors()
+        ]);
+
+        const associatedSensorIds = cropSensorsResult.map(s => s.id);
+        const available = sensors.filter(s => !associatedSensorIds.includes(s.id));
+
+        setAvailableSensors(available);
+        setCropSensors(cropSensorsResult);
       } catch (error) {
         console.error('Error desasociando sensor:', error);
+      } finally {
+        setIsLoading(false);
       }
     }
   };
 
   const handleCreateAndAssociate = async (e) => {
     e.preventDefault();
-    
+
     try {
+      setIsLoading(true);
       const sensorData = {
         sensorType: newSensorData.sensorType,
         unitOfMeasurement: newSensorData.unitOfMeasurement,
@@ -96,18 +141,30 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
       };
 
       await createSensorAndAssociateToCrop(crop.id, sensorData);
-      
+
       // Resetear formulario
       setNewSensorData({
         sensorType: '',
         unitOfMeasurement: '',
         thresholds: { minThreshold: '', maxThreshold: '' }
       });
-      
-      await loadSensorsData();
+
+      // Recargar datos después de crear y asociar
+      const [cropSensorsResult] = await Promise.all([
+        fetchSensorsByCropId(crop.id),
+        fetchUserSensors()
+      ]);
+
+      const associatedSensorIds = cropSensorsResult.map(s => s.id);
+      const available = sensors.filter(s => !associatedSensorIds.includes(s.id));
+
+      setAvailableSensors(available);
+      setCropSensors(cropSensorsResult);
       setActiveTab('associated');
     } catch (error) {
       console.error('Error creando y asociando sensor:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -134,31 +191,28 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
         <div className="flex border-b">
           <button
             onClick={() => setActiveTab('associated')}
-            className={`px-6 py-3 font-medium ${
-              activeTab === 'associated' 
-                ? 'border-b-2 border-primary text-primary' 
+            className={`px-6 py-3 font-medium ${activeTab === 'associated'
+                ? 'border-b-2 border-primary text-primary'
                 : 'text-gray-600 hover:text-gray-800'
-            }`}
+              }`}
           >
             Sensores Asociados ({cropSensors.length})
           </button>
           <button
             onClick={() => setActiveTab('available')}
-            className={`px-6 py-3 font-medium ${
-              activeTab === 'available' 
-                ? 'border-b-2 border-primary text-primary' 
+            className={`px-6 py-3 font-medium ${activeTab === 'available'
+                ? 'border-b-2 border-primary text-primary'
                 : 'text-gray-600 hover:text-gray-800'
-            }`}
+              }`}
           >
             Sensores Disponibles ({availableSensors.length})
           </button>
           <button
             onClick={() => setActiveTab('create')}
-            className={`px-6 py-3 font-medium ${
-              activeTab === 'create' 
-                ? 'border-b-2 border-primary text-primary' 
+            className={`px-6 py-3 font-medium ${activeTab === 'create'
+                ? 'border-b-2 border-primary text-primary'
                 : 'text-gray-600 hover:text-gray-800'
-            }`}
+              }`}
           >
             Crear Nuevo
           </button>
@@ -166,14 +220,14 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
 
         {/* Content */}
         <div className="p-6 max-h-96 overflow-y-auto">
-          {loading && (
+          {(loading || isLoading) && (
             <div className="flex justify-center items-center h-32">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary"></div>
             </div>
           )}
 
           {/* Sensores Asociados */}
-          {activeTab === 'associated' && !loading && (
+          {activeTab === 'associated' && !loading && !isLoading && (
             <div className="space-y-4">
               {cropSensors.length === 0 ? (
                 <div className="text-center py-8">
@@ -214,7 +268,7 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
           )}
 
           {/* Sensores Disponibles */}
-          {activeTab === 'available' && !loading && (
+          {activeTab === 'available' && !loading && !isLoading && (
             <div className="space-y-4">
               {availableSensors.length === 0 ? (
                 <div className="text-center py-8">
@@ -243,7 +297,7 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
           )}
 
           {/* Crear Nuevo Sensor */}
-          {activeTab === 'create' && !loading && (
+          {activeTab === 'create' && !loading && !isLoading && (
             <form onSubmit={handleCreateAndAssociate} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -251,12 +305,12 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
                 </label>
                 <select
                   value={newSensorData.sensorType}
-                  onChange={(e) => setNewSensorData(prev => ({ 
-                    ...prev, 
+                  onChange={(e) => setNewSensorData(prev => ({
+                    ...prev,
                     sensorType: e.target.value,
-                    unitOfMeasurement: e.target.value === 'temperature' ? '°C' : 
-                                     e.target.value === 'humidity' ? '%' : 
-                                     e.target.value === 'ec' ? 'mS/cm' : ''
+                    unitOfMeasurement: e.target.value === 'temperature' ? '°C' :
+                      e.target.value === 'humidity' ? '%' :
+                        e.target.value === 'ec' ? 'mS/cm' : ''
                   }))}
                   className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
                   required
@@ -275,9 +329,9 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
                 <input
                   type="text"
                   value={newSensorData.unitOfMeasurement}
-                  onChange={(e) => setNewSensorData(prev => ({ 
-                    ...prev, 
-                    unitOfMeasurement: e.target.value 
+                  onChange={(e) => setNewSensorData(prev => ({
+                    ...prev,
+                    unitOfMeasurement: e.target.value
                   }))}
                   className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
                   readOnly
@@ -293,8 +347,8 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
                     type="number"
                     step="0.1"
                     value={newSensorData.thresholds.minThreshold}
-                    onChange={(e) => setNewSensorData(prev => ({ 
-                      ...prev, 
+                    onChange={(e) => setNewSensorData(prev => ({
+                      ...prev,
                       thresholds: { ...prev.thresholds, minThreshold: e.target.value }
                     }))}
                     className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
@@ -309,8 +363,8 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
                     type="number"
                     step="0.1"
                     value={newSensorData.thresholds.maxThreshold}
-                    onChange={(e) => setNewSensorData(prev => ({ 
-                      ...prev, 
+                    onChange={(e) => setNewSensorData(prev => ({
+                      ...prev,
                       thresholds: { ...prev.thresholds, maxThreshold: e.target.value }
                     }))}
                     className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
