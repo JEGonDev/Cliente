@@ -76,13 +76,31 @@ export const RealTimeLayout = () => {
   // Función para guardar umbrales
   const handleSaveThresholds = useCallback(async (newThresholds) => {
     try {
-      await updateAllThresholds(selectedCrop.id, newThresholds);
-      setLocalThresholds(newThresholds);
-      setIsThresholdModalOpen(false);
+      setStatus('loading');
+      const success = await updateAllThresholds(selectedCrop.id, newThresholds);
+
+      if (success) {
+        setStatus('success');
+        setLocalThresholds(newThresholds);
+        setIsThresholdModalOpen(false);
+
+        // Recargar los umbrales después de un breve delay
+        setTimeout(() => {
+          loadThresholds(selectedCrop.id);
+        }, 500);
+      } else {
+        setStatus('error');
+      }
     } catch (error) {
       console.error('Error updating thresholds:', error);
+      setStatus('error');
+    } finally {
+      // Limpiar el estado después de 3 segundos
+      setTimeout(() => {
+        setStatus(null);
+      }, 3000);
     }
-  }, [selectedCrop, updateAllThresholds]);
+  }, [selectedCrop?.id, updateAllThresholds, loadThresholds]);
 
   // Obtener datos de monitoreo en tiempo real
   const getCurrentSensorData = () => {

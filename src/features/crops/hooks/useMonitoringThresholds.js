@@ -113,12 +113,55 @@ export const useMonitoringThresholds = () => {
   /**
    * Actualiza todos los umbrales de una vez
    * 
+   * @param {number} cropId - ID del cultivo
    * @param {Object} newThresholds - Objeto con todos los umbrales
    */
-  const updateAllThresholds = useCallback((newThresholds) => {
-    if (!newThresholds) return;
-    setThresholds(newThresholds);
-  }, []);
+  const updateAllThresholds = useCallback(async (cropId, newThresholds) => {
+    if (!cropId || !newThresholds) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Obtener los sensores del cultivo
+      const response = await cropService.getSensorsByCropId(cropId);
+      const sensors = response.data || [];
+
+      // Para cada sensor, actualizar sus umbrales
+      for (const sensor of sensors) {
+        const sensorType = sensor.sensorType?.toLowerCase();
+        if (!sensorType) continue;
+
+        let type = '';
+        if (sensorType.includes('temperatura')) type = 'temperature';
+        else if (sensorType.includes('humedad')) type = 'humidity';
+        else if (sensorType.includes('conductividad') || sensorType.includes('ec')) type = 'ec';
+        else continue;
+
+        // Si tenemos umbrales para este tipo de sensor
+        if (newThresholds[type]) {
+          await cropService.updateSensorThresholds(cropId, sensor.id, {
+            minThreshold: newThresholds[type].min,
+            maxThreshold: newThresholds[type].max
+          });
+        }
+      }
+
+      // Actualizar el estado local
+      setThresholds(newThresholds);
+
+      // Recargar los umbrales para asegurarnos de tener los datos más recientes
+      await loadThresholds(cropId);
+
+      return true;
+    } catch (err) {
+      console.error('Error al actualizar umbrales:', err);
+      setError(err.message || 'Error al actualizar los umbrales.');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [loadThresholds]);
 
   return {
     thresholds,
