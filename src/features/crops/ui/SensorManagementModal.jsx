@@ -49,7 +49,7 @@ ConfirmationModal.propTypes = {
   sensorType: PropTypes.string
 };
 
-export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
+export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop }) => {
   const {
     sensors,
     fetchSensorsByCropId,
@@ -117,34 +117,25 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('Iniciando proceso de eliminación del sensor:', sensorId);
 
-      // Llamar al servicio para eliminar el sensor
-      const result = await removeSensorAndDelete(crop.id, sensorId);
-      console.log('Resultado de la eliminación:', result);
+      await removeSensorAndDelete(crop.id, sensorId);
 
       // Recargar datos después de eliminar
-      console.log('Recargando lista de sensores...');
       const cropSensorsResult = await fetchSensorsByCropId(crop.id);
-
-      if (!cropSensorsResult) {
-        console.log('No se recibieron datos de sensores actualizados');
-        setCropSensors([]);
-      } else {
-        console.log('Nuevos datos de sensores recibidos:', cropSensorsResult);
-        setCropSensors(Array.isArray(cropSensorsResult) ? cropSensorsResult : []);
-      }
+      setCropSensors(Array.isArray(cropSensorsResult) ? cropSensorsResult : []);
 
       // Cerrar el modal de confirmación
       setConfirmationModal({ isOpen: false, sensorId: null, sensorType: '' });
 
-      // Mostrar mensaje de éxito
+      // Notificar al padre del cambio
+      onSensorChange?.();
+
       setError({ type: 'success', message: 'Sensor eliminado correctamente' });
     } catch (error) {
       console.error('Error completo al eliminar sensor:', error);
       setError({
         type: 'error',
-        message: error.response?.data?.message || 'Error al eliminar el sensor. Por favor, intente de nuevo.'
+        message: error.response?.data?.message || 'Error al eliminar el sensor'
       });
     } finally {
       setIsLoading(false);
@@ -157,6 +148,7 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
     try {
       setIsLoading(true);
       setError(null);
+
       const sensorData = {
         sensorType: newSensorData.sensorType,
         unitOfMeasurement: newSensorData.unitOfMeasurement,
@@ -173,13 +165,21 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
         thresholds: { minThreshold: '', maxThreshold: '' }
       });
 
-      // Recargar datos después de crear y asociar
+      // Recargar datos
       const cropSensorsResult = await fetchSensorsByCropId(crop.id);
-      setCropSensors(cropSensorsResult || []);
+      setCropSensors(Array.isArray(cropSensorsResult) ? cropSensorsResult : []);
+
+      // Notificar al padre del cambio
+      onSensorChange?.();
+
       setActiveTab('associated');
+      setError({ type: 'success', message: 'Sensor creado y asociado correctamente' });
     } catch (error) {
       console.error('Error creando y asociando sensor:', error);
-      setError('Error al crear y asociar el sensor. Por favor, intente de nuevo.');
+      setError({
+        type: 'error',
+        message: error.response?.data?.message || 'Error al crear y asociar el sensor'
+      });
     } finally {
       setIsLoading(false);
     }
@@ -439,6 +439,7 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
 SensorManagementModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
+  onSensorChange: PropTypes.func,
   crop: PropTypes.shape({
     id: PropTypes.number.isRequired,
     name: PropTypes.string.isRequired

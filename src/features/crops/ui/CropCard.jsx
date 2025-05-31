@@ -1,70 +1,83 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ChevronRight, Droplets, Thermometer, Pencil, Cpu } from 'lucide-react';
 import PropTypes from 'prop-types';
 import { CropStatusBadge } from './CropStatusBadge';
 import { EditCropModal } from './EditCropModal';
 import { SensorManagementModal } from './SensorManagementModal';
+import { useMonitoring } from '../hooks/useMonitoring';
 
 export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSensorModalOpen, setIsSensorModalOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [cropSensors, setCropSensors] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Función para obtener datos de sensores de manera flexible
-  const getSensorData = () => {
-    // Si sensors es un objeto (formato mock)
-    if (crop.sensors && typeof crop.sensors === 'object' && !Array.isArray(crop.sensors)) {
-      return {
-        humidity: crop.sensors.humidity || 0,
-        temperature: crop.sensors.temperature || 0,
-        conductivity: crop.sensors.conductivity || crop.sensors.ec || 0
-      };
+  const { fetchSensorsByCropId } = useMonitoring();
+
+  // Función para cargar los sensores
+  const loadSensors = async () => {
+    if (!crop?.id) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetchSensorsByCropId(crop.id);
+      const sensors = Array.isArray(response) ? response : [];
+      setCropSensors(sensors);
+    } catch (error) {
+      console.error('Error al cargar sensores:', error);
+      setError('Error al cargar los sensores');
+      setCropSensors([]);
+    } finally {
+      setIsLoading(false);
     }
-
-    // Si sensors es un array (formato backend)
-    if (Array.isArray(crop.sensors)) {
-      const sensorData = { humidity: 0, temperature: 0, conductivity: 0 };
-
-      crop.sensors.forEach(sensor => {
-        if (sensor.lastReading) {
-          const type = sensor.type.toLowerCase();
-          if (type.includes('humidity')) {
-            sensorData.humidity = sensor.lastReading;
-          } else if (type.includes('temperature')) {
-            sensorData.temperature = sensor.lastReading;
-          } else if (type.includes('ec') || type.includes('conductivity')) {
-            sensorData.conductivity = sensor.lastReading;
-          }
-        }
-      });
-
-      return sensorData;
-    }
-
-    // Valores por defecto
-    return { humidity: 0, temperature: 0, conductivity: 0 };
   };
+
+  // Efecto para cargar los sensores del cultivo
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchSensors = async () => {
+      if (!isMounted) return;
+      await loadSensors();
+    };
+
+    fetchSensors();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [crop?.id, fetchSensorsByCropId]);
+
+  // Procesar datos de sensores de manera eficiente usando useMemo
+  const sensorData = useMemo(() => {
+    const data = { humidity: 0, temperature: 0, conductivity: 0 };
+
+    cropSensors.forEach(sensor => {
+      const type = sensor.sensorType.toLowerCase();
+      if (type.includes('humedad')) {
+        data.humidity = sensor.lastReading || 0;
+      } else if (type.includes('temperatura')) {
+        data.temperature = sensor.lastReading || 0;
+      } else if (type.includes('conductividad') || type.includes('ec')) {
+        data.conductivity = sensor.lastReading || 0;
+      }
+    });
+
+    return data;
+  }, [cropSensors]);
 
   // Función para obtener el número de alertas
   const getAlertsCount = () => {
-    if (typeof crop.alerts === 'number') {
-      return crop.alerts;
-    }
-    if (Array.isArray(crop.alerts)) {
-      return crop.alerts.length;
-    }
-    return 0;
+    return 0; // Por ahora retornamos 0 ya que no hay integración con alertas
   };
 
   // Función para obtener el número de sensores
   const getSensorsCount = () => {
-    if (Array.isArray(crop.sensors)) {
-      return crop.sensors.length;
-    }
-    if (crop.sensors && typeof crop.sensors === 'object') {
-      return Object.keys(crop.sensors).length;
-    }
-    return 0;
+    return cropSensors.length;
   };
 
   // Función para normalizar el status
@@ -109,9 +122,10 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
   const handleSensorModalClose = () => {
     setIsSensorModalOpen(false);
     onModalClose?.();
+    // Recargar los sensores cuando se cierra el modal
+    loadSensors();
   };
 
-  const sensorData = getSensorData();
   const alertsCount = getAlertsCount();
   const sensorsCount = getSensorsCount();
   const normalizedStatus = getNormalizedStatus();
@@ -135,6 +149,7 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
             }}
             className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
             title="Gestionar sensores"
+            disabled={isLoading}
           >
             <Cpu className="h-4 w-4" />
           </button>
@@ -206,7 +221,17 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
           <div className="flex items-center gap-4 text-sm text-gray-600">
             <div className="flex items-center gap-1">
               <Cpu className="h-4 w-4" />
-              <span>{sensorsCount} sensores</span>
+              {isLoading ? (
+                <span className="inline-flex items-center">
+                  <svg className="animate-spin h-4 w-4 text-gray-500 mr-1" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Cargando...
+                </span>
+              ) : (
+                <span>{sensorsCount} sensores</span>
+              )}
             </div>
             <div className={`flex items-center gap-1 ${alertsCount > 0 ? 'text-red-600' : ''}`}>
               <span className="text-lg">🔔</span>
@@ -223,9 +248,14 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
 
         {/* Indicador de actividad reciente */}
         <div className="absolute bottom-3 left-3">
-          <div className={`w-2 h-2 rounded-full ${normalizedStatus === 'active' ? 'bg-green-400 animate-pulse' : 'bg-gray-300'
-            }`}></div>
+          <div className={`w-2 h-2 rounded-full ${normalizedStatus === 'active' ? 'bg-green-400 animate-pulse' : 'bg-gray-300'}`}></div>
         </div>
+
+        {error && (
+          <div className="absolute bottom-0 left-0 right-0 bg-red-50 text-red-600 text-sm p-2 rounded-b-lg">
+            {error}
+          </div>
+        )}
       </div>
 
       {/* Modal de edición */}
@@ -239,6 +269,7 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
       <SensorManagementModal
         isOpen={isSensorModalOpen}
         onClose={handleSensorModalClose}
+        onSensorChange={loadSensors}
         crop={{
           id: crop.id,
           name: crop.cropName || crop.name || 'Sin nombre'
@@ -264,22 +295,6 @@ CropCard.propTypes = {
         id: PropTypes.number,
         name: PropTypes.string
       })
-    ]),
-    sensors: PropTypes.oneOfType([
-      PropTypes.shape({
-        humidity: PropTypes.number,
-        temperature: PropTypes.number,
-        conductivity: PropTypes.number
-      }),
-      PropTypes.arrayOf(PropTypes.object)
-    ]),
-    alerts: PropTypes.oneOfType([
-      PropTypes.arrayOf(
-        PropTypes.shape({
-          id: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
-        })
-      ),
-      PropTypes.number
     ])
   }).isRequired,
   onClick: PropTypes.func.isRequired,
