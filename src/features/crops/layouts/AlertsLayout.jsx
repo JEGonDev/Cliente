@@ -339,9 +339,6 @@ export const AlertsLayout = ({ alerts = [] }) => {
           </div>
         )}
       </div>
-
-      {/* Configuración de umbrales */}
-      <ThresholdConfig />
     </div>
   );
 };
