@@ -54,19 +54,43 @@ export const RealTimeChart = () => {
     }
   }, [selectedCrop?.id, getReadingsByCropId]);
 
+  // Efecto para simular actualizaciones cada 15 minutos
+  useEffect(() => {
+    if (selectedCrop?.id) {
+      const interval = setInterval(() => {
+        getReadingsByCropId(selectedCrop.id)
+          .then(response => {
+            setManualReadings(response.data || []);
+          })
+          .catch(error => {
+            console.error('Error al obtener lecturas:', error);
+          });
+      }, 15 * 60 * 1000); // 15 minutos en milisegundos
+
+      return () => clearInterval(interval);
+    }
+  }, [selectedCrop?.id, getReadingsByCropId]);
+
   // Procesar datos del contexto para el gráfico
   const chartData = useMemo(() => {
     const timePoints = new Map();
 
     // Función para procesar una lectura
     const processReading = (reading, sensorType) => {
-      const time = new Date(reading.readingDate).toLocaleTimeString('es-ES', {
+      const date = new Date(reading.readingDate);
+      const time = date.toLocaleTimeString('es-ES', {
         hour: '2-digit',
         minute: '2-digit'
       });
 
       if (!timePoints.has(time)) {
-        timePoints.set(time, { time });
+        timePoints.set(time, {
+          time,
+          timestamp: date.getTime(), // Agregamos timestamp para ordenar correctamente
+          temp: null,
+          hum: null,
+          cond: null
+        });
       }
 
       const point = timePoints.get(time);
@@ -108,10 +132,51 @@ export const RealTimeChart = () => {
       processReading(reading, reading.sensorType);
     });
 
-    // Convertir el Map a array y ordenar por tiempo
-    return Array.from(timePoints.values()).sort((a, b) => {
-      return new Date(`1970/01/01 ${a.time}`) - new Date(`1970/01/01 ${b.time}`);
-    });
+    // Convertir el Map a array y ordenar por timestamp
+    const sortedData = Array.from(timePoints.values())
+      .sort((a, b) => a.timestamp - b.timestamp);
+
+    // Interpolar valores faltantes
+    const interpolatedData = [];
+    for (let i = 0; i < sortedData.length; i++) {
+      const current = sortedData[i];
+      interpolatedData.push(current);
+
+      // Si hay un siguiente punto y no es el último
+      if (i < sortedData.length - 1) {
+        const next = sortedData[i + 1];
+        const timeDiff = next.timestamp - current.timestamp;
+
+        // Si hay un gap significativo entre lecturas (más de 15 minutos)
+        if (timeDiff > 15 * 60 * 1000) {
+          // Interpolar valores
+          const steps = Math.floor(timeDiff / (15 * 60 * 1000));
+          for (let j = 1; j <= steps; j++) {
+            const fraction = j / (steps + 1);
+            const interpolatedTime = new Date(current.timestamp + timeDiff * fraction);
+            const interpolatedPoint = {
+              time: interpolatedTime.toLocaleTimeString('es-ES', {
+                hour: '2-digit',
+                minute: '2-digit'
+              }),
+              timestamp: interpolatedTime.getTime(),
+              temp: current.temp !== null && next.temp !== null
+                ? current.temp + (next.temp - current.temp) * fraction
+                : null,
+              hum: current.hum !== null && next.hum !== null
+                ? current.hum + (next.hum - current.hum) * fraction
+                : null,
+              cond: current.cond !== null && next.cond !== null
+                ? current.cond + (next.cond - current.cond) * fraction
+                : null
+            };
+            interpolatedData.push(interpolatedPoint);
+          }
+        }
+      }
+    }
+
+    return interpolatedData;
   }, [realTimeData, sensors, manualReadings]);
 
   // Estado de carga
@@ -149,6 +214,15 @@ export const RealTimeChart = () => {
   // Obtener umbrales actuales
   const currentThresholds = thresholds || {};
 
+  // Modificar las propiedades de las líneas en los gráficos
+  const lineProps = {
+    type: "monotone",
+    strokeWidth: 2,
+    dot: { r: 3 },
+    activeDot: { r: 5 },
+    connectNulls: true // Cambiar a true para conectar puntos no nulos
+  };
+
   return (
     <div className="w-full space-y-6">
       {/* Grid para humedad y temperatura */}
@@ -163,7 +237,12 @@ export const RealTimeChart = () => {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="time" stroke="#4b5563" tick={{ fontSize: 12 }} />
+                <XAxis
+                  dataKey="time"
+                  stroke="#4b5563"
+                  tick={{ fontSize: 12 }}
+                  interval="preserveStartEnd"
+                />
                 <YAxis
                   domain={[
                     dataMin => Math.max(0, Math.floor(dataMin - 5)),
@@ -176,7 +255,6 @@ export const RealTimeChart = () => {
                 <Tooltip content={<CustomTooltip />} />
                 <Legend verticalAlign="bottom" height={36} />
 
-                {/* Líneas de umbral de humedad */}
                 {currentThresholds.humidity && (
                   <>
                     <ReferenceLine
@@ -197,14 +275,10 @@ export const RealTimeChart = () => {
                 )}
 
                 <Line
-                  type="monotone"
+                  {...lineProps}
                   dataKey="hum"
                   name="humedad"
                   stroke="#3b82f6"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 5 }}
-                  connectNulls={false}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -221,7 +295,12 @@ export const RealTimeChart = () => {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="time" stroke="#4b5563" tick={{ fontSize: 12 }} />
+                <XAxis
+                  dataKey="time"
+                  stroke="#4b5563"
+                  tick={{ fontSize: 12 }}
+                  interval="preserveStartEnd"
+                />
                 <YAxis
                   domain={[
                     dataMin => Math.max(0, Math.floor(dataMin - 2)),
@@ -234,7 +313,6 @@ export const RealTimeChart = () => {
                 <Tooltip content={<CustomTooltip />} />
                 <Legend verticalAlign="bottom" height={36} />
 
-                {/* Líneas de umbral de temperatura */}
                 {currentThresholds.temperature && (
                   <>
                     <ReferenceLine
@@ -255,14 +333,10 @@ export const RealTimeChart = () => {
                 )}
 
                 <Line
-                  type="monotone"
+                  {...lineProps}
                   dataKey="temp"
                   name="temperatura"
                   stroke="#ef4444"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 5 }}
-                  connectNulls={false}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -280,7 +354,12 @@ export const RealTimeChart = () => {
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="time" stroke="#4b5563" tick={{ fontSize: 12 }} />
+              <XAxis
+                dataKey="time"
+                stroke="#4b5563"
+                tick={{ fontSize: 12 }}
+                interval="preserveStartEnd"
+              />
               <YAxis
                 domain={[
                   dataMin => Math.max(0, Math.floor(dataMin - 0.2)),
@@ -293,7 +372,6 @@ export const RealTimeChart = () => {
               <Tooltip content={<CustomTooltip />} />
               <Legend verticalAlign="bottom" height={36} />
 
-              {/* Líneas de umbral de EC */}
               {currentThresholds.ec && (
                 <>
                   <ReferenceLine
@@ -314,14 +392,10 @@ export const RealTimeChart = () => {
               )}
 
               <Line
-                type="monotone"
+                {...lineProps}
                 dataKey="cond"
                 name="conductividad"
                 stroke="#10b981"
-                strokeWidth={2}
-                dot={{ r: 3 }}
-                activeDot={{ r: 5 }}
-                connectNulls={false}
               />
             </LineChart>
           </ResponsiveContainer>
