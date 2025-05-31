@@ -32,12 +32,7 @@ export const RealTimeLayout = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [localThresholds, setLocalThresholds] = useState({
-    temperature: { min: 18.0, max: 26.0 },
-    humidity: { min: 60, max: 80 },
-    ec: { min: 1.0, max: 1.6 },
-  });
-
+  const [localThresholds, setLocalThresholds] = useState({});
   const [status, setStatus] = useState(null);
   const [isThresholdModalOpen, setIsThresholdModalOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('monitoring'); // 'monitoring' | 'manual-readings'
@@ -58,6 +53,9 @@ export const RealTimeLayout = () => {
       setLocalThresholds(thresholds);
     }
   }, [thresholds]);
+
+  // Verificar si hay sensores configurados
+  const hasSensorsConfigured = sensors && sensors.length > 0;
 
   // Función para cambiar de sección
   const handleSectionChange = useCallback((section) => {
@@ -179,6 +177,30 @@ export const RealTimeLayout = () => {
             className="mt-4 inline-block bg-primary text-white px-4 py-2 rounded hover:bg-green-700"
           >
             Ver cultivos
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Mensaje cuando no hay sensores configurados
+  if (!hasSensorsConfigured) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+          <div className="text-gray-400 text-5xl mb-4">🌱</div>
+          <h3 className="text-xl font-medium text-gray-900 mb-2">
+            No hay sensores configurados
+          </h3>
+          <p className="text-gray-600 mb-6">
+            Este cultivo aún no tiene sensores asociados. Necesitas configurar sensores para poder establecer umbrales y monitorear en tiempo real.
+          </p>
+          <Link
+            to={`/monitoring/crops/${selectedCrop.id}/sensors`}
+            className="inline-flex items-center px-4 py-2 bg-primary text-white rounded hover:bg-green-700 transition-colors"
+          >
+            <span className="mr-2">➕</span>
+            Configurar sensores
           </Link>
         </div>
       </div>
