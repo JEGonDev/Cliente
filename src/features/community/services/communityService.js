@@ -25,10 +25,18 @@ export const communityService = {
   getPostsByGroup: async (groupId) => {
     try {
       const response = await API.get(`/posts/by-group/${groupId}`);
-      return response.data;
+
+      // Manejar diferentes formatos de respuesta
+      if (response.data && response.data.data) {
+        return { data: response.data.data };
+      } else if (Array.isArray(response.data)) {
+        return { data: response.data };
+      }
+
+      return { data: [] };
     } catch (error) {
       handleError(error, `obtener publicaciones del grupo ${groupId}`);
-      throw error;
+      return { data: [] }; // Retornar array vacío en caso de error
     }
   },
 
@@ -91,9 +99,20 @@ export const communityService = {
   getAllPosts: async () => {
     try {
       const response = await API.get(ENDPOINTS.POSTS);
-      return response.data;
+
+      // Manejar diferentes formatos de respuesta
+      let posts = [];
+      if (response.data && response.data.data) {
+        posts = response.data.data;
+      } else if (Array.isArray(response.data)) {
+        posts = response.data;
+      }
+
+      // Filtrar solo los posts que no pertenecen a hilos ni grupos
+      return posts.filter(post => !post.threadId && !post.groupId);
     } catch (error) {
       handleError(error, "obtener todos los posts");
+      return []; // Retornar array vacío en caso de error
     }
   },
 

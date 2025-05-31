@@ -11,6 +11,9 @@ import { MessageList } from "../ui/MessageList";
 import { MessageForm } from "../ui/MessageForm";
 import { useCompleteMessage } from "../hooks/useCompleteMessage";
 import { websocketService } from "../../../common/services/webSocketService";
+import { PostFormModal } from "../ui/PostFormModal";
+import { GroupContentList } from "../ui/GroupContentList";
+import { communityService } from "../services/communityService";
 
 export const GroupDetailsView = () => {
   const { groupId } = useParams();
@@ -21,6 +24,7 @@ export const GroupDetailsView = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [activeTab, setActiveTab] = useState("messages"); // "messages" o "threads"
+  const [showPostModal, setShowPostModal] = useState(false);
 
   // Estado para WebSocket
   const [wsConnected, setWsConnected] = useState(false);
@@ -168,6 +172,34 @@ export const GroupDetailsView = () => {
     }
   };
 
+  // Handler para abrir el modal de posts
+  const handleAttachmentClick = () => {
+    setShowPostModal(true);
+  };
+
+  // Handler para cuando se crea un post
+  const handlePostCreated = async (newPost) => {
+    setShowPostModal(false);
+    // No necesitamos hacer nada más aquí, el indicador de nuevo contenido
+    // se activará automáticamente en el siguiente intervalo de verificación
+  };
+
+  // Handler para eliminar post
+  const handleDeletePost = async (postId) => {
+    try {
+      await communityService.deletePost(postId);
+      // Recargar posts después de eliminar
+      loadMessagesByType('group', groupId);
+    } catch (error) {
+      console.error('Error al eliminar post:', error);
+    }
+  };
+
+  // Handler para refrescar el contenido
+  const handleRefreshContent = async () => {
+    await loadMessagesByType('group', groupId);
+  };
+
   // Estados de carga y error
   if (groupLoading) {
     return (
@@ -304,8 +336,8 @@ export const GroupDetailsView = () => {
           <button
             onClick={() => setActiveTab("messages")}
             className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === "messages"
-                ? "border-primary text-primary"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              ? "border-primary text-primary"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
           >
             <div className="flex items-center space-x-2">
@@ -317,8 +349,8 @@ export const GroupDetailsView = () => {
           <button
             onClick={() => setActiveTab("threads")}
             className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === "threads"
-                ? "border-primary text-primary"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              ? "border-primary text-primary"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
           >
             <div className="flex items-center space-x-2">
@@ -332,17 +364,18 @@ export const GroupDetailsView = () => {
       {/* Contenido de las pestañas */}
       <div className="space-y-6">
         {activeTab === "messages" ? (
-          // Sección de Mensajes
+          // Sección de Mensajes y Posts
           <div className="flex flex-col h-[calc(100vh-400px)] max-h-[600px]">
-            {/* Lista de mensajes - Área scrolleable */}
+            {/* Lista unificada de mensajes y posts - Área scrolleable */}
             <div className="flex-1 overflow-y-auto mb-4">
-              <MessageList
+              <GroupContentList
+                groupId={parseInt(groupId)}
                 messages={getMessagesByType('group', parseInt(groupId))}
                 isLoading={messagesLoading}
                 error={messagesError}
                 onDeleteMessage={handleDeleteMessage}
-                onRefresh={() => loadMessagesByType('group', groupId)}
-                autoScroll={true}
+                onDeletePost={handleDeletePost}
+                onRefresh={handleRefreshContent}
               />
             </div>
 
@@ -353,6 +386,8 @@ export const GroupDetailsView = () => {
                 isLoading={false}
                 placeholder="Comparte algo con el grupo..."
                 disabled={!wsConnected}
+                showAttachment={true}
+                onAttachmentClick={handleAttachmentClick}
               />
             </div>
           </div>
@@ -420,6 +455,21 @@ export const GroupDetailsView = () => {
           onCancel={() => setShowDeleteConfirmation(false)}
         />
       )}
+
+      {/* Modal para crear post */}
+      {showPostModal && (
+        <PostFormModal
+          onClose={() => setShowPostModal(false)}
+          onPostCreated={handlePostCreated}
+          context={{
+            type: 'group',
+            id: parseInt(groupId),
+            name: group.name
+          }}
+        />
+      )}
     </div>
   );
 };
+
+export default GroupDetailsView;
