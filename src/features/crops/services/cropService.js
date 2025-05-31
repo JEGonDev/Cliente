@@ -485,5 +485,61 @@ export const cropService = {
       console.error('Error al obtener historial de lecturas:', error);
       throw error;
     }
-  }
+  },
+
+  // ==================== Operaciones para los umbrales de sensores ====================
+
+  /**
+   * Obtiene todos los sensores con sus umbrales configurados para un cultivo específico
+   * 
+   * @param {number} cropId - ID del cultivo
+   * @returns {Promise<Array>} - Lista de sensores con umbrales del cultivo
+   */
+  getThresholdsByCropId: async (cropId) => {
+    try {
+      console.log('Calling getThresholdsByCropId API endpoint for crop:', cropId);
+      const response = await API.get(`/sensors/crop/${cropId}/thresholds`);
+      console.log('Raw API Response:', response);
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener umbrales del cultivo:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene los umbrales de un sensor específico en un cultivo específico
+   * 
+   * @param {number} cropId - ID del cultivo
+   * @param {number} sensorId - ID del sensor
+   * @returns {Promise<Object>} - Información del sensor con sus umbrales
+   */
+  getThresholdsByCropIdAndSensorId: async (cropId, sensorId) => {
+    try {
+      console.log(`Calling getThresholdsByCropIdAndSensorId API endpoint for crop: ${cropId}, sensor: ${sensorId}`);
+      const response = await API.get(`/sensors/crop/${cropId}/sensor/${sensorId}/thresholds`);
+      console.log('Raw API Response:', response);
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener umbrales del sensor:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene todos los umbrales de sensores para los cultivos del usuario autenticado
+   * 
+   * @returns {Promise<Object>} - Umbrales agrupados por cultivo
+   */
+  getUserCropThresholds: async () => {
+    try {
+      console.log('Calling getUserCropThresholds API endpoint...');
+      const response = await API.get('/sensors/user/thresholds');
+      console.log('Raw API Response from getUserCropThresholds:', response);
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener umbrales de cultivos del usuario:', error);
+      throw error;
+    }
+  },
 }
