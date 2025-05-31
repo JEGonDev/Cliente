@@ -117,8 +117,8 @@ export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
       return (
         <span
           className={`ml-auto px-2 py-1 text-xs rounded-full ${activeSection === item.id
-              ? 'bg-green-200 text-green-800'
-              : 'bg-gray-200 text-gray-700'
+            ? 'bg-green-200 text-green-800'
+            : 'bg-gray-200 text-gray-700'
             }`}
           title={item.description}
         >
@@ -172,36 +172,12 @@ export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
 
       {/* Información adicional en la parte inferior */}
       <div className="p-4 bg-white border-t border-gray-200">
-        <div className="space-y-2 text-xs text-gray-600">
-          <div className="flex justify-between">
-            <span>Cultivos activos:</span>
-            <span className="font-medium">
-              {crops.filter(c => c.status === 'ACTIVE' || c.status === 'active').length}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span>Alertas pendientes:</span>
-            <span className={`font-medium ${alerts.length > 0 ? 'text-red-600' : ''}`}>
-              {alerts.filter(a => !a.resolved).length}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span>Sensores online:</span>
-            <span className="font-medium text-green-600">
-              {sensors.filter(s => s.status === 'ACTIVE').length}
-            </span>
-          </div>
-        </div>
-
         {/* Indicador de conectividad */}
-        <div className="mt-3 pt-3 border-t border-gray-100">
-          <div className="flex items-center text-xs">
-            <div className={`w-2 h-2 rounded-full mr-2 ${loading ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'
-              }`}></div>
-            <span className="text-gray-600">
-              {loading ? 'Sincronizando...' : 'Sistema conectado'}
-            </span>
-          </div>
+        <div className="flex items-center text-xs">
+          <div className={`w-2 h-2 rounded-full mr-2 ${loading ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`}></div>
+          <span className="text-gray-600">
+            Sistema {loading ? 'sincronizando...' : 'conectado'}
+          </span>
         </div>
       </div>
     </aside>
