@@ -112,7 +112,10 @@ export const useSensors = () => {
       console.log('Fetching sensors for crop:', cropId);
       const response = await cropService.getSensorsByCropId(cropId);
       console.log('Crop sensors response:', response);
-      const sensors = Array.isArray(response) ? response : response?.data || [];
+
+      // Asegurarnos de que los sensores tengan la estructura correcta
+      const sensors = response?.data || [];
+      console.log('Setting sensors state with:', sensors);
       setSensors(sensors);
       return sensors;
     } catch (err) {

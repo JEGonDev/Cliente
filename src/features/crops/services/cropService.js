@@ -217,11 +217,28 @@ export const cropService = {
       console.log('Calling getSensorsByCropId API endpoint for crop:', cropId);
       const response = await API.get(`/sensors/crop/${cropId}`);
       console.log('Raw API Response:', response);
-      // Asegurarse de que siempre retornemos un array
-      const sensors = Array.isArray(response.data?.data) ? response.data.data :
-        Array.isArray(response.data) ? response.data : [];
-      console.log('Formatted sensors response:', sensors);
-      return { data: sensors };
+
+      // Asegurarse de que siempre retornemos un array de sensores
+      let sensors;
+      if (response.data?.data) {
+        sensors = response.data.data;
+      } else if (Array.isArray(response.data)) {
+        sensors = response.data;
+      } else {
+        sensors = [];
+      }
+
+      // Normalizar los datos de los sensores
+      const normalizedSensors = sensors.map(sensor => ({
+        ...sensor,
+        id: sensor.id || sensor.sensorId,
+        sensorType: sensor.sensorType || sensor.type || 'Desconocido',
+        unitOfMeasurement: sensor.unitOfMeasurement || sensor.unit || '',
+        cropId: cropId // Asegurarnos de que tenga el cropId
+      }));
+
+      console.log('Normalized sensors:', normalizedSensors);
+      return { data: normalizedSensors };
     } catch (error) {
       console.error('Error al obtener sensores del cultivo:', error);
       throw error;
