@@ -10,6 +10,8 @@ import { ManualReadingSection } from "../ui/ManualReadingSection";
 import { Database, Activity, Eye, EyeOff } from 'lucide-react';
 
 export const RealTimeLayout = () => {
+  console.log('RealTimeLayout: Componente renderizado');
+
   const {
     selectedCrop,
     sensors,
@@ -22,11 +24,11 @@ export const RealTimeLayout = () => {
     changeTimeRange,
     loading: globalLoading,
     error: globalError,
-    fetchSensorsByCropId,
     updateAllThresholds
   } = useMonitoring();
 
-  const [cropSensors, setCropSensors] = useState([]);
+  console.log('RealTimeLayout: selectedCrop:', selectedCrop);
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [localThresholds, setLocalThresholds] = useState({
@@ -40,44 +42,6 @@ export const RealTimeLayout = () => {
   const [activeSection, setActiveSection] = useState('monitoring'); // 'monitoring' | 'manual-readings'
   const [showManualReadings, setShowManualReadings] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-
-  // Función para cargar los sensores
-  const loadSensors = async () => {
-    if (!selectedCrop?.id) return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetchSensorsByCropId(selectedCrop.id);
-      const sensors = Array.isArray(response) ? response : [];
-      setCropSensors(sensors);
-    } catch (error) {
-      console.error('Error al cargar sensores:', error);
-      setError('Error al cargar los sensores');
-      setCropSensors([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Cargar sensores del cultivo seleccionado
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchSensors = async () => {
-      if (!isMounted) return;
-      await loadSensors();
-    };
-
-    if (selectedCrop?.id) {
-      fetchSensors();
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [selectedCrop?.id]);
 
   // Actualizar umbrales locales cuando cambian los del contexto
   useEffect(() => {
@@ -163,7 +127,7 @@ export const RealTimeLayout = () => {
         <div className="bg-red-50 border border-red-200 rounded-md p-4">
           <p className="text-red-700">Error: {globalError || error}</p>
           <button
-            onClick={loadSensors}
+            onClick={() => window.location.reload()}
             className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
           >
             Reintentar
@@ -261,7 +225,14 @@ export const RealTimeLayout = () => {
                     Cargando sensores...
                   </span>
                 ) : (
-                  `${cropSensors.length} sensores asociados`
+                  (() => {
+                    console.log('Renderizando cantidad de sensores:', {
+                      sensors,
+                      length: sensors.length,
+                      isLoading
+                    });
+                    return `${sensors.length} sensores asociados`;
+                  })()
                 )}
               </span>
             </p>
