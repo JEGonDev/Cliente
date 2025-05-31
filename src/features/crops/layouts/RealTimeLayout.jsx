@@ -71,6 +71,23 @@ export const RealTimeLayout = () => {
     }
   }, [selectedCrop?.id, getReadingsByCropId, isMonitoring]);
 
+  // Efecto para actualizar las lecturas cuando hay nuevos datos en tiempo real
+  useEffect(() => {
+    if (realTimeData && Object.keys(realTimeData).length > 0) {
+      const loadReadings = async () => {
+        if (selectedCrop?.id) {
+          try {
+            const response = await getReadingsByCropId(selectedCrop.id);
+            setReadings(response.data || []);
+          } catch (error) {
+            console.error('Error al cargar lecturas:', error);
+          }
+        }
+      };
+      loadReadings();
+    }
+  }, [realTimeData, selectedCrop?.id, getReadingsByCropId]);
+
   // Verificar si hay sensores configurados
   const hasSensorsConfigured = sensors && sensors.length > 0;
 
@@ -387,7 +404,7 @@ export const RealTimeLayout = () => {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Gráficos en Tiempo Real</h2>
               <div className="text-sm text-gray-500">
-                Actualización automática cada {isMonitoring ? '1 minuto' : 'detenida'}
+                Actualización automática cada 5 segundos
               </div>
             </div>
             <RealTimeChart />

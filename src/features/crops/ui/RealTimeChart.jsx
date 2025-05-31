@@ -1,5 +1,5 @@
 import { useMonitoring } from '../hooks/useMonitoring';
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect, useState, useCallback } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine
 } from 'recharts';
@@ -36,42 +36,41 @@ export const RealTimeChart = () => {
     selectedCrop,
     thresholds,
     loading,
-    getReadingsByCropId
+    getReadingsByCropId,
+    isMonitoring
   } = useMonitoring();
 
-  const [manualReadings, setManualReadings] = useState([]);
+  const [chartReadings, setChartReadings] = useState([]);
 
-  // Efecto para cargar las lecturas manuales
-  useEffect(() => {
+  // Función para cargar lecturas
+  const loadReadings = useCallback(async () => {
     if (selectedCrop?.id) {
-      getReadingsByCropId(selectedCrop.id)
-        .then(response => {
-          setManualReadings(response.data || []);
-        })
-        .catch(error => {
-          console.error('Error al obtener lecturas:', error);
-        });
+      try {
+        const response = await getReadingsByCropId(selectedCrop.id);
+        setChartReadings(response.data || []);
+      } catch (error) {
+        console.error('Error al cargar lecturas:', error);
+      }
     }
   }, [selectedCrop?.id, getReadingsByCropId]);
 
-  // Efecto para simular actualizaciones cada 15 minutos
+  // Efecto para cargar lecturas iniciales y configurar actualizaciones
   useEffect(() => {
-    if (selectedCrop?.id) {
-      const interval = setInterval(() => {
-        getReadingsByCropId(selectedCrop.id)
-          .then(response => {
-            setManualReadings(response.data || []);
-          })
-          .catch(error => {
-            console.error('Error al obtener lecturas:', error);
-          });
-      }, 15 * 60 * 1000); // 15 minutos en milisegundos
+    loadReadings();
 
-      return () => clearInterval(interval);
+    // Actualizar cada 5 segundos
+    const interval = setInterval(loadReadings, 5000);
+    return () => clearInterval(interval);
+  }, [loadReadings, selectedCrop?.id]);
+
+  // Efecto adicional para actualizar cuando hay nuevos datos en tiempo real
+  useEffect(() => {
+    if (realTimeData && Object.keys(realTimeData).length > 0) {
+      loadReadings();
     }
-  }, [selectedCrop?.id, getReadingsByCropId]);
+  }, [realTimeData, loadReadings]);
 
-  // Procesar datos del contexto para el gráfico
+  // Procesar datos para el gráfico
   const chartData = useMemo(() => {
     const timePoints = new Map();
 
@@ -86,7 +85,7 @@ export const RealTimeChart = () => {
       if (!timePoints.has(time)) {
         timePoints.set(time, {
           time,
-          timestamp: date.getTime(), // Agregamos timestamp para ordenar correctamente
+          timestamp: date.getTime(),
           temp: null,
           hum: null,
           cond: null
@@ -127,8 +126,8 @@ export const RealTimeChart = () => {
       });
     }
 
-    // Procesar lecturas manuales
-    manualReadings.forEach(reading => {
+    // Procesar lecturas del estado local
+    chartReadings.forEach(reading => {
       processReading(reading, reading.sensorType);
     });
 
@@ -142,14 +141,11 @@ export const RealTimeChart = () => {
       const current = sortedData[i];
       interpolatedData.push(current);
 
-      // Si hay un siguiente punto y no es el último
       if (i < sortedData.length - 1) {
         const next = sortedData[i + 1];
         const timeDiff = next.timestamp - current.timestamp;
 
-        // Si hay un gap significativo entre lecturas (más de 15 minutos)
         if (timeDiff > 15 * 60 * 1000) {
-          // Interpolar valores
           const steps = Math.floor(timeDiff / (15 * 60 * 1000));
           for (let j = 1; j <= steps; j++) {
             const fraction = j / (steps + 1);
@@ -177,7 +173,7 @@ export const RealTimeChart = () => {
     }
 
     return interpolatedData;
-  }, [realTimeData, sensors, manualReadings]);
+  }, [realTimeData, sensors, chartReadings]);
 
   // Estado de carga
   if (loading) {
