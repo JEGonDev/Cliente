@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useMonitoring } from '../hooks/useMonitoring';
 import { RealTimeIndicator } from "../ui/RealTimeIndicator";
 import { RealTimeChart } from "../ui/RealTimeChart";
-import { TimeSelector } from "../ui/TimeSelector";
 import { ThresholdEditModal } from "../ui/ThresholdEditModal";
 import { ThresholdSlider } from "../ui/ThresholdSlider";
 import { ManualReadingSection } from "../ui/ManualReadingSection";
@@ -18,10 +17,8 @@ export const RealTimeLayout = () => {
     realTimeData,
     thresholds,
     isMonitoring,
-    timeRange,
     startMonitoring,
     stopMonitoring,
-    changeTimeRange,
     loading: globalLoading,
     error: globalError,
     updateAllThresholds,
@@ -199,7 +196,7 @@ export const RealTimeLayout = () => {
         result[normalizedType] = {
           current: reading.readingValue,
           unit: reading.unitOfMeasurement,
-          trend: "Última lectura manual",
+          trend: "Estable",
           trendTime: new Date(reading.readingDate).toLocaleString(),
           trendDirection: 'stable'
         };
@@ -318,7 +315,6 @@ export const RealTimeLayout = () => {
         {/* Controles según la sección activa */}
         {activeSection === 'monitoring' && (
           <div className="flex items-center gap-4">
-            <TimeSelector value={timeRange} onChange={changeTimeRange} />
             <button
               onClick={isMonitoring ? stopMonitoring : startMonitoring}
               className={`flex items-center gap-2 px-4 py-2 rounded-md ${isMonitoring
@@ -347,16 +343,6 @@ export const RealTimeLayout = () => {
               </span>
             </p>
           </div>
-
-          {activeSection === 'monitoring' && (
-            <div className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${isMonitoring ? 'bg-green-400 animate-pulse' : 'bg-gray-300'
-                }`}></div>
-              <span className="text-sm text-gray-600">
-                {isMonitoring ? 'En vivo' : 'Detenido'}
-              </span>
-            </div>
-          )}
         </div>
       </div>
 
