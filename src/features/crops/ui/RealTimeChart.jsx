@@ -1,5 +1,5 @@
 import { useMonitoring } from '../hooks/useMonitoring';
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine
 } from 'recharts';
@@ -34,65 +34,85 @@ export const RealTimeChart = () => {
     realTimeData,
     sensors,
     selectedCrop,
-    timeRange,
-    loading
+    thresholds,
+    loading,
+    getReadingsByCropId
   } = useMonitoring();
+
+  const [manualReadings, setManualReadings] = useState([]);
+
+  // Efecto para cargar las lecturas manuales
+  useEffect(() => {
+    if (selectedCrop?.id) {
+      getReadingsByCropId(selectedCrop.id)
+        .then(response => {
+          setManualReadings(response.data || []);
+        })
+        .catch(error => {
+          console.error('Error al obtener lecturas:', error);
+        });
+    }
+  }, [selectedCrop?.id, getReadingsByCropId]);
 
   // Procesar datos del contexto para el gráfico
   const chartData = useMemo(() => {
-    if (!realTimeData || Object.keys(realTimeData).length === 0) {
-      return [];
-    }
-
-    // Obtener todas las lecturas y organizarlas por tiempo
     const timePoints = new Map();
 
-    Object.entries(realTimeData).forEach(([sensorId, sensorData]) => {
-      if (sensorData.history && sensorData.history.length > 0) {
-        const sensor = sensors.find(s => s.id === parseInt(sensorId));
-        if (sensor) {
-          sensorData.history.forEach(reading => {
-            const time = new Date(reading.readingDate).toLocaleTimeString('es-ES', {
-              hour: '2-digit',
-              minute: '2-digit'
-            });
+    // Función para procesar una lectura
+    const processReading = (reading, sensorType) => {
+      const time = new Date(reading.readingDate).toLocaleTimeString('es-ES', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
 
-            if (!timePoints.has(time)) {
-              timePoints.set(time, { time });
-            }
-
-            const point = timePoints.get(time);
-            const sensorType = sensor.type.toLowerCase();
-
-            if (sensorType === 'temperature') {
-              point.temp = reading.readingValue;
-            } else if (sensorType === 'humidity') {
-              point.hum = reading.readingValue;
-            } else if (sensorType === 'ec') {
-              point.cond = reading.readingValue;
-            }
-          });
-        }
+      if (!timePoints.has(time)) {
+        timePoints.set(time, { time });
       }
+
+      const point = timePoints.get(time);
+
+      switch (sensorType.toLowerCase()) {
+        case 'temperature':
+        case 'sensor temperatura':
+          point.temp = reading.readingValue;
+          break;
+        case 'humidity':
+        case 'humedad':
+          point.hum = reading.readingValue;
+          break;
+        case 'ec':
+        case 'conductividad electrica':
+          point.cond = reading.readingValue;
+          break;
+        default:
+          break;
+      }
+    };
+
+    // Procesar datos en tiempo real si están disponibles
+    if (realTimeData && Object.keys(realTimeData).length > 0) {
+      Object.entries(realTimeData).forEach(([sensorId, sensorData]) => {
+        if (sensorData.history && sensorData.history.length > 0) {
+          const sensor = sensors.find(s => s.id === parseInt(sensorId));
+          if (sensor) {
+            sensorData.history.forEach(reading => {
+              processReading(reading, sensor.type);
+            });
+          }
+        }
+      });
+    }
+
+    // Procesar lecturas manuales
+    manualReadings.forEach(reading => {
+      processReading(reading, reading.sensorType);
     });
 
+    // Convertir el Map a array y ordenar por tiempo
     return Array.from(timePoints.values()).sort((a, b) => {
       return new Date(`1970/01/01 ${a.time}`) - new Date(`1970/01/01 ${b.time}`);
     });
-  }, [realTimeData, sensors]);
-
-  // Datos de fallback si no hay datos reales
-  const fallbackData = [
-    { time: '00:00', temp: 22, hum: 80, cond: 1.2 },
-    { time: '02:00', temp: 21, hum: 75, cond: 1.3 },
-    { time: '04:00', temp: 20, hum: 70, cond: 1.4 },
-    { time: '06:00', temp: 22, hum: 68, cond: 1.2 },
-    { time: '08:00', temp: 25, hum: 65, cond: 1.1 },
-    { time: '10:00', temp: 28, hum: 60, cond: 1.0 }
-  ];
-
-  const dataToShow = chartData.length > 0 ? chartData : fallbackData;
-  const isUsingRealData = chartData.length > 0;
+  }, [realTimeData, sensors, manualReadings]);
 
   // Estado de carga
   if (loading) {
@@ -106,20 +126,31 @@ export const RealTimeChart = () => {
     );
   }
 
-  return (
-    <div className="w-full space-y-6">
-      {/* Indicador de tipo de datos */}
-      {!isUsingRealData && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
-          <p className="text-yellow-700 text-sm">
-            ⚠️ Mostrando datos de ejemplo. {selectedCrop ?
-              'Los datos reales se cargarán cuando haya lecturas disponibles.' :
-              'Selecciona un cultivo para ver datos reales.'
+  // Si no hay datos, mostrar mensaje
+  if (chartData.length === 0) {
+    return (
+      <div className="w-full space-y-6">
+        <div className="bg-gray-50 rounded-lg p-8 text-center">
+          <div className="text-gray-400 text-4xl mb-4">📊</div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No hay datos para mostrar
+          </h3>
+          <p className="text-gray-600">
+            {selectedCrop ?
+              'Los datos se mostrarán cuando haya lecturas disponibles.' :
+              'Selecciona un cultivo para ver datos en tiempo real.'
             }
           </p>
         </div>
-      )}
+      </div>
+    );
+  }
 
+  // Obtener umbrales actuales
+  const currentThresholds = thresholds || {};
+
+  return (
+    <div className="w-full space-y-6">
       {/* Grid para humedad y temperatura */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Gráfica de Humedad */}
@@ -127,19 +158,17 @@ export const RealTimeChart = () => {
           <div className="flex items-center gap-2 mb-4">
             <HumidityIcon />
             <h3 className="text-lg font-semibold text-blue-600">Humedad</h3>
-            {isUsingRealData && (
-              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                En vivo
-              </span>
-            )}
           </div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={dataToShow}>
+              <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="time" stroke="#4b5563" tick={{ fontSize: 12 }} />
                 <YAxis
-                  domain={[50, 90]}
+                  domain={[
+                    dataMin => Math.max(0, Math.floor(dataMin - 5)),
+                    dataMax => Math.min(100, Math.ceil(dataMax + 5))
+                  ]}
                   tickFormatter={formatHumidity}
                   stroke="#4b5563"
                   tick={{ fontSize: 12 }}
@@ -147,9 +176,25 @@ export const RealTimeChart = () => {
                 <Tooltip content={<CustomTooltip />} />
                 <Legend verticalAlign="bottom" height={36} />
 
-                {/* Líneas de umbral */}
-                <ReferenceLine y={80} stroke="#f97316" strokeDasharray="4 4" strokeWidth={1.5} />
-                <ReferenceLine y={60} stroke="#f97316" strokeDasharray="4 4" strokeWidth={1.5} />
+                {/* Líneas de umbral de humedad */}
+                {currentThresholds.humidity && (
+                  <>
+                    <ReferenceLine
+                      y={currentThresholds.humidity.max}
+                      stroke="#f97316"
+                      strokeDasharray="4 4"
+                      strokeWidth={1.5}
+                      label={{ value: 'Máx', position: 'right' }}
+                    />
+                    <ReferenceLine
+                      y={currentThresholds.humidity.min}
+                      stroke="#f97316"
+                      strokeDasharray="4 4"
+                      strokeWidth={1.5}
+                      label={{ value: 'Mín', position: 'right' }}
+                    />
+                  </>
+                )}
 
                 <Line
                   type="monotone"
@@ -161,24 +206,6 @@ export const RealTimeChart = () => {
                   activeDot={{ r: 5 }}
                   connectNulls={false}
                 />
-
-                {/* Líneas para la leyenda de umbrales */}
-                <Line
-                  type="monotone"
-                  dataKey={() => null}
-                  name="Umbral máximo"
-                  stroke="#f97316"
-                  strokeDasharray="4 4"
-                  dot={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey={() => null}
-                  name="Umbral mínimo"
-                  stroke="#f97316"
-                  strokeDasharray="4 4"
-                  dot={false}
-                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -189,19 +216,17 @@ export const RealTimeChart = () => {
           <div className="flex items-center gap-2 mb-4">
             <TemperatureIcon />
             <h3 className="text-lg font-semibold text-red-600">Temperatura</h3>
-            {isUsingRealData && (
-              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                En vivo
-              </span>
-            )}
           </div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={dataToShow}>
+              <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="time" stroke="#4b5563" tick={{ fontSize: 12 }} />
                 <YAxis
-                  domain={[15, 35]}
+                  domain={[
+                    dataMin => Math.max(0, Math.floor(dataMin - 2)),
+                    dataMax => Math.ceil(dataMax + 2)
+                  ]}
                   tickFormatter={formatTemperature}
                   stroke="#4b5563"
                   tick={{ fontSize: 12 }}
@@ -209,9 +234,25 @@ export const RealTimeChart = () => {
                 <Tooltip content={<CustomTooltip />} />
                 <Legend verticalAlign="bottom" height={36} />
 
-                {/* Líneas de umbral */}
-                <ReferenceLine y={26} stroke="#f97316" strokeDasharray="4 4" strokeWidth={1.5} />
-                <ReferenceLine y={18} stroke="#f97316" strokeDasharray="4 4" strokeWidth={1.5} />
+                {/* Líneas de umbral de temperatura */}
+                {currentThresholds.temperature && (
+                  <>
+                    <ReferenceLine
+                      y={currentThresholds.temperature.max}
+                      stroke="#f97316"
+                      strokeDasharray="4 4"
+                      strokeWidth={1.5}
+                      label={{ value: 'Máx', position: 'right' }}
+                    />
+                    <ReferenceLine
+                      y={currentThresholds.temperature.min}
+                      stroke="#f97316"
+                      strokeDasharray="4 4"
+                      strokeWidth={1.5}
+                      label={{ value: 'Mín', position: 'right' }}
+                    />
+                  </>
+                )}
 
                 <Line
                   type="monotone"
@@ -222,24 +263,6 @@ export const RealTimeChart = () => {
                   dot={{ r: 3 }}
                   activeDot={{ r: 5 }}
                   connectNulls={false}
-                />
-
-                {/* Líneas para la leyenda de umbrales */}
-                <Line
-                  type="monotone"
-                  dataKey={() => null}
-                  name="Umbral máximo"
-                  stroke="#f97316"
-                  strokeDasharray="4 4"
-                  dot={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey={() => null}
-                  name="Umbral mínimo"
-                  stroke="#f97316"
-                  strokeDasharray="4 4"
-                  dot={false}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -252,19 +275,17 @@ export const RealTimeChart = () => {
         <div className="flex items-center gap-2 mb-4">
           <ConductivityIcon />
           <h3 className="text-lg font-semibold text-purple-600">Conductividad eléctrica (EC)</h3>
-          {isUsingRealData && (
-            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-              En vivo
-            </span>
-          )}
         </div>
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={dataToShow}>
+            <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="time" stroke="#4b5563" tick={{ fontSize: 12 }} />
               <YAxis
-                domain={[0.5, 2]}
+                domain={[
+                  dataMin => Math.max(0, Math.floor(dataMin - 0.2)),
+                  dataMax => Math.ceil(dataMax + 0.2)
+                ]}
                 tickFormatter={formatConductivity}
                 stroke="#4b5563"
                 tick={{ fontSize: 12 }}
@@ -272,9 +293,25 @@ export const RealTimeChart = () => {
               <Tooltip content={<CustomTooltip />} />
               <Legend verticalAlign="bottom" height={36} />
 
-              {/* Líneas de umbral */}
-              <ReferenceLine y={1.6} stroke="#f97316" strokeDasharray="4 4" strokeWidth={1.5} />
-              <ReferenceLine y={0.9} stroke="#f97316" strokeDasharray="4 4" strokeWidth={1.5} />
+              {/* Líneas de umbral de EC */}
+              {currentThresholds.ec && (
+                <>
+                  <ReferenceLine
+                    y={currentThresholds.ec.max}
+                    stroke="#f97316"
+                    strokeDasharray="4 4"
+                    strokeWidth={1.5}
+                    label={{ value: 'Máx', position: 'right' }}
+                  />
+                  <ReferenceLine
+                    y={currentThresholds.ec.min}
+                    stroke="#f97316"
+                    strokeDasharray="4 4"
+                    strokeWidth={1.5}
+                    label={{ value: 'Mín', position: 'right' }}
+                  />
+                </>
+              )}
 
               <Line
                 type="monotone"
@@ -286,24 +323,6 @@ export const RealTimeChart = () => {
                 activeDot={{ r: 5 }}
                 connectNulls={false}
               />
-
-              {/* Líneas para la leyenda de umbrales */}
-              <Line
-                type="monotone"
-                dataKey={() => null}
-                name="Umbral máximo"
-                stroke="#f97316"
-                strokeDasharray="4 4"
-                dot={false}
-              />
-              <Line
-                type="monotone"
-                dataKey={() => null}
-                name="Umbral mínimo"
-                stroke="#f97316"
-                strokeDasharray="4 4"
-                dot={false}
-              />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -312,7 +331,6 @@ export const RealTimeChart = () => {
       {/* Información adicional */}
       <div className="text-center text-sm text-gray-600">
         <p>
-          Rango de tiempo: <strong>{timeRange}</strong> |
           Última actualización: <strong>{new Date().toLocaleTimeString('es-ES')}</strong>
         </p>
       </div>
