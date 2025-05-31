@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useMonitoring } from '../hooks/useMonitoring';
 import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import { StatCard } from '../ui/StatCard';
 import { ExportSection } from '../ui/ExportSection';
+import { SensorDataPDF } from '../ui/SensorDataPDF';
 
 export const DataHistoryLayout = () => {
   const [range, setRange] = useState('semana');
   const [selectedSensor, setSelectedSensor] = useState('');
   const [localSelectedCrop, setLocalSelectedCrop] = useState(null);
+  const chartRef = useRef(null);
 
   // Usar el contexto de monitoreo
   const {
@@ -248,33 +250,35 @@ export const DataHistoryLayout = () => {
             </div>
 
             {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis
-                    dataKey="fecha"
-                    interval="preserveStartEnd"
-                    minTickGap={50}
-                  />
-                  <YAxis
-                    label={{
-                      value: getUnit(selectedSensorData?.sensorType),
-                      angle: -90,
-                      position: 'insideLeft'
-                    }}
-                  />
-                  <Tooltip />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="valor"
-                    name={selectedSensorData ? formatSensorName(selectedSensorData) : 'Valor'}
-                    stroke="#4F46E5"
-                    dot={false}
-                    connectNulls
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              <div ref={chartRef}>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="fecha"
+                      interval="preserveStartEnd"
+                      minTickGap={50}
+                    />
+                    <YAxis
+                      label={{
+                        value: selectedSensorData?.unitOfMeasurement,
+                        angle: -90,
+                        position: 'insideLeft'
+                      }}
+                    />
+                    <Tooltip />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="valor"
+                      name={selectedSensorData ? formatSensorName(selectedSensorData) : 'Valor'}
+                      stroke="#4F46E5"
+                      dot={false}
+                      connectNulls
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
                 No hay datos disponibles para el período seleccionado
@@ -312,6 +316,8 @@ export const DataHistoryLayout = () => {
             sensorType={selectedSensorData?.sensorType}
             cropName={localSelectedCrop.cropName}
             dateRange={range}
+            stats={stats}
+            chartRef={chartRef}
           />
         </>
       )}

@@ -1,5 +1,7 @@
 import PropTypes from 'prop-types';
-import { FileText, Download, FileSpreadsheet } from 'lucide-react';
+import { useState } from 'react';
+import { FileText, Download, FileSpreadsheet, Eye } from 'lucide-react';
+import { SensorDataPDF } from './SensorDataPDF';
 
 /**
  * Sección para exportar datos históricos en diferentes formatos
@@ -9,8 +11,19 @@ import { FileText, Download, FileSpreadsheet } from 'lucide-react';
  * @param {string} props.sensorType - Tipo de sensor
  * @param {string} props.cropName - Nombre del cultivo
  * @param {string} props.dateRange - Rango de fechas seleccionado
+ * @param {Object} props.stats - Estadísticas de los datos
+ * @param {Object} props.chartRef - Referencia al gráfico
  */
-export const ExportSection = ({ data, sensorType, cropName, dateRange }) => {
+export const ExportSection = ({
+  data,
+  sensorType,
+  cropName,
+  dateRange,
+  stats,
+  chartRef
+}) => {
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
   // Función para exportar como CSV
   const exportToCSV = () => {
     const headers = ['Fecha', 'Valor', 'Tipo'];
@@ -69,7 +82,7 @@ export const ExportSection = ({ data, sensorType, cropName, dateRange }) => {
         </span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Exportar como CSV */}
         <button
           onClick={exportToCSV}
@@ -103,6 +116,23 @@ export const ExportSection = ({ data, sensorType, cropName, dateRange }) => {
           </div>
           <Download size={20} className="text-gray-400" />
         </button>
+
+        {/* Exportar como PDF */}
+        <button
+          onClick={() => setIsPreviewOpen(!isPreviewOpen)}
+          className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          <div className="flex items-center">
+            <div className="bg-red-100 rounded-lg p-3 mr-4">
+              <FileText className="text-red-600" size={24} />
+            </div>
+            <div>
+              <h3 className="font-medium">Exportar como PDF</h3>
+              <p className="text-sm text-gray-500">Reporte detallado con gráficos</p>
+            </div>
+          </div>
+          <Eye size={20} className="text-gray-400" />
+        </button>
       </div>
 
       {/* Información adicional */}
@@ -115,6 +145,18 @@ export const ExportSection = ({ data, sensorType, cropName, dateRange }) => {
           <li>• Metadatos del cultivo</li>
         </ul>
       </div>
+
+      {/* Componente PDF */}
+      {isPreviewOpen && (
+        <SensorDataPDF
+          cropName={cropName}
+          sensorType={sensorType}
+          dateRange={dateRange}
+          stats={stats}
+          chartRef={chartRef}
+          data={data}
+        />
+      )}
     </div>
   );
 };
@@ -127,5 +169,12 @@ ExportSection.propTypes = {
   })).isRequired,
   sensorType: PropTypes.string.isRequired,
   cropName: PropTypes.string.isRequired,
-  dateRange: PropTypes.string.isRequired
+  dateRange: PropTypes.string.isRequired,
+  stats: PropTypes.shape({
+    min: PropTypes.string,
+    max: PropTypes.string,
+    avg: PropTypes.string,
+    stdDev: PropTypes.string
+  }).isRequired,
+  chartRef: PropTypes.object.isRequired
 };
