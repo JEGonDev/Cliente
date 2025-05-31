@@ -24,7 +24,8 @@ export const RealTimeLayout = () => {
     changeTimeRange,
     loading: globalLoading,
     error: globalError,
-    updateAllThresholds
+    updateAllThresholds,
+    loadThresholds
   } = useMonitoring();
 
   console.log('RealTimeLayout: selectedCrop:', selectedCrop);
@@ -43,9 +44,17 @@ export const RealTimeLayout = () => {
   const [showManualReadings, setShowManualReadings] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
+  // Cargar umbrales cuando cambia el cultivo seleccionado
+  useEffect(() => {
+    if (selectedCrop?.id) {
+      loadThresholds(selectedCrop.id);
+    }
+  }, [selectedCrop?.id, loadThresholds]);
+
   // Actualizar umbrales locales cuando cambian los del contexto
   useEffect(() => {
     if (Object.keys(thresholds).length > 0) {
+      console.log('Actualizando umbrales locales:', thresholds);
       setLocalThresholds(thresholds);
     }
   }, [thresholds]);

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { cropService } from '../services/cropService';
 
 /**
@@ -13,9 +13,62 @@ export const useMonitoringThresholds = () => {
     ec: { min: 1.0, max: 1.6 },
     ph: { min: 5.5, max: 6.5 }
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  /**
+   * Carga los umbrales configurados para un cultivo específico
+   * 
+   * @param {number} cropId - ID del cultivo
+   */
+  const loadThresholds = useCallback(async (cropId) => {
+    if (!cropId) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await cropService.getThresholdsByCropId(cropId);
+      console.log('Umbrales cargados:', response);
+
+      const newThresholds = {};
+
+      // Procesar los umbrales recibidos
+      // La respuesta tiene una estructura { message, data: [...] }
+      const thresholdsData = response.data || [];
+
+      thresholdsData.forEach(sensor => {
+        const sensorType = sensor.sensorType?.toLowerCase();
+        if (!sensorType) return;
+
+        let type = '';
+        if (sensorType.includes('temperatura')) type = 'temperature';
+        else if (sensorType.includes('humedad')) type = 'humidity';
+        else if (sensorType.includes('conductividad') || sensorType.includes('ec')) type = 'ec';
+        else return;
+
+        newThresholds[type] = {
+          min: sensor.minThreshold,
+          max: sensor.maxThreshold
+        };
+      });
+
+      // Actualizar los umbrales
+      if (Object.keys(newThresholds).length > 0) {
+        console.log('Actualizando umbrales con:', newThresholds);
+        setThresholds(prevThresholds => ({
+          ...prevThresholds,
+          ...newThresholds
+        }));
+      }
+    } catch (err) {
+      console.error('Error al cargar umbrales:', err);
+      setError(err.message || 'Error al cargar los umbrales.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   /**
    * Actualiza los umbrales de un sensor para un cultivo específico
@@ -28,16 +81,16 @@ export const useMonitoringThresholds = () => {
    */
   const updateThreshold = useCallback(async (cropId, sensorId, sensorType, newThresholds) => {
     if (!cropId || !sensorId || !sensorType || !newThresholds) return false;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       await cropService.updateSensorThresholds(cropId, sensorId, {
         minThreshold: newThresholds.min,
         maxThreshold: newThresholds.max
       });
-      
+
       // Actualizar el estado local
       setThresholds(prev => ({
         ...prev,
@@ -46,7 +99,7 @@ export const useMonitoringThresholds = () => {
           max: newThresholds.max
         }
       }));
-      
+
       return true;
     } catch (err) {
       console.error('Error al actualizar umbrales:', err);
@@ -72,6 +125,7 @@ export const useMonitoringThresholds = () => {
     loading,
     error,
     updateThreshold,
-    updateAllThresholds
+    updateAllThresholds,
+    loadThresholds
   };
 };
