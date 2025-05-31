@@ -290,18 +290,30 @@ export const cropService = {
   },
 
   /**
-   * Desasocia un sensor de un cultivo
+   * Desasocia y elimina un sensor de un cultivo
    * 
    * @param {number} cropId - ID del cultivo
    * @param {number} sensorId - ID del sensor
    * @returns {Promise<Object>} - Respuesta de confirmación
    */
-  removeSensorFromCrop: async (cropId, sensorId) => {
+  removeSensorAndDelete: async (cropId, sensorId) => {
     try {
-      const response = await API.delete(`/sensors/crop/${cropId}/sensor/${sensorId}`);
-      return response.data;
+      console.log(`Iniciando proceso de desasociación y eliminación del sensor ${sensorId} del cultivo ${cropId}`);
+
+      // Primero desasociamos el sensor del cultivo
+      const disassociateResponse = await API.delete(`/sensors/crop/${cropId}/sensor/${sensorId}`);
+      console.log('Sensor desasociado:', disassociateResponse.data);
+
+      // Luego eliminamos el sensor completamente
+      const deleteResponse = await API.delete(`/sensors/${sensorId}`);
+      console.log('Sensor eliminado:', deleteResponse.data);
+
+      return {
+        message: 'Sensor desasociado y eliminado correctamente',
+        data: deleteResponse.data
+      };
     } catch (error) {
-      console.error('Error al desasociar sensor de cultivo:', error);
+      console.error('Error al desasociar y eliminar sensor:', error);
       throw error;
     }
   },

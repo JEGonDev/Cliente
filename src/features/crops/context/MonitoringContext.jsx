@@ -44,6 +44,7 @@ export const MonitoringContext = createContext({
   addSensorToCropWithThresholds: () => { },
   updateSensorThresholds: () => { },
   removeSensorFromCrop: () => { },
+  removeSensorAndDelete: () => { },
   createSensorAndAssociateToCrop: () => { },
 
   // Métodos para lecturas
@@ -109,6 +110,7 @@ export const MonitoringProvider = ({ children }) => {
     addSensorToCropWithThresholds,
     updateSensorThresholds,
     removeSensorFromCrop,
+    removeSensorAndDelete,
     createSensorAndAssociateToCrop,
     setSelectedSensor: selectSensor
   } = useSensors();
@@ -241,6 +243,7 @@ export const MonitoringProvider = ({ children }) => {
     addSensorToCropWithThresholds,
     updateSensorThresholds,
     removeSensorFromCrop,
+    removeSensorAndDelete,
     createSensorAndAssociateToCrop,
 
     // Métodos para lecturas

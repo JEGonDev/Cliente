@@ -325,6 +325,40 @@ export const useSensors = () => {
   }, []);
 
   /**
+   * Desasocia y elimina un sensor de un cultivo
+   * 
+   * @param {number} cropId - ID del cultivo
+   * @param {number} sensorId - ID del sensor
+   * @returns {Promise<boolean>} Resultado de la operación
+   */
+  const removeSensorAndDelete = useCallback(async (cropId, sensorId) => {
+    if (!cropId || !sensorId) return false;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      await cropService.removeSensorAndDelete(cropId, sensorId);
+
+      // Actualizar la lista de sensores
+      setSensors(prevSensors => prevSensors.filter(sensor => sensor.id !== sensorId));
+
+      // Limpiar selectedSensor si es el que se está eliminando
+      if (selectedSensor && selectedSensor.id === sensorId) {
+        setSelectedSensor(null);
+      }
+
+      return true;
+    } catch (err) {
+      console.error(`Error al desasociar y eliminar sensor ${sensorId} de cultivo ${cropId}:`, err);
+      setError(err.message || 'Error al desasociar y eliminar el sensor.');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedSensor]);
+
+  /**
    * Crea un sensor y lo asocia a un cultivo con umbrales
    * 
    * @param {number} cropId - ID del cultivo
@@ -370,6 +404,7 @@ export const useSensors = () => {
     addSensorToCropWithThresholds,
     updateSensorThresholds,
     removeSensorFromCrop,
+    removeSensorAndDelete,
     createSensorAndAssociateToCrop,
     setSelectedSensor
   };

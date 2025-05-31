@@ -7,11 +7,53 @@ import { X, Plus, Trash2, Settings } from 'lucide-react';
  * Modal completo para gestión de sensores de un cultivo
  * Integra las funcionalidades faltantes de cropService
  */
+
+// Componente de Modal de Confirmación
+const ConfirmationModal = ({ isOpen, onClose, onConfirm, sensorType }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[60] overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg max-w-md w-full p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          Confirmar Eliminación
+        </h3>
+        <p className="text-gray-600 mb-6">
+          ¿Estás seguro de que deseas eliminar el sensor "{sensorType}"?
+          Esta acción desasociará el sensor del cultivo y lo eliminará permanentemente.
+          Esta acción no se puede deshacer.
+        </p>
+        <div className="flex justify-end gap-4">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-700 border rounded hover:bg-gray-50 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+          >
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+ConfirmationModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onConfirm: PropTypes.func.isRequired,
+  sensorType: PropTypes.string
+};
+
 export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
   const {
     sensors,
     fetchSensorsByCropId,
-    removeSensorFromCrop,
+    removeSensorAndDelete,
     createSensorAndAssociateToCrop,
     loading
   } = useMonitoring();
@@ -22,6 +64,11 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
   const [selectedSensorForThresholds, setSelectedSensorForThresholds] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [confirmationModal, setConfirmationModal] = useState({
+    isOpen: false,
+    sensorId: null,
+    sensorType: ''
+  });
 
   // Estados para creación de sensor
   const [newSensorData, setNewSensorData] = useState({
@@ -67,21 +114,40 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
   }, [isOpen, crop?.id, fetchSensorsByCropId]);
 
   const handleRemoveSensor = async (sensorId) => {
-    if (window.confirm('¿Estás seguro de desasociar este sensor del cultivo?')) {
-      try {
-        setIsLoading(true);
-        setError(null);
-        await removeSensorFromCrop(crop.id, sensorId);
+    try {
+      setIsLoading(true);
+      setError(null);
+      console.log('Iniciando proceso de eliminación del sensor:', sensorId);
 
-        // Recargar datos después de desasociar
-        const cropSensorsResult = await fetchSensorsByCropId(crop.id);
-        setCropSensors(cropSensorsResult || []);
-      } catch (error) {
-        console.error('Error desasociando sensor:', error);
-        setError('Error al desasociar el sensor. Por favor, intente de nuevo.');
-      } finally {
-        setIsLoading(false);
+      // Llamar al servicio para eliminar el sensor
+      const result = await removeSensorAndDelete(crop.id, sensorId);
+      console.log('Resultado de la eliminación:', result);
+
+      // Recargar datos después de eliminar
+      console.log('Recargando lista de sensores...');
+      const cropSensorsResult = await fetchSensorsByCropId(crop.id);
+
+      if (!cropSensorsResult) {
+        console.log('No se recibieron datos de sensores actualizados');
+        setCropSensors([]);
+      } else {
+        console.log('Nuevos datos de sensores recibidos:', cropSensorsResult);
+        setCropSensors(Array.isArray(cropSensorsResult) ? cropSensorsResult : []);
       }
+
+      // Cerrar el modal de confirmación
+      setConfirmationModal({ isOpen: false, sensorId: null, sensorType: '' });
+
+      // Mostrar mensaje de éxito
+      setError({ type: 'success', message: 'Sensor eliminado correctamente' });
+    } catch (error) {
+      console.error('Error completo al eliminar sensor:', error);
+      setError({
+        type: 'error',
+        message: error.response?.data?.message || 'Error al eliminar el sensor. Por favor, intente de nuevo.'
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -140,8 +206,9 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
 
         {/* Error message */}
         {error && (
-          <div className="mx-6 mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-800">{error}</p>
+          <div className={`mx-6 mt-4 p-4 ${error.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'
+            } border rounded-lg`}>
+            <p>{error.message}</p>
           </div>
         )}
 
@@ -191,25 +258,17 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
                         Unidad: {sensor.unitOfMeasurement}
                       </p>
                     </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          setSelectedSensorForThresholds(sensor);
-                          setShowThresholdConfig(true);
-                        }}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded"
-                        title="Configurar umbrales"
-                      >
-                        <Settings size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleRemoveSensor(sensor.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded"
-                        title="Desasociar sensor"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => setConfirmationModal({
+                        isOpen: true,
+                        sensorId: sensor.id,
+                        sensorType: sensor.sensorType
+                      })}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded"
+                      title="Desasociar sensor"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 ))
               )}
@@ -365,6 +424,14 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
           </button>
         </div>
       </div>
+
+      {/* Modal de Confirmación */}
+      <ConfirmationModal
+        isOpen={confirmationModal.isOpen}
+        onClose={() => setConfirmationModal({ isOpen: false, sensorId: null, sensorType: '' })}
+        onConfirm={() => handleRemoveSensor(confirmationModal.sensorId)}
+        sensorType={confirmationModal.sensorType}
+      />
     </div>
   );
 };
