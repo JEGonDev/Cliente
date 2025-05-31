@@ -38,17 +38,20 @@ export const AlertItem = ({
     error: {
       icon: <AlertCircle size={20} />,
       colorClasses: 'bg-red-50 border-l-4 border-l-red-500 text-red-700',
-      iconClass: 'text-red-500'
+      iconClass: 'text-red-500',
+      severityLabel: 'Alta'
     },
     warning: {
       icon: <AlertTriangle size={20} />,
       colorClasses: 'bg-yellow-50 border-l-4 border-l-yellow-500 text-yellow-700',
-      iconClass: 'text-yellow-500'
+      iconClass: 'text-yellow-500',
+      severityLabel: 'Media'
     },
     info: {
       icon: <Info size={20} />,
       colorClasses: 'bg-blue-50 border-l-4 border-l-blue-500 text-blue-700',
-      iconClass: 'text-blue-500'
+      iconClass: 'text-blue-500',
+      severityLabel: 'Baja'
     }
   };
 
@@ -116,24 +119,6 @@ export const AlertItem = ({
               <div>
                 <span className="font-medium text-gray-700">Umbral:</span> {threshold}
               </div>
-              <button
-                className={`flex items-center gap-1 text-blue-600 hover:underline text-sm cursor-pointer transition-colors ${isDeleting ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                onClick={handleResolve}
-                disabled={isDeleting}
-              >
-                {isDeleting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                    <span>Resolviendo...</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-4 h-4" />
-                    <span>Resolver</span>
-                  </>
-                )}
-              </button>
             </div>
           </div>
         </div>
@@ -151,20 +136,6 @@ export const AlertItem = ({
               className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition"
             >
               Cerrar
-            </button>
-            <button
-              onClick={async () => {
-                await handleResolve({ stopPropagation: () => { } });
-                setIsModalOpen(false);
-              }}
-              disabled={isDeleting}
-              className={`px-4 py-2 bg-primary text-white rounded hover:bg-blue-700 transition flex items-center gap-2 ${isDeleting ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-            >
-              {isDeleting && (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              )}
-              {isDeleting ? 'Resolviendo...' : 'Marcar como resuelta'}
             </button>
           </div>
         }
@@ -191,10 +162,10 @@ export const AlertItem = ({
           <p>
             <strong>Severidad:</strong>{" "}
             <span className={`px-2 py-1 rounded font-semibold text-sm ${type === 'error' ? 'bg-red-100 text-red-800' :
-                type === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-blue-100 text-blue-800'
+              type === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-blue-100 text-blue-800'
               }`}>
-              {type === 'error' ? 'Alta' : type === 'warning' ? 'Media' : 'Baja'}
+              {config.severityLabel}
             </span>
           </p>
           <p>
