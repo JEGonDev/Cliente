@@ -136,12 +136,37 @@ export const cropService = {
   /**
    * Obtiene los sensores del usuario autenticado
    * 
-   * @returns {Promise<Array>} - Lista de sensores del usuario
+   * @returns {Promise<Object>} - Respuesta con mensaje y datos de los sensores
    */
   getUserSensors: async () => {
     try {
+      console.log('Calling getUserSensors API endpoint...');
       const response = await API.get('/sensors/user');
-      return response.data;
+      console.log('Raw API Response from getUserSensors:', response);
+
+      // Verificar la estructura de la respuesta
+      if (response?.data?.data) {
+        console.log('Response contains nested data structure');
+        return response.data; // Ya tiene el formato { message, data }
+      } else if (Array.isArray(response?.data)) {
+        console.log('Response is an array, formatting to expected structure');
+        return {
+          message: 'Sensores recuperados correctamente',
+          data: response.data
+        };
+      } else if (response?.data) {
+        console.log('Response has unexpected structure:', response.data);
+        return {
+          message: 'Sensores recuperados correctamente',
+          data: []
+        };
+      }
+
+      console.log('No valid data in response, returning empty array');
+      return {
+        message: 'No se encontraron sensores',
+        data: []
+      };
     } catch (error) {
       console.error('Error al obtener sensores del usuario:', error);
       throw error;
@@ -189,8 +214,14 @@ export const cropService = {
    */
   getSensorsByCropId: async (cropId) => {
     try {
+      console.log('Calling getSensorsByCropId API endpoint for crop:', cropId);
       const response = await API.get(`/sensors/crop/${cropId}`);
-      return response.data;
+      console.log('Raw API Response:', response);
+      // Asegurarse de que siempre retornemos un array
+      const sensors = Array.isArray(response.data?.data) ? response.data.data :
+        Array.isArray(response.data) ? response.data : [];
+      console.log('Formatted sensors response:', sensors);
+      return { data: sensors };
     } catch (error) {
       console.error('Error al obtener sensores del cultivo:', error);
       throw error;
@@ -359,12 +390,12 @@ export const cropService = {
 
   // ==================== Operaciones para las lecturas de los sensores ====================
 
-    /**
-   * Crea una nueva lectura de sensor
-   * 
-   * @param {Object} readingData - Datos de la lectura a crear
-   * @returns {Promise<Object>} - Datos de la lectura creada
-   */
+  /**
+ * Crea una nueva lectura de sensor
+ * 
+ * @param {Object} readingData - Datos de la lectura a crear
+ * @returns {Promise<Object>} - Datos de la lectura creada
+ */
   createReading: async (readingData) => {
     try {
       const response = await API.post('/readings', readingData);

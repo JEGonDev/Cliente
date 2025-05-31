@@ -11,19 +11,17 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
   const {
     sensors,
     fetchSensorsByCropId,
-    fetchUserSensors,
-    addSensorToCropWithThresholds,
     removeSensorFromCrop,
     createSensorAndAssociateToCrop,
     loading
   } = useMonitoring();
 
-  const [availableSensors, setAvailableSensors] = useState([]);
   const [cropSensors, setCropSensors] = useState([]);
-  const [activeTab, setActiveTab] = useState('associated'); // 'associated' | 'available' | 'create'
+  const [activeTab, setActiveTab] = useState('associated'); // 'associated' | 'create'
   const [showThresholdConfig, setShowThresholdConfig] = useState(false);
   const [selectedSensorForThresholds, setSelectedSensorForThresholds] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Estados para creación de sensor
   const [newSensorData, setNewSensorData] = useState({
@@ -43,26 +41,17 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
       if (!isOpen || !crop || isLoading) return;
 
       setIsLoading(true);
+      setError(null);
       try {
-        // Cargar datos en paralelo
-        const [cropSensorsResult] = await Promise.all([
-          fetchSensorsByCropId(crop.id),
-          fetchUserSensors()
-        ]);
-
+        const cropSensorsResult = await fetchSensorsByCropId(crop.id);
         if (!isMounted) return;
 
-        // Filtrar sensores disponibles (no asociados al cultivo actual)
-        const associatedSensorIds = sensors
-          .filter(s => s.cropId === crop.id)
-          .map(s => s.id);
-
-        const available = sensors.filter(s => !associatedSensorIds.includes(s.id));
-
-        setAvailableSensors(available);
-        setCropSensors(cropSensorsResult || []);
+        // Asegurarnos de que cropSensorsResult es un array
+        const sensors = Array.isArray(cropSensorsResult) ? cropSensorsResult : [];
+        setCropSensors(sensors);
       } catch (error) {
         console.error('Error cargando datos de sensores:', error);
+        setError('Error al cargar los sensores. Por favor, intente de nuevo.');
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -75,53 +64,21 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
     return () => {
       isMounted = false;
     };
-  }, [isOpen, crop?.id]);
-
-  const handleAssociateSensor = async (sensorId) => {
-    try {
-      setIsLoading(true);
-      await addSensorToCropWithThresholds(crop.id, sensorId, {
-        minThreshold: 0,
-        maxThreshold: 100
-      });
-
-      // Recargar datos después de asociar
-      const [cropSensorsResult] = await Promise.all([
-        fetchSensorsByCropId(crop.id),
-        fetchUserSensors()
-      ]);
-
-      const associatedSensorIds = cropSensorsResult.map(s => s.id);
-      const available = sensors.filter(s => !associatedSensorIds.includes(s.id));
-
-      setAvailableSensors(available);
-      setCropSensors(cropSensorsResult);
-    } catch (error) {
-      console.error('Error asociando sensor:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [isOpen, crop?.id, fetchSensorsByCropId]);
 
   const handleRemoveSensor = async (sensorId) => {
     if (window.confirm('¿Estás seguro de desasociar este sensor del cultivo?')) {
       try {
         setIsLoading(true);
+        setError(null);
         await removeSensorFromCrop(crop.id, sensorId);
 
         // Recargar datos después de desasociar
-        const [cropSensorsResult] = await Promise.all([
-          fetchSensorsByCropId(crop.id),
-          fetchUserSensors()
-        ]);
-
-        const associatedSensorIds = cropSensorsResult.map(s => s.id);
-        const available = sensors.filter(s => !associatedSensorIds.includes(s.id));
-
-        setAvailableSensors(available);
-        setCropSensors(cropSensorsResult);
+        const cropSensorsResult = await fetchSensorsByCropId(crop.id);
+        setCropSensors(cropSensorsResult || []);
       } catch (error) {
         console.error('Error desasociando sensor:', error);
+        setError('Error al desasociar el sensor. Por favor, intente de nuevo.');
       } finally {
         setIsLoading(false);
       }
@@ -133,6 +90,7 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
 
     try {
       setIsLoading(true);
+      setError(null);
       const sensorData = {
         sensorType: newSensorData.sensorType,
         unitOfMeasurement: newSensorData.unitOfMeasurement,
@@ -150,19 +108,12 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
       });
 
       // Recargar datos después de crear y asociar
-      const [cropSensorsResult] = await Promise.all([
-        fetchSensorsByCropId(crop.id),
-        fetchUserSensors()
-      ]);
-
-      const associatedSensorIds = cropSensorsResult.map(s => s.id);
-      const available = sensors.filter(s => !associatedSensorIds.includes(s.id));
-
-      setAvailableSensors(available);
-      setCropSensors(cropSensorsResult);
+      const cropSensorsResult = await fetchSensorsByCropId(crop.id);
+      setCropSensors(cropSensorsResult || []);
       setActiveTab('associated');
     } catch (error) {
       console.error('Error creando y asociando sensor:', error);
+      setError('Error al crear y asociar el sensor. Por favor, intente de nuevo.');
     } finally {
       setIsLoading(false);
     }
@@ -187,6 +138,13 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
           </button>
         </div>
 
+        {/* Error message */}
+        {error && (
+          <div className="mx-6 mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-800">{error}</p>
+          </div>
+        )}
+
         {/* Tabs */}
         <div className="flex border-b">
           <button
@@ -199,22 +157,13 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
             Sensores Asociados ({cropSensors.length})
           </button>
           <button
-            onClick={() => setActiveTab('available')}
-            className={`px-6 py-3 font-medium ${activeTab === 'available'
-              ? 'border-b-2 border-primary text-primary'
-              : 'text-gray-600 hover:text-gray-800'
-              }`}
-          >
-            Sensores Disponibles ({availableSensors.length})
-          </button>
-          <button
             onClick={() => setActiveTab('create')}
             className={`px-6 py-3 font-medium ${activeTab === 'create'
               ? 'border-b-2 border-primary text-primary'
               : 'text-gray-600 hover:text-gray-800'
               }`}
           >
-            Crear Nuevo
+            Crear y Asociar Sensor
           </button>
         </div>
 
@@ -261,35 +210,6 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
                         <Trash2 size={16} />
                       </button>
                     </div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-
-          {/* Sensores Disponibles */}
-          {activeTab === 'available' && !loading && !isLoading && (
-            <div className="space-y-4">
-              {availableSensors.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No hay sensores disponibles para asociar</p>
-                </div>
-              ) : (
-                availableSensors.map(sensor => (
-                  <div key={sensor.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h4 className="font-medium">{sensor.sensorType}</h4>
-                      <p className="text-sm text-gray-600">
-                        Unidad: {sensor.unitOfMeasurement}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => handleAssociateSensor(sensor.id)}
-                      className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded hover:bg-green-700 transition-colors"
-                    >
-                      <Plus size={16} />
-                      Asociar
-                    </button>
                   </div>
                 ))
               )}
@@ -423,47 +343,12 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
                 </div>
               </div>
 
-              <div className="flex gap-4">
+              <div>
                 <button
                   type="submit"
-                  className="flex-1 py-2 bg-primary text-white rounded hover:bg-green-700 transition-colors"
+                  className="w-full py-2 bg-primary text-white rounded hover:bg-green-700 transition-colors"
                 >
                   Crear y Asociar Sensor
-                </button>
-                <button
-                  type="button"
-                  onClick={async (e) => {
-                    e.preventDefault();
-                    try {
-                      setIsLoading(true);
-                      const sensorData = {
-                        sensorType: newSensorData.sensorType,
-                        unitOfMeasurement: newSensorData.unitOfMeasurement,
-                        minThreshold: parseFloat(newSensorData.thresholds.minThreshold),
-                        maxThreshold: parseFloat(newSensorData.thresholds.maxThreshold)
-                      };
-
-                      await createSensorAndAssociateToCrop(crop.id, sensorData);
-
-                      // Resetear formulario
-                      setNewSensorData({
-                        sensorType: '',
-                        unitOfMeasurement: '',
-                        thresholds: { minThreshold: '', maxThreshold: '' }
-                      });
-
-                      // Recargar datos
-                      await fetchUserSensors();
-                      setActiveTab('available');
-                    } catch (error) {
-                      console.error('Error creando sensor:', error);
-                    } finally {
-                      setIsLoading(false);
-                    }
-                  }}
-                  className="flex-1 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
-                >
-                  Solo Crear Sensor
                 </button>
               </div>
             </form>
