@@ -26,43 +26,47 @@ export const ExportSection = ({
 
   // Función para exportar como CSV
   const exportToCSV = () => {
-    const headers = ['Fecha', 'Valor', 'Tipo'];
+    // Crear encabezado con información general
+    const infoHeader = [
+      `Reporte de Sensor - ${cropName}`,
+      `Tipo de Sensor: ${sensorType}`,
+      `Período de Análisis: ${dateRange}`,
+      '',
+      'Estadísticas:',
+      `Valor Mínimo: ${stats.min}`,
+      `Valor Máximo: ${stats.max}`,
+      `Promedio: ${stats.avg}`,
+      `Desviación Estándar: ${stats.stdDev}`,
+      '',
+      'Historial de Lecturas:',
+      'Fecha y Hora,Valor Registrado,Tipo de Sensor,Unidad de Medida'
+    ];
+
+    // Procesar las lecturas con más detalles
+    const readings = data.map(row => [
+      row.fecha,
+      row.valor,
+      sensorType,
+      // Determinar la unidad según el tipo de sensor
+      sensorType.toLowerCase().includes('temperatura') ? '°C' :
+        sensorType.toLowerCase().includes('humedad') ? '%' :
+          sensorType.toLowerCase().includes('conductividad') ? 'mS/cm' : 'N/A'
+    ].join(','));
+
+    // Combinar todo el contenido
     const csvContent = [
-      headers.join(','),
-      ...data.map(row => [
-        row.fecha,
-        row.valor,
-        sensorType
-      ].join(','))
+      ...infoHeader,
+      ...readings
     ].join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // Crear y descargar el archivo
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/[:]/g, '-');
 
     link.setAttribute('href', url);
-    link.setAttribute('download', `datos_${cropName}_${sensorType}_${dateRange}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  // Función para exportar como JSON
-  const exportToJSON = () => {
-    const jsonData = {
-      cropName,
-      sensorType,
-      dateRange,
-      exportDate: new Date().toISOString(),
-      readings: data
-    };
-
-    const blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-
-    link.setAttribute('href', url);
-    link.setAttribute('download', `datos_${cropName}_${sensorType}_${dateRange}.json`);
+    link.setAttribute('download', `reporte_${cropName}_${sensorType}_${dateRange}_${timestamp}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -82,7 +86,7 @@ export const ExportSection = ({
         </span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Exportar como CSV */}
         <button
           onClick={exportToCSV}
@@ -95,23 +99,6 @@ export const ExportSection = ({
             <div>
               <h3 className="font-medium">Exportar como CSV</h3>
               <p className="text-sm text-gray-500">Formato para hojas de cálculo</p>
-            </div>
-          </div>
-          <Download size={20} className="text-gray-400" />
-        </button>
-
-        {/* Exportar como JSON */}
-        <button
-          onClick={exportToJSON}
-          className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          <div className="flex items-center">
-            <div className="bg-blue-100 rounded-lg p-3 mr-4">
-              <FileText className="text-blue-600" size={24} />
-            </div>
-            <div>
-              <h3 className="font-medium">Exportar como JSON</h3>
-              <p className="text-sm text-gray-500">Formato para desarrolladores</p>
             </div>
           </div>
           <Download size={20} className="text-gray-400" />
