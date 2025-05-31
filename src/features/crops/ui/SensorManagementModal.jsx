@@ -192,8 +192,8 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
           <button
             onClick={() => setActiveTab('associated')}
             className={`px-6 py-3 font-medium ${activeTab === 'associated'
-                ? 'border-b-2 border-primary text-primary'
-                : 'text-gray-600 hover:text-gray-800'
+              ? 'border-b-2 border-primary text-primary'
+              : 'text-gray-600 hover:text-gray-800'
               }`}
           >
             Sensores Asociados ({cropSensors.length})
@@ -201,8 +201,8 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
           <button
             onClick={() => setActiveTab('available')}
             className={`px-6 py-3 font-medium ${activeTab === 'available'
-                ? 'border-b-2 border-primary text-primary'
-                : 'text-gray-600 hover:text-gray-800'
+              ? 'border-b-2 border-primary text-primary'
+              : 'text-gray-600 hover:text-gray-800'
               }`}
           >
             Sensores Disponibles ({availableSensors.length})
@@ -210,8 +210,8 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
           <button
             onClick={() => setActiveTab('create')}
             className={`px-6 py-3 font-medium ${activeTab === 'create'
-                ? 'border-b-2 border-primary text-primary'
-                : 'text-gray-600 hover:text-gray-800'
+              ? 'border-b-2 border-primary text-primary'
+              : 'text-gray-600 hover:text-gray-800'
               }`}
           >
             Crear Nuevo
@@ -303,82 +303,169 @@ export const SensorManagementModal = ({ isOpen, onClose, crop }) => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Tipo de Sensor
                 </label>
-                <select
-                  value={newSensorData.sensorType}
-                  onChange={(e) => setNewSensorData(prev => ({
-                    ...prev,
-                    sensorType: e.target.value,
-                    unitOfMeasurement: e.target.value === 'temperature' ? '°C' :
-                      e.target.value === 'humidity' ? '%' :
-                        e.target.value === 'ec' ? 'mS/cm' : ''
-                  }))}
-                  className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
-                  required
-                >
-                  <option value="">Seleccionar tipo</option>
-                  <option value="temperature">Temperatura</option>
-                  <option value="humidity">Humedad</option>
-                  <option value="ec">Conductividad (EC)</option>
-                </select>
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={newSensorData.sensorType}
+                    onChange={(e) => setNewSensorData(prev => ({
+                      ...prev,
+                      sensorType: e.target.value
+                    }))}
+                    className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
+                    placeholder="Especifique el tipo de sensor (ej: Sensor A, Invernadero 1)"
+                    required
+                  />
+                  <p className="text-sm text-gray-500">
+                    Ingrese un nombre descriptivo para identificar el sensor
+                  </p>
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Unidad de Medida
                 </label>
-                <input
-                  type="text"
+                <select
                   value={newSensorData.unitOfMeasurement}
-                  onChange={(e) => setNewSensorData(prev => ({
-                    ...prev,
-                    unitOfMeasurement: e.target.value
-                  }))}
+                  onChange={(e) => {
+                    const unit = e.target.value;
+                    let defaultThresholds = { minThreshold: '', maxThreshold: '' };
+
+                    // Establecer umbrales sugeridos según la unidad
+                    switch (unit) {
+                      case '°C':
+                        defaultThresholds = { minThreshold: '18', maxThreshold: '26' };
+                        break;
+                      case '%':
+                        defaultThresholds = { minThreshold: '60', maxThreshold: '80' };
+                        break;
+                      case 'mS/cm':
+                        defaultThresholds = { minThreshold: '1', maxThreshold: '1.6' };
+                        break;
+                    }
+
+                    setNewSensorData(prev => ({
+                      ...prev,
+                      unitOfMeasurement: unit,
+                      thresholds: defaultThresholds
+                    }));
+                  }}
                   className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
-                  readOnly
-                />
+                  required
+                >
+                  <option value="">Seleccionar unidad</option>
+                  <option value="°C">Grados centígrados (°C)</option>
+                  <option value="%">Porcentaje (%)</option>
+                  <option value="mS/cm">Conductividad eléctrica (mS/cm)</option>
+                </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Umbral Mínimo
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={newSensorData.thresholds.minThreshold}
-                    onChange={(e) => setNewSensorData(prev => ({
-                      ...prev,
-                      thresholds: { ...prev.thresholds, minThreshold: e.target.value }
-                    }))}
-                    className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Umbral Máximo
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={newSensorData.thresholds.maxThreshold}
-                    onChange={(e) => setNewSensorData(prev => ({
-                      ...prev,
-                      thresholds: { ...prev.thresholds, maxThreshold: e.target.value }
-                    }))}
-                    className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
-                    required
-                  />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Umbrales
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">
+                      Mínimo
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step={newSensorData.unitOfMeasurement === 'mS/cm' ? '0.1' : '1'}
+                        value={newSensorData.thresholds.minThreshold}
+                        onChange={(e) => setNewSensorData(prev => ({
+                          ...prev,
+                          thresholds: {
+                            ...prev.thresholds,
+                            minThreshold: e.target.value
+                          }
+                        }))}
+                        className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
+                        required
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                        {newSensorData.unitOfMeasurement}
+                      </span>
+                    </div>
+                    {newSensorData.unitOfMeasurement && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {newSensorData.unitOfMeasurement === '°C' && 'Rango válido: -10°C - 50°C | Recomendado: 18°C - 26°C'}
+                        {newSensorData.unitOfMeasurement === '%' && 'Rango válido: 0% - 100% | Recomendado: 60% - 80%'}
+                        {newSensorData.unitOfMeasurement === 'mS/cm' && 'Rango válido: 0mS/cm - 5mS/cm | Recomendado: 1mS/cm - 1.6mS/cm'}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">
+                      Máximo
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step={newSensorData.unitOfMeasurement === 'mS/cm' ? '0.1' : '1'}
+                        value={newSensorData.thresholds.maxThreshold}
+                        onChange={(e) => setNewSensorData(prev => ({
+                          ...prev,
+                          thresholds: {
+                            ...prev.thresholds,
+                            maxThreshold: e.target.value
+                          }
+                        }))}
+                        className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
+                        required
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                        {newSensorData.unitOfMeasurement}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <button
-                type="submit"
-                className="w-full py-2 bg-primary text-white rounded hover:bg-green-700 transition-colors"
-              >
-                Crear y Asociar Sensor
-              </button>
+              <div className="flex gap-4">
+                <button
+                  type="submit"
+                  className="flex-1 py-2 bg-primary text-white rounded hover:bg-green-700 transition-colors"
+                >
+                  Crear y Asociar Sensor
+                </button>
+                <button
+                  type="button"
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    try {
+                      setIsLoading(true);
+                      const sensorData = {
+                        sensorType: newSensorData.sensorType,
+                        unitOfMeasurement: newSensorData.unitOfMeasurement,
+                        minThreshold: parseFloat(newSensorData.thresholds.minThreshold),
+                        maxThreshold: parseFloat(newSensorData.thresholds.maxThreshold)
+                      };
+
+                      await createSensorAndAssociateToCrop(crop.id, sensorData);
+
+                      // Resetear formulario
+                      setNewSensorData({
+                        sensorType: '',
+                        unitOfMeasurement: '',
+                        thresholds: { minThreshold: '', maxThreshold: '' }
+                      });
+
+                      // Recargar datos
+                      await fetchUserSensors();
+                      setActiveTab('available');
+                    } catch (error) {
+                      console.error('Error creando sensor:', error);
+                    } finally {
+                      setIsLoading(false);
+                    }
+                  }}
+                  className="flex-1 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                >
+                  Solo Crear Sensor
+                </button>
+              </div>
             </form>
           )}
         </div>
