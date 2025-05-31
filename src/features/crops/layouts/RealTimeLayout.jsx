@@ -20,12 +20,15 @@ export const RealTimeLayout = () => {
     startMonitoring,
     stopMonitoring,
     changeTimeRange,
-    loading,
-    error,
+    loading: globalLoading,
+    error: globalError,
     fetchSensorsByCropId,
     updateAllThresholds
   } = useMonitoring();
 
+  const [cropSensors, setCropSensors] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [localThresholds, setLocalThresholds] = useState({
     temperature: { min: 18.0, max: 26.0 },
     humidity: { min: 60, max: 80 },
@@ -38,29 +41,43 @@ export const RealTimeLayout = () => {
   const [showManualReadings, setShowManualReadings] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  // Cargar sensores del cultivo seleccionado solo una vez al inicio
+  // Función para cargar los sensores
+  const loadSensors = async () => {
+    if (!selectedCrop?.id) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetchSensorsByCropId(selectedCrop.id);
+      const sensors = Array.isArray(response) ? response : [];
+      setCropSensors(sensors);
+    } catch (error) {
+      console.error('Error al cargar sensores:', error);
+      setError('Error al cargar los sensores');
+      setCropSensors([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Cargar sensores del cultivo seleccionado
   useEffect(() => {
     let isMounted = true;
 
-    const loadInitialData = async () => {
-      if (selectedCrop && isInitialLoad) {
-        try {
-          await fetchSensorsByCropId(selectedCrop.id);
-          if (isMounted) {
-            setIsInitialLoad(false);
-          }
-        } catch (error) {
-          console.error('Error loading sensors:', error);
-        }
-      }
+    const fetchSensors = async () => {
+      if (!isMounted) return;
+      await loadSensors();
     };
 
-    loadInitialData();
+    if (selectedCrop?.id) {
+      fetchSensors();
+    }
 
     return () => {
       isMounted = false;
     };
-  }, [selectedCrop, fetchSensorsByCropId, isInitialLoad]);
+  }, [selectedCrop?.id]);
 
   // Actualizar umbrales locales cuando cambian los del contexto
   useEffect(() => {
@@ -129,7 +146,7 @@ export const RealTimeLayout = () => {
   const displayData = getCurrentSensorData();
 
   // Estado de carga
-  if (loading && !sensors.length) {
+  if (globalLoading && !sensors.length) {
     return (
       <div className="p-6">
         <div className="flex justify-center items-center h-64">
@@ -140,13 +157,13 @@ export const RealTimeLayout = () => {
     );
   }
 
-  if (error) {
+  if (globalError || error) {
     return (
       <div className="p-6">
         <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-red-700">Error: {error}</p>
+          <p className="text-red-700">Error: {globalError || error}</p>
           <button
-            onClick={() => fetchSensorsByCropId(selectedCrop?.id)}
+            onClick={loadSensors}
             className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
           >
             Reintentar
@@ -235,7 +252,17 @@ export const RealTimeLayout = () => {
             <p className="text-gray-600 mt-1">
               Cultivo: <span className="font-medium">{selectedCrop?.name}</span>
               <span className="ml-4 text-sm">
-                {sensors.filter(s => s.cropId === selectedCrop?.id).length} sensores asociados
+                {isLoading ? (
+                  <span className="inline-flex items-center">
+                    <svg className="animate-spin h-4 w-4 text-gray-500 mr-1" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Cargando sensores...
+                  </span>
+                ) : (
+                  `${cropSensors.length} sensores asociados`
+                )}
               </span>
             </p>
           </div>
