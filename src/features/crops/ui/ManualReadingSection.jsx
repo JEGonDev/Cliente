@@ -14,6 +14,7 @@ export const ManualReadingSection = () => {
     createReading,
     processBatchReadings,
     fetchSensorsByCropId,
+    getReadingsByCropId,
     loading: globalLoading
   } = useMonitoring();
 
@@ -36,6 +37,16 @@ export const ManualReadingSection = () => {
   const [csvData, setCsvData] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Función para recargar las lecturas
+  const refreshReadings = useCallback(async () => {
+    if (!selectedCrop?.id) return;
+    try {
+      await getReadingsByCropId(selectedCrop.id);
+    } catch (error) {
+      console.error('Error al recargar lecturas:', error);
+    }
+  }, [selectedCrop?.id, getReadingsByCropId]);
 
   // Cargar sensores cuando cambie el cultivo seleccionado
   useEffect(() => {
@@ -82,6 +93,7 @@ export const ManualReadingSection = () => {
     }
 
     try {
+      setLoading(true);
       const readingData = {
         cropId: selectedCrop.id,
         readings: [{
@@ -102,12 +114,17 @@ export const ManualReadingSection = () => {
           notes: ''
         });
 
+        // Recargar lecturas inmediatamente
+        await refreshReadings();
+
         // Limpiar mensaje después de 3 segundos
         setTimeout(() => setSuccessMessage(''), 3000);
       }
     } catch (error) {
       setErrorMessage(error.message || 'Error al crear la lectura');
       setTimeout(() => setErrorMessage(''), 5000);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -150,6 +167,7 @@ export const ManualReadingSection = () => {
     }
 
     try {
+      setLoading(true);
       const batchData = {
         cropId: selectedCrop.id,
         readings: batchReadings.map(reading => ({
@@ -163,11 +181,17 @@ export const ManualReadingSection = () => {
       if (result) {
         setSuccessMessage(`Lote de ${batchReadings.length} lecturas procesado exitosamente`);
         setBatchReadings([]);
+
+        // Recargar lecturas inmediatamente
+        await refreshReadings();
+
         setTimeout(() => setSuccessMessage(''), 3000);
       }
     } catch (error) {
       setErrorMessage(error.message || 'Error al procesar el lote de lecturas');
       setTimeout(() => setErrorMessage(''), 5000);
+    } finally {
+      setLoading(false);
     }
   };
 

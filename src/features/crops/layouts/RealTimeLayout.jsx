@@ -25,19 +25,17 @@ export const RealTimeLayout = () => {
     loading: globalLoading,
     error: globalError,
     updateAllThresholds,
-    loadThresholds
+    loadThresholds,
+    getReadingsByCropId
   } = useMonitoring();
 
   console.log('RealTimeLayout: selectedCrop:', selectedCrop);
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [localThresholds, setLocalThresholds] = useState({});
   const [status, setStatus] = useState(null);
   const [isThresholdModalOpen, setIsThresholdModalOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('monitoring'); // 'monitoring' | 'manual-readings'
-  const [showManualReadings, setShowManualReadings] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [readings, setReadings] = useState([]);
 
   // Cargar umbrales cuando cambia el cultivo seleccionado
   useEffect(() => {
@@ -53,6 +51,28 @@ export const RealTimeLayout = () => {
       setLocalThresholds(thresholds);
     }
   }, [thresholds]);
+
+  // Efecto para cargar las lecturas cuando cambia el cultivo o cuando se crean nuevas lecturas
+  useEffect(() => {
+    const loadReadings = async () => {
+      if (selectedCrop?.id) {
+        try {
+          const response = await getReadingsByCropId(selectedCrop.id);
+          setReadings(response.data || []);
+        } catch (error) {
+          console.error('Error al cargar lecturas:', error);
+        }
+      }
+    };
+
+    loadReadings();
+
+    // Configurar un intervalo para actualizar las lecturas cada 5 segundos cuando no hay monitoreo en tiempo real
+    if (!isMonitoring) {
+      const interval = setInterval(loadReadings, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [selectedCrop?.id, getReadingsByCropId, isMonitoring]);
 
   // Verificar si hay sensores configurados
   const hasSensorsConfigured = sensors && sensors.length > 0;
@@ -102,33 +122,91 @@ export const RealTimeLayout = () => {
 
   // Obtener datos de monitoreo en tiempo real
   const getCurrentSensorData = () => {
-    if (!selectedCrop || !realTimeData || Object.keys(realTimeData).length === 0) {
-      return {
-        temperature: { current: 0, unit: "°C", trend: "Sin datos", trendTime: "" },
-        humidity: { current: 0, unit: "%", trend: "Sin datos", trendTime: "" },
-        ec: { current: 0, unit: "mS/cm", trend: "Sin datos", trendTime: "" },
-      };
+    // Si hay datos en tiempo real, usarlos
+    if (isMonitoring && realTimeData && Object.keys(realTimeData).length > 0) {
+      const result = {};
+
+      // Procesar datos en tiempo real
+      Object.entries(realTimeData).forEach(([sensorId, sensorData]) => {
+        const sensor = sensors.find(s => s.id === parseInt(sensorId));
+        if (sensor && sensorData.current) {
+          const sensorType = sensor.type.toLowerCase();
+          if (['temperature', 'humidity', 'ec'].includes(sensorType)) {
+            result[sensorType] = {
+              current: sensorData.current.readingValue,
+              unit: sensorType === 'temperature' ? '°C' : sensorType === 'humidity' ? '%' : 'mS/cm',
+              trend: sensorData.trend?.value || 'Estable',
+              trendDirection: sensorData.trend?.direction || 'stable',
+              trendTime: sensorData.trend?.time || 'Sin datos'
+            };
+          }
+        }
+      });
+
+      return result;
     }
 
-    const result = {};
+    // Si no hay datos en tiempo real, usar las últimas lecturas manuales
+    console.log('Usando lecturas manuales:', readings);
 
-    // Procesar cada sensor
-    Object.entries(realTimeData).forEach(([sensorId, sensorData]) => {
-      const sensor = sensors.find(s => s.id === parseInt(sensorId));
-      if (sensor && sensorData.current) {
-        const sensorType = sensor.type.toLowerCase();
-        if (['temperature', 'humidity', 'ec'].includes(sensorType)) {
-          result[sensorType] = {
-            current: sensorData.current.readingValue,
-            unit: sensorType === 'temperature' ? '°C' : sensorType === 'humidity' ? '%' : 'mS/cm',
-            trend: sensorData.trend?.value || 'Estable',
-            trendDirection: sensorData.trend?.direction || 'stable',
-            trendTime: sensorData.trend?.time || 'Sin datos'
-          };
-        }
+    // Crear un mapa para almacenar la última lectura de cada tipo de sensor
+    const latestReadings = {};
+
+    // Iterar sobre todas las lecturas para encontrar las más recientes por tipo
+    readings.forEach(reading => {
+      const type = reading.sensorType.toLowerCase();
+      const currentLatest = latestReadings[type];
+
+      // Si no hay lectura previa o esta es más reciente, actualizar
+      if (!currentLatest || new Date(reading.readingDate) > new Date(currentLatest.readingDate)) {
+        latestReadings[type] = reading;
       }
     });
 
+    // Mapear los tipos de sensores a los nombres esperados
+    const sensorTypeMap = {
+      'sensor temperatura': 'temperature',
+      'humedad': 'humidity',
+      'conductividad electrica': 'ec'
+    };
+
+    // Crear el objeto de respuesta con el formato esperado
+    const result = {
+      temperature: {
+        current: 0,
+        unit: "°C",
+        trend: "Sin datos",
+        trendTime: ""
+      },
+      humidity: {
+        current: 0,
+        unit: "%",
+        trend: "Sin datos",
+        trendTime: ""
+      },
+      ec: {
+        current: 0,
+        unit: "mS/cm",
+        trend: "Sin datos",
+        trendTime: ""
+      }
+    };
+
+    // Actualizar los valores con las últimas lecturas
+    Object.entries(latestReadings).forEach(([type, reading]) => {
+      const normalizedType = sensorTypeMap[type];
+      if (normalizedType) {
+        result[normalizedType] = {
+          current: reading.readingValue,
+          unit: reading.unitOfMeasurement,
+          trend: "Última lectura manual",
+          trendTime: new Date(reading.readingDate).toLocaleString(),
+          trendDirection: 'stable'
+        };
+      }
+    });
+
+    console.log('Datos procesados:', result);
     return result;
   };
 
@@ -146,11 +224,11 @@ export const RealTimeLayout = () => {
     );
   }
 
-  if (globalError || error) {
+  if (globalError) {
     return (
       <div className="p-6">
         <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-red-700">Error: {globalError || error}</p>
+          <p className="text-red-700">Error: {globalError}</p>
           <button
             onClick={() => window.location.reload()}
             className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
@@ -263,26 +341,9 @@ export const RealTimeLayout = () => {
               {activeSection === 'monitoring' ? 'Monitoreo en Tiempo Real' : 'Lecturas Manuales'}
             </h1>
             <p className="text-gray-600 mt-1">
-              Cultivo: <span className="font-medium">{selectedCrop?.name}</span>
+              Cultivo: <span className="font-medium">{selectedCrop?.cropName}</span>
               <span className="ml-4 text-sm">
-                {isLoading ? (
-                  <span className="inline-flex items-center">
-                    <svg className="animate-spin h-4 w-4 text-gray-500 mr-1" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Cargando sensores...
-                  </span>
-                ) : (
-                  (() => {
-                    console.log('Renderizando cantidad de sensores:', {
-                      sensors,
-                      length: sensors.length,
-                      isLoading
-                    });
-                    return `${sensors.length} sensores asociados`;
-                  })()
-                )}
+                {`${sensors.length} sensores asociados`}
               </span>
             </p>
           </div>
