@@ -303,7 +303,7 @@ export const RealTimeLayout = () => {
             Este cultivo aún no tiene sensores asociados. Necesitas configurar sensores para poder establecer umbrales y monitorear en tiempo real.
           </p>
           <Link
-            to={`/monitoring/crops/${selectedCrop.id}/sensors`}
+            to="/monitoring/crops"
             className="inline-flex items-center px-4 py-2 bg-primary text-white rounded hover:bg-green-700 transition-colors"
           >
             <span className="mr-2">➕</span>
