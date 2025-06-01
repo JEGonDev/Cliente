@@ -5,79 +5,158 @@ import { CropStatusBadge } from './CropStatusBadge';
 import { EditCropModal } from './EditCropModal';
 import { SensorManagementModal } from './SensorManagementModal';
 import { useMonitoring } from '../hooks/useMonitoring';
+import { cropService } from '../services/cropService';
 
 export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSensorModalOpen, setIsSensorModalOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [cropSensors, setCropSensors] = useState([]);
+  const [cropAlerts, setCropAlerts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const { fetchSensorsByCropId } = useMonitoring();
+  const {
+    fetchSensorsByCropId,
+    fetchAlertsByCropId,
+    removeSensorAndDelete,
+    createSensorAndAssociateToCrop,
+    loading
+  } = useMonitoring();
 
-  // Función para cargar los sensores
-  const loadSensors = async () => {
-    if (!crop?.id) return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetchSensorsByCropId(crop.id);
-      const sensors = Array.isArray(response) ? response : [];
-      setCropSensors(sensors);
-    } catch (error) {
-      console.error('Error al cargar sensores:', error);
-      setError('Error al cargar los sensores');
-      setCropSensors([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Efecto para cargar los sensores del cultivo
+  // Efecto para cargar datos cuando se monta el componente
   useEffect(() => {
     let isMounted = true;
+    let intervalId;
 
-    const fetchSensors = async () => {
-      if (!isMounted) return;
-      await loadSensors();
+    const loadData = async () => {
+      if (!crop?.id || isLoading) return;
+
+      setIsLoading(true);
+      setError(null);
+      try {
+        // Cargar sensores, alertas y lecturas recientes
+        const [sensorsResponse, alertsResponse, readingsResponse] = await Promise.all([
+          fetchSensorsByCropId(crop.id),
+          fetchAlertsByCropId(crop.id),
+          cropService.getReadingsByCropId(crop.id)
+        ]);
+
+        if (!isMounted) return;
+
+        // Procesar sensores
+        const sensors = Array.isArray(sensorsResponse) ? sensorsResponse :
+          Array.isArray(sensorsResponse?.data) ? sensorsResponse.data : [];
+
+        // Obtener las lecturas y ordenarlas por fecha
+        const readings = readingsResponse?.data || [];
+        const latestReadings = new Map();
+
+        // Procesar las lecturas para obtener la más reciente de cada sensor
+        readings.forEach(reading => {
+          const currentLatest = latestReadings.get(reading.sensorId);
+          if (!currentLatest || new Date(reading.readingDate) > new Date(currentLatest.readingDate)) {
+            latestReadings.set(reading.sensorId, reading);
+          }
+        });
+
+        // Asociar las lecturas más recientes a cada sensor
+        const sensorsWithReadings = sensors.map(sensor => {
+          const sensorId = sensor.id || sensor.sensorId;
+          const latestReading = latestReadings.get(sensorId);
+          return {
+            ...sensor,
+            lastReading: latestReading ? latestReading.readingValue : 0,
+            readingDate: latestReading ? latestReading.readingDate : null
+          };
+        });
+
+        // Procesar alertas
+        let alerts;
+        if (Array.isArray(alertsResponse)) {
+          alerts = alertsResponse;
+        } else if (alertsResponse?.data) {
+          alerts = Array.isArray(alertsResponse.data) ? alertsResponse.data : [alertsResponse.data];
+        } else {
+          alerts = [];
+        }
+
+        // Filtrar solo alertas activas
+        alerts = alerts.filter(alert => alert.status === 'ACTIVE' || !alert.resolved);
+
+        if (isMounted) {
+          setCropSensors(sensorsWithReadings);
+          setCropAlerts(alerts);
+        }
+      } catch (error) {
+        console.error('Error cargando datos:', error);
+        if (isMounted) {
+          setError('Error al cargar los datos');
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
     };
 
-    fetchSensors();
+    loadData();
+
+    // Configurar actualización periódica solo si el documento está visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    intervalId = setInterval(loadData, 5000);
 
     return () => {
       isMounted = false;
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
     };
-  }, [crop?.id, fetchSensorsByCropId]);
+  }, [crop?.id, fetchSensorsByCropId, fetchAlertsByCropId]);
 
   // Procesar datos de sensores de manera eficiente usando useMemo
   const sensorData = useMemo(() => {
     const data = { humidity: 0, temperature: 0, conductivity: 0 };
 
     cropSensors.forEach(sensor => {
-      const type = sensor.sensorType.toLowerCase();
-      if (type.includes('humedad')) {
-        data.humidity = sensor.lastReading || 0;
-      } else if (type.includes('temperatura')) {
-        data.temperature = sensor.lastReading || 0;
-      } else if (type.includes('conductividad') || type.includes('ec')) {
-        data.conductivity = sensor.lastReading || 0;
+      const type = (sensor.sensorType || sensor.type || '').toLowerCase();
+      const value = parseFloat(sensor.lastReading || 0);
+
+      switch (type) {
+        case 'humidity':
+        case 'humedad':
+          data.humidity = value;
+          break;
+        case 'temperature':
+        case 'temperatura':
+          data.temperature = value;
+          break;
+        case 'ec':
+        case 'conductividad':
+        case 'conductividad electrica':
+          data.conductivity = value;
+          break;
       }
     });
 
     return data;
   }, [cropSensors]);
 
-  // Función para obtener el número de alertas
+  // Función para obtener el número de alertas activas
   const getAlertsCount = () => {
-    return 0; // Por ahora retornamos 0 ya que no hay integración con alertas
+    return cropAlerts.filter(alert => alert.status === 'ACTIVE' || !alert.resolved).length;
   };
 
   // Función para obtener el número de sensores
   const getSensorsCount = () => {
-    return cropSensors.length;
+    return cropSensors.filter(sensor => sensor.status === 'ACTIVE' || sensor.isActive !== false).length;
   };
 
   // Función para normalizar el status
@@ -123,7 +202,7 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
     setIsSensorModalOpen(false);
     onModalClose?.();
     // Recargar los sensores cuando se cierra el modal
-    loadSensors();
+    fetchSensorsByCropId(crop.id);
   };
 
   const alertsCount = getAlertsCount();
@@ -193,24 +272,24 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
 
         {/* Datos de sensores en grid */}
         <div className="grid grid-cols-3 gap-4 mb-4">
-          <div className="flex flex-col items-center p-3 bg-blue-50 rounded-lg">
-            <Droplets className="h-5 w-5 text-blue-500 mb-1" />
-            <span className="text-sm font-medium text-blue-700">
-              {sensorData.humidity}%
+          <div className={`flex flex-col items-center p-3 rounded-lg ${sensorData.humidity > 0 ? 'bg-blue-50' : 'bg-gray-50'}`}>
+            <Droplets className={`h-5 w-5 ${sensorData.humidity > 0 ? 'text-blue-500' : 'text-gray-400'} mb-1`} />
+            <span className={`text-sm font-medium ${sensorData.humidity > 0 ? 'text-blue-700' : 'text-gray-500'}`}>
+              {sensorData.humidity.toFixed(1)}%
             </span>
             <span className="text-xs text-gray-600">Humedad</span>
           </div>
-          <div className="flex flex-col items-center p-3 bg-red-50 rounded-lg">
-            <Thermometer className="h-5 w-5 text-red-500 mb-1" />
-            <span className="text-sm font-medium text-red-700">
-              {sensorData.temperature}°C
+          <div className={`flex flex-col items-center p-3 rounded-lg ${sensorData.temperature > 0 ? 'bg-red-50' : 'bg-gray-50'}`}>
+            <Thermometer className={`h-5 w-5 ${sensorData.temperature > 0 ? 'text-red-500' : 'text-gray-400'} mb-1`} />
+            <span className={`text-sm font-medium ${sensorData.temperature > 0 ? 'text-red-700' : 'text-gray-500'}`}>
+              {sensorData.temperature.toFixed(1)}°C
             </span>
             <span className="text-xs text-gray-600">Temperatura</span>
           </div>
-          <div className="flex flex-col items-center p-3 bg-purple-50 rounded-lg">
-            <span className="text-purple-500 mb-1 text-lg">⚡</span>
-            <span className="text-sm font-medium text-purple-700">
-              {sensorData.conductivity} mS/cm
+          <div className={`flex flex-col items-center p-3 rounded-lg ${sensorData.conductivity > 0 ? 'bg-purple-50' : 'bg-gray-50'}`}>
+            <span className={`${sensorData.conductivity > 0 ? 'text-purple-500' : 'text-gray-400'} mb-1 text-lg`}>⚡</span>
+            <span className={`text-sm font-medium ${sensorData.conductivity > 0 ? 'text-purple-700' : 'text-gray-500'}`}>
+              {sensorData.conductivity.toFixed(2)} mS/cm
             </span>
             <span className="text-xs text-gray-600">EC</span>
           </div>
@@ -230,12 +309,12 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
                   Cargando...
                 </span>
               ) : (
-                <span>{sensorsCount} sensores</span>
+                <span>{getSensorsCount()} sensores</span>
               )}
             </div>
-            <div className={`flex items-center gap-1 ${alertsCount > 0 ? 'text-red-600' : ''}`}>
+            <div className={`flex items-center gap-1 ${getAlertsCount() > 0 ? 'text-red-600' : ''}`}>
               <span className="text-lg">🔔</span>
-              <span>{alertsCount} alertas</span>
+              <span>{getAlertsCount()} alertas</span>
             </div>
           </div>
 
@@ -269,7 +348,7 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
       <SensorManagementModal
         isOpen={isSensorModalOpen}
         onClose={handleSensorModalClose}
-        onSensorChange={loadSensors}
+        onSensorChange={fetchSensorsByCropId}
         crop={{
           id: crop.id,
           name: crop.cropName || crop.name || 'Sin nombre'
