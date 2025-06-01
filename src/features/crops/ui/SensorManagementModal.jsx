@@ -151,7 +151,18 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
 
       const sensorData = {
         sensorType: newSensorData.sensorType,
-        unitOfMeasurement: newSensorData.unitOfMeasurement,
+        unitOfMeasurement: (() => {
+          switch (newSensorData.sensorType) {
+            case 'temperature':
+              return '°C';
+            case 'humidity':
+              return '%';
+            case 'ec':
+              return 'mS/cm';
+            default:
+              return '';
+          }
+        })(),
         minThreshold: parseFloat(newSensorData.thresholds.minThreshold),
         maxThreshold: parseFloat(newSensorData.thresholds.maxThreshold)
       };
@@ -283,19 +294,41 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                   Tipo de Sensor
                 </label>
                 <div className="space-y-2">
-                  <input
-                    type="text"
+                  <select
                     value={newSensorData.sensorType}
-                    onChange={(e) => setNewSensorData(prev => ({
-                      ...prev,
-                      sensorType: e.target.value
-                    }))}
+                    onChange={(e) => {
+                      const sensorType = e.target.value;
+                      let defaultThresholds = { minThreshold: '', maxThreshold: '' };
+
+                      // Set default thresholds based on sensor type
+                      switch (sensorType) {
+                        case 'temperature':
+                          defaultThresholds = { minThreshold: '18', maxThreshold: '26' };
+                          break;
+                        case 'humidity':
+                          defaultThresholds = { minThreshold: '60', maxThreshold: '80' };
+                          break;
+                        case 'ec':
+                          defaultThresholds = { minThreshold: '1', maxThreshold: '1.6' };
+                          break;
+                      }
+
+                      setNewSensorData(prev => ({
+                        ...prev,
+                        sensorType,
+                        thresholds: defaultThresholds
+                      }));
+                    }}
                     className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
-                    placeholder="Especifique el tipo de sensor (ej: Sensor A, Invernadero 1)"
                     required
-                  />
+                  >
+                    <option value="">Seleccionar tipo de sensor</option>
+                    <option value="temperature">Temperatura</option>
+                    <option value="humidity">Humedad</option>
+                    <option value="ec">Conductividad Eléctrica (EC)</option>
+                  </select>
                   <p className="text-sm text-gray-500">
-                    Ingrese un nombre descriptivo para identificar el sensor
+                    Seleccione el tipo de sensor que desea crear
                   </p>
                 </div>
               </div>
@@ -304,39 +337,26 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Unidad de Medida
                 </label>
-                <select
-                  value={newSensorData.unitOfMeasurement}
-                  onChange={(e) => {
-                    const unit = e.target.value;
-                    let defaultThresholds = { minThreshold: '', maxThreshold: '' };
-
-                    // Establecer umbrales sugeridos según la unidad
-                    switch (unit) {
-                      case '°C':
-                        defaultThresholds = { minThreshold: '18', maxThreshold: '26' };
-                        break;
-                      case '%':
-                        defaultThresholds = { minThreshold: '60', maxThreshold: '80' };
-                        break;
-                      case 'mS/cm':
-                        defaultThresholds = { minThreshold: '1', maxThreshold: '1.6' };
-                        break;
-                    }
-
-                    setNewSensorData(prev => ({
-                      ...prev,
-                      unitOfMeasurement: unit,
-                      thresholds: defaultThresholds
-                    }));
-                  }}
-                  className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
-                  required
-                >
-                  <option value="">Seleccionar unidad</option>
-                  <option value="°C">Grados centígrados (°C)</option>
-                  <option value="%">Porcentaje (%)</option>
-                  <option value="mS/cm">Conductividad eléctrica (mS/cm)</option>
-                </select>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={(() => {
+                      switch (newSensorData.sensorType) {
+                        case 'temperature':
+                          return 'Grados centígrados (°C)';
+                        case 'humidity':
+                          return 'Porcentaje (%)';
+                        case 'ec':
+                          return 'Conductividad eléctrica (mS/cm)';
+                        default:
+                          return '';
+                      }
+                    })()}
+                    className="w-full p-2 border rounded bg-gray-50 focus:ring-0 focus:border-gray-300"
+                    readOnly
+                    required
+                  />
+                </div>
               </div>
 
               <div>
@@ -351,7 +371,7 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                     <div className="relative">
                       <input
                         type="number"
-                        step={newSensorData.unitOfMeasurement === 'mS/cm' ? '0.1' : '1'}
+                        step={newSensorData.sensorType === 'ec' ? '0.1' : '1'}
                         value={newSensorData.thresholds.minThreshold}
                         onChange={(e) => setNewSensorData(prev => ({
                           ...prev,
@@ -364,14 +384,25 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                         required
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                        {newSensorData.unitOfMeasurement}
+                        {(() => {
+                          switch (newSensorData.sensorType) {
+                            case 'temperature':
+                              return '°C';
+                            case 'humidity':
+                              return '%';
+                            case 'ec':
+                              return 'mS/cm';
+                            default:
+                              return '';
+                          }
+                        })()}
                       </span>
                     </div>
-                    {newSensorData.unitOfMeasurement && (
+                    {newSensorData.sensorType && (
                       <p className="text-xs text-gray-500 mt-1">
-                        {newSensorData.unitOfMeasurement === '°C' && 'Rango válido: -10°C - 50°C | Recomendado: 18°C - 26°C'}
-                        {newSensorData.unitOfMeasurement === '%' && 'Rango válido: 0% - 100% | Recomendado: 60% - 80%'}
-                        {newSensorData.unitOfMeasurement === 'mS/cm' && 'Rango válido: 0mS/cm - 5mS/cm | Recomendado: 1mS/cm - 1.6mS/cm'}
+                        {newSensorData.sensorType === 'temperature' && 'Rango válido: -10°C - 50°C | Recomendado: 18°C - 26°C'}
+                        {newSensorData.sensorType === 'humidity' && 'Rango válido: 0% - 100% | Recomendado: 60% - 80%'}
+                        {newSensorData.sensorType === 'ec' && 'Rango válido: 0mS/cm - 5mS/cm | Recomendado: 1mS/cm - 1.6mS/cm'}
                       </p>
                     )}
                   </div>
@@ -382,7 +413,7 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                     <div className="relative">
                       <input
                         type="number"
-                        step={newSensorData.unitOfMeasurement === 'mS/cm' ? '0.1' : '1'}
+                        step={newSensorData.sensorType === 'ec' ? '0.1' : '1'}
                         value={newSensorData.thresholds.maxThreshold}
                         onChange={(e) => setNewSensorData(prev => ({
                           ...prev,
@@ -395,7 +426,18 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                         required
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                        {newSensorData.unitOfMeasurement}
+                        {(() => {
+                          switch (newSensorData.sensorType) {
+                            case 'temperature':
+                              return '°C';
+                            case 'humidity':
+                              return '%';
+                            case 'ec':
+                              return 'mS/cm';
+                            default:
+                              return '';
+                          }
+                        })()}
                       </span>
                     </div>
                   </div>

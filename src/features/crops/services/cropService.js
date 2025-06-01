@@ -228,14 +228,47 @@ export const cropService = {
         sensors = [];
       }
 
-      // Normalizar los datos de los sensores
-      const normalizedSensors = sensors.map(sensor => ({
-        ...sensor,
-        id: sensor.id || sensor.sensorId,
-        sensorType: sensor.sensorType || sensor.type || 'Desconocido',
-        unitOfMeasurement: sensor.unitOfMeasurement || sensor.unit || '',
-        cropId: cropId // Asegurarnos de que tenga el cropId
-      }));
+      // Normalizar los tipos de sensores y unidades
+      const normalizedSensors = sensors.map(sensor => {
+        // Obtener el tipo de sensor original
+        const originalType = (sensor.sensorType || sensor.type || '').toLowerCase();
+
+        // Normalizar el tipo de sensor
+        let normalizedType;
+        if (originalType.includes('temp')) {
+          normalizedType = 'temperature';
+        } else if (originalType.includes('hum')) {
+          normalizedType = 'humidity';
+        } else if (originalType.includes('ec') || originalType.includes('cond')) {
+          normalizedType = 'ec';
+        } else {
+          normalizedType = originalType;
+        }
+
+        // Normalizar la unidad de medida basada en el tipo normalizado
+        let normalizedUnit;
+        switch (normalizedType) {
+          case 'temperature':
+            normalizedUnit = '°C';
+            break;
+          case 'humidity':
+            normalizedUnit = '%';
+            break;
+          case 'ec':
+            normalizedUnit = 'mS/cm';
+            break;
+          default:
+            normalizedUnit = sensor.unitOfMeasurement || sensor.unit || '';
+        }
+
+        return {
+          ...sensor,
+          id: sensor.id || sensor.sensorId,
+          sensorType: normalizedType,
+          unitOfMeasurement: normalizedUnit,
+          cropId: cropId
+        };
+      });
 
       console.log('Normalized sensors:', normalizedSensors);
       return { data: normalizedSensors };

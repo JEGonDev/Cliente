@@ -144,11 +144,23 @@ export const RealTimeLayout = () => {
       Object.entries(realTimeData).forEach(([sensorId, sensorData]) => {
         const sensor = sensors.find(s => s.id === parseInt(sensorId));
         if (sensor && sensorData.current) {
-          const sensorType = sensor.type.toLowerCase();
-          if (['temperature', 'humidity', 'ec'].includes(sensorType)) {
-            result[sensorType] = {
-              current: sensorData.current.readingValue,
-              unit: sensorType === 'temperature' ? '°C' : sensorType === 'humidity' ? '%' : 'mS/cm',
+          // Normalizar el tipo de sensor
+          const sensorTypeMap = {
+            'temperature': 'temperature',
+            'temperatura': 'temperature',
+            'sensor temperatura': 'temperature',
+            'humidity': 'humidity',
+            'humedad': 'humidity',
+            'ec': 'ec',
+            'conductividad electrica': 'ec'
+          };
+
+          const normalizedType = sensorTypeMap[sensor.sensorType.toLowerCase()] || sensor.sensorType.toLowerCase();
+
+          if (['temperature', 'humidity', 'ec'].includes(normalizedType)) {
+            result[normalizedType] = {
+              current: parseFloat(sensorData.current.readingValue),
+              unit: normalizedType === 'temperature' ? '°C' : normalizedType === 'humidity' ? '%' : 'mS/cm',
               trend: sensorData.trend?.value || 'Estable',
               trendDirection: sensorData.trend?.direction || 'stable',
               trendTime: sensorData.trend?.time || 'Sin datos'
@@ -168,21 +180,25 @@ export const RealTimeLayout = () => {
 
     // Iterar sobre todas las lecturas para encontrar las más recientes por tipo
     readings.forEach(reading => {
-      const type = reading.sensorType.toLowerCase();
-      const currentLatest = latestReadings[type];
+      const sensorTypeMap = {
+        'temperature': 'temperature',
+        'temperatura': 'temperature',
+        'sensor temperatura': 'temperature',
+        'humidity': 'humidity',
+        'humedad': 'humidity',
+        'ec': 'ec',
+        'conductividad electrica': 'ec'
+      };
+
+      const normalizedType = sensorTypeMap[reading.sensorType.toLowerCase()] || reading.sensorType.toLowerCase();
+
+      const currentLatest = latestReadings[normalizedType];
 
       // Si no hay lectura previa o esta es más reciente, actualizar
       if (!currentLatest || new Date(reading.readingDate) > new Date(currentLatest.readingDate)) {
-        latestReadings[type] = reading;
+        latestReadings[normalizedType] = reading;
       }
     });
-
-    // Mapear los tipos de sensores a los nombres esperados
-    const sensorTypeMap = {
-      'sensor temperatura': 'temperature',
-      'humedad': 'humidity',
-      'conductividad electrica': 'ec'
-    };
 
     // Crear el objeto de respuesta con el formato esperado
     const result = {
@@ -208,10 +224,9 @@ export const RealTimeLayout = () => {
 
     // Actualizar los valores con las últimas lecturas
     Object.entries(latestReadings).forEach(([type, reading]) => {
-      const normalizedType = sensorTypeMap[type];
-      if (normalizedType) {
-        result[normalizedType] = {
-          current: reading.readingValue,
+      if (result[type]) {
+        result[type] = {
+          current: parseFloat(reading.readingValue),
           unit: reading.unitOfMeasurement,
           trend: "Estable",
           trendTime: new Date(reading.readingDate).toLocaleString(),

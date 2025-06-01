@@ -81,9 +81,12 @@ export const DataHistoryLayout = () => {
     if (!sensor) return '';
 
     const sensorTypes = {
+      'temperature': 'Temperatura',
       'temperatura': 'Temperatura',
       'sensor temperatura': 'Temperatura',
+      'humidity': 'Humedad',
       'humedad': 'Humedad',
+      'ec': 'Conductividad',
       'conductividad': 'Conductividad',
       'conductividad electrica': 'Conductividad'
     };
@@ -101,9 +104,12 @@ export const DataHistoryLayout = () => {
     if (!type) return '';
 
     const typeMap = {
+      'temperature': '°C',
       'temperatura': '°C',
       'sensor temperatura': '°C',
+      'humidity': '%',
       'humedad': '%',
+      'ec': 'mS/cm',
       'conductividad': 'mS/cm',
       'conductividad electrica': 'mS/cm'
     };
