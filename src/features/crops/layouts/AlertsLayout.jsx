@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useMonitoring } from '../hooks/useMonitoring';
-import { ThresholdConfig } from '../ui/ThresholdConfig';
 import { AlertItem } from '../ui/AlertItem';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import PropTypes from 'prop-types';
 
 /**
  * Layout para la sección de alertas y configuración
@@ -27,6 +28,8 @@ export const AlertsLayout = ({ alerts = [] }) => {
   });
 
   const [initialLoad, setInitialLoad] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
   // Cargar alertas al montar el componente y configurar actualización periódica
   useEffect(() => {
@@ -194,7 +197,23 @@ export const AlertsLayout = ({ alerts = [] }) => {
 
       return true;
     })
-    .sort((a, b) => new Date(b.alertDatetime) - new Date(a.alertDatetime)); // Ordenar de más nueva a más antigua
+    .sort((a, b) => new Date(b.alertDatetime) - new Date(a.alertDatetime));
+
+  // Calcular índices para paginación
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentAlerts = filteredAlerts.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredAlerts.length / itemsPerPage);
+
+  // Funciones de navegación
+  const goToPage = (pageNumber) => {
+    setCurrentPage(Math.max(1, Math.min(pageNumber, totalPages)));
+  };
+
+  // Resetear a la primera página cuando cambian los filtros
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
 
   const handleFilterChange = (filterType, value) => {
     setFilters(prev => ({
@@ -319,26 +338,122 @@ export const AlertsLayout = ({ alerts = [] }) => {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredAlerts.map(alert => {
-              const { value, threshold } = extractValueAndThreshold(alert.alertMessage);
-              return (
-                <AlertItem
-                  key={alert.id}
-                  type={mapAlertLevelToType(alert.alertLevel)}
-                  parameter={alert.sensorType}
-                  crop={alert.cropName}
-                  message={alert.alertMessage}
-                  value={value}
-                  threshold={threshold}
-                  time={formatTimeAgo(alert.alertDatetime)}
-                  onDelete={() => handleDeleteAlert(alert.id)}
-                />
-              );
-            })}
-          </div>
+          <>
+            <div className="space-y-4">
+              {currentAlerts.map(alert => {
+                const { value, threshold } = extractValueAndThreshold(alert.alertMessage);
+                return (
+                  <AlertItem
+                    key={alert.id}
+                    type={mapAlertLevelToType(alert.alertLevel)}
+                    parameter={alert.sensorType}
+                    crop={alert.cropName}
+                    message={alert.alertMessage}
+                    value={value}
+                    threshold={threshold}
+                    time={formatTimeAgo(alert.alertDatetime)}
+                    onDelete={() => handleDeleteAlert(alert.id)}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Controles de paginación */}
+            {totalPages > 1 && (
+              <div className="mt-6 flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
+                <div className="flex flex-1 justify-between sm:hidden">
+                  <button
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className={`relative inline-flex items-center rounded-md px-4 py-2 text-sm font-medium ${currentPage === 1
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                      } border border-gray-300`}
+                  >
+                    Anterior
+                  </button>
+                  <button
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className={`relative ml-3 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium ${currentPage === totalPages
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                      } border border-gray-300`}
+                  >
+                    Siguiente
+                  </button>
+                </div>
+                <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm text-gray-700">
+                      Mostrando <span className="font-medium">{indexOfFirstItem + 1}</span> a{' '}
+                      <span className="font-medium">
+                        {Math.min(indexOfLastItem, filteredAlerts.length)}
+                      </span>{' '}
+                      de <span className="font-medium">{filteredAlerts.length}</span> alertas
+                    </p>
+                  </div>
+                  <div>
+                    <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                      <button
+                        onClick={() => goToPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className={`relative inline-flex items-center rounded-l-md px-2 py-2 ${currentPage === 1
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-500 hover:bg-gray-50'
+                          } border border-gray-300`}
+                      >
+                        <span className="sr-only">Anterior</span>
+                        <ChevronLeft className="h-5 w-5" />
+                      </button>
+                      {/* Números de página */}
+                      {[...Array(totalPages)].map((_, index) => {
+                        const pageNumber = index + 1;
+                        const isCurrentPage = pageNumber === currentPage;
+
+                        return (
+                          <button
+                            key={pageNumber}
+                            onClick={() => goToPage(pageNumber)}
+                            className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${isCurrentPage
+                              ? 'z-10 bg-primary text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+                              : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-offset-0'
+                              }`}
+                          >
+                            {pageNumber}
+                          </button>
+                        );
+                      })}
+                      <button
+                        onClick={() => goToPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className={`relative inline-flex items-center rounded-r-md px-2 py-2 ${currentPage === totalPages
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-500 hover:bg-gray-50'
+                          } border border-gray-300`}
+                      >
+                        <span className="sr-only">Siguiente</span>
+                        <ChevronRight className="h-5 w-5" />
+                      </button>
+                    </nav>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
   );
+};
+
+AlertsLayout.propTypes = {
+  alerts: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    alertLevel: PropTypes.string,
+    alertMessage: PropTypes.string,
+    alertDatetime: PropTypes.string,
+    sensorType: PropTypes.string,
+    cropName: PropTypes.string
+  }))
 };
