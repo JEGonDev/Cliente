@@ -110,7 +110,7 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    intervalId = setInterval(loadData, 5000);
+    intervalId = setInterval(loadData, 60000);
 
     return () => {
       isMounted = false;
@@ -148,11 +148,6 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
 
     return data;
   }, [cropSensors]);
-
-  // Función para obtener el número de alertas activas
-  const getAlertsCount = () => {
-    return cropAlerts.filter(alert => alert.status === 'ACTIVE' || !alert.resolved).length;
-  };
 
   // Función para obtener el número de sensores
   const getSensorsCount = () => {
@@ -205,7 +200,6 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
     fetchSensorsByCropId(crop.id);
   };
 
-  const alertsCount = getAlertsCount();
   const sensorsCount = getSensorsCount();
   const normalizedStatus = getNormalizedStatus();
 
@@ -311,10 +305,6 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
               ) : (
                 <span>{getSensorsCount()} sensores</span>
               )}
-            </div>
-            <div className={`flex items-center gap-1 ${getAlertsCount() > 0 ? 'text-red-600' : ''}`}>
-              <span className="text-lg">🔔</span>
-              <span>{getAlertsCount()} alertas</span>
             </div>
           </div>
 
