@@ -118,25 +118,43 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
       setIsLoading(true);
       setError(null);
 
-      await removeSensorAndDelete(crop.id, sensorId);
+      // Intentar eliminar el sensor
+      const result = await removeSensorAndDelete(crop.id, sensorId);
+      console.log('Resultado de eliminación:', result);
+
+      // Esperar un momento antes de recargar los datos
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Recargar datos después de eliminar
       const cropSensorsResult = await fetchSensorsByCropId(crop.id);
-      setCropSensors(Array.isArray(cropSensorsResult) ? cropSensorsResult : []);
+      const sensors = Array.isArray(cropSensorsResult) ? cropSensorsResult : [];
+
+      // Actualizar la lista de sensores
+      setCropSensors(sensors);
 
       // Cerrar el modal de confirmación
       setConfirmationModal({ isOpen: false, sensorId: null, sensorType: '' });
 
       // Notificar al padre del cambio
-      onSensorChange?.();
+      if (onSensorChange) {
+        await onSensorChange();
+      }
 
       setError({ type: 'success', message: 'Sensor eliminado correctamente' });
     } catch (error) {
       console.error('Error completo al eliminar sensor:', error);
       setError({
         type: 'error',
-        message: error.response?.data?.message || 'Error al eliminar el sensor'
+        message: error.message || 'Error al eliminar el sensor. Por favor, intente nuevamente.'
       });
+
+      // Intentar recargar los datos de todas formas
+      try {
+        const cropSensorsResult = await fetchSensorsByCropId(crop.id);
+        setCropSensors(Array.isArray(cropSensorsResult) ? cropSensorsResult : []);
+      } catch (reloadError) {
+        console.error('Error al recargar datos:', reloadError);
+      }
     } finally {
       setIsLoading(false);
     }

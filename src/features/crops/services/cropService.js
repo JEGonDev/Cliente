@@ -351,20 +351,34 @@ export const cropService = {
       console.log(`Iniciando proceso de desasociación y eliminación del sensor ${sensorId} del cultivo ${cropId}`);
 
       // Primero desasociamos el sensor del cultivo
-      const disassociateResponse = await API.delete(`/sensors/crop/${cropId}/sensor/${sensorId}`);
-      console.log('Sensor desasociado:', disassociateResponse.data);
+      console.log('Intentando desasociar el sensor del cultivo...');
+      await API.delete(`/sensors/crop/${cropId}/sensor/${sensorId}`);
 
-      // Luego eliminamos el sensor completamente
+      // Esperamos un momento para asegurar que la desasociación se complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Luego eliminamos el sensor
+      console.log('Intentando eliminar el sensor...');
       const deleteResponse = await API.delete(`/sensors/${sensorId}`);
-      console.log('Sensor eliminado:', deleteResponse.data);
 
-      return {
-        message: 'Sensor desasociado y eliminado correctamente',
-        data: deleteResponse.data
-      };
+      // Verificar que el sensor se eliminó
+      try {
+        await API.get(`/sensors/${sensorId}`);
+        throw new Error('El sensor no se eliminó correctamente');
+      } catch (verifyError) {
+        // Si obtenemos un error 404, significa que el sensor ya no existe (lo que queremos)
+        if (verifyError.response?.status === 404) {
+          return {
+            success: true,
+            message: 'Sensor eliminado correctamente',
+            data: deleteResponse.data
+          };
+        }
+        throw new Error('No se pudo verificar la eliminación del sensor');
+      }
     } catch (error) {
-      console.error('Error al desasociar y eliminar sensor:', error);
-      throw error;
+      console.error('Error al eliminar sensor:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Error al eliminar el sensor');
     }
   },
 
@@ -453,11 +467,11 @@ export const cropService = {
   // ==================== Operaciones para las lecturas de los sensores ====================
 
   /**
- * Crea una nueva lectura de sensor
- * 
- * @param {Object} readingData - Datos de la lectura a crear
- * @returns {Promise<Object>} - Datos de la lectura creada
- */
+   * Crea una nueva lectura de sensor
+   * 
+   * @param {Object} readingData - Datos de la lectura a crear
+   * @returns {Promise<Object>} - Datos de la lectura creada
+   */
   createReading: async (readingData) => {
     try {
       const response = await API.post('/readings', readingData);
