@@ -3,71 +3,93 @@ import { Link } from 'react-router-dom';
 import { useMonitoring } from '../hooks/useMonitoring';
 import { RealTimeIndicator } from "../ui/RealTimeIndicator";
 import { RealTimeChart } from "../ui/RealTimeChart";
-import { TimeSelector } from "../ui/TimeSelector";
 import { ThresholdEditModal } from "../ui/ThresholdEditModal";
 import { ThresholdSlider } from "../ui/ThresholdSlider";
 import { ManualReadingSection } from "../ui/ManualReadingSection";
 import { Database, Activity, Eye, EyeOff } from 'lucide-react';
 
 export const RealTimeLayout = () => {
+  console.log('RealTimeLayout: Componente renderizado');
+
   const {
     selectedCrop,
     sensors,
     realTimeData,
     thresholds,
     isMonitoring,
-    timeRange,
     startMonitoring,
     stopMonitoring,
-    changeTimeRange,
-    loading,
-    error,
-    fetchSensorsByCropId,
-    updateAllThresholds
+    loading: globalLoading,
+    error: globalError,
+    updateAllThresholds,
+    loadThresholds,
+    getReadingsByCropId
   } = useMonitoring();
 
-  const [localThresholds, setLocalThresholds] = useState({
-    temperature: { min: 18.0, max: 26.0 },
-    humidity: { min: 60, max: 80 },
-    ec: { min: 1.0, max: 1.6 },
-  });
+  console.log('RealTimeLayout: selectedCrop:', selectedCrop);
 
+  const [localThresholds, setLocalThresholds] = useState({});
   const [status, setStatus] = useState(null);
   const [isThresholdModalOpen, setIsThresholdModalOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('monitoring'); // 'monitoring' | 'manual-readings'
-  const [showManualReadings, setShowManualReadings] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [readings, setReadings] = useState([]);
 
-  // Cargar sensores del cultivo seleccionado solo una vez al inicio
+  // Cargar umbrales cuando cambia el cultivo seleccionado
   useEffect(() => {
-    let isMounted = true;
-
-    const loadInitialData = async () => {
-      if (selectedCrop && isInitialLoad) {
-        try {
-          await fetchSensorsByCropId(selectedCrop.id);
-          if (isMounted) {
-            setIsInitialLoad(false);
-          }
-        } catch (error) {
-          console.error('Error loading sensors:', error);
-        }
-      }
-    };
-
-    loadInitialData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [selectedCrop, fetchSensorsByCropId, isInitialLoad]);
+    if (selectedCrop?.id) {
+      loadThresholds(selectedCrop.id);
+    }
+  }, [selectedCrop?.id, loadThresholds]);
 
   // Actualizar umbrales locales cuando cambian los del contexto
   useEffect(() => {
     if (Object.keys(thresholds).length > 0) {
+      console.log('Actualizando umbrales locales:', thresholds);
       setLocalThresholds(thresholds);
     }
   }, [thresholds]);
+
+  // Efecto para cargar las lecturas cuando cambia el cultivo o cuando se crean nuevas lecturas
+  useEffect(() => {
+    const loadReadings = async () => {
+      if (selectedCrop?.id) {
+        try {
+          const response = await getReadingsByCropId(selectedCrop.id);
+          setReadings(response.data || []);
+        } catch (error) {
+          console.error('Error al cargar lecturas:', error);
+        }
+      }
+    };
+
+    loadReadings();
+
+    // Configurar un intervalo para actualizar las lecturas cada 5 segundos cuando no hay monitoreo en tiempo real
+    if (!isMonitoring) {
+      const interval = setInterval(loadReadings, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [selectedCrop?.id, getReadingsByCropId, isMonitoring]);
+
+  // Efecto para actualizar las lecturas cuando hay nuevos datos en tiempo real
+  useEffect(() => {
+    if (realTimeData && Object.keys(realTimeData).length > 0) {
+      const loadReadings = async () => {
+        if (selectedCrop?.id) {
+          try {
+            const response = await getReadingsByCropId(selectedCrop.id);
+            setReadings(response.data || []);
+          } catch (error) {
+            console.error('Error al cargar lecturas:', error);
+          }
+        }
+      };
+      loadReadings();
+    }
+  }, [realTimeData, selectedCrop?.id, getReadingsByCropId]);
+
+  // Verificar si hay sensores configurados
+  const hasSensorsConfigured = sensors && sensors.length > 0;
 
   // Función para cambiar de sección
   const handleSectionChange = useCallback((section) => {
@@ -86,50 +108,141 @@ export const RealTimeLayout = () => {
   // Función para guardar umbrales
   const handleSaveThresholds = useCallback(async (newThresholds) => {
     try {
-      await updateAllThresholds(selectedCrop.id, newThresholds);
-      setLocalThresholds(newThresholds);
-      setIsThresholdModalOpen(false);
+      setStatus('loading');
+      const success = await updateAllThresholds(selectedCrop.id, newThresholds);
+
+      if (success) {
+        setStatus('success');
+        setLocalThresholds(newThresholds);
+        setIsThresholdModalOpen(false);
+
+        // Recargar los umbrales después de un breve delay
+        setTimeout(() => {
+          loadThresholds(selectedCrop.id);
+        }, 500);
+      } else {
+        setStatus('error');
+      }
     } catch (error) {
       console.error('Error updating thresholds:', error);
+      setStatus('error');
+    } finally {
+      // Limpiar el estado después de 3 segundos
+      setTimeout(() => {
+        setStatus(null);
+      }, 3000);
     }
-  }, [selectedCrop, updateAllThresholds]);
+  }, [selectedCrop?.id, updateAllThresholds, loadThresholds]);
 
   // Obtener datos de monitoreo en tiempo real
   const getCurrentSensorData = () => {
-    if (!selectedCrop || !realTimeData || Object.keys(realTimeData).length === 0) {
-      return {
-        temperature: { current: 0, unit: "°C", trend: "Sin datos", trendTime: "" },
-        humidity: { current: 0, unit: "%", trend: "Sin datos", trendTime: "" },
-        ec: { current: 0, unit: "mS/cm", trend: "Sin datos", trendTime: "" },
-      };
+    // Si hay datos en tiempo real, usarlos
+    if (isMonitoring && realTimeData && Object.keys(realTimeData).length > 0) {
+      const result = {};
+
+      // Procesar datos en tiempo real
+      Object.entries(realTimeData).forEach(([sensorId, sensorData]) => {
+        const sensor = sensors.find(s => s.id === parseInt(sensorId));
+        if (sensor && sensorData.current) {
+          // Normalizar el tipo de sensor
+          const sensorTypeMap = {
+            'temperature': 'temperature',
+            'temperatura': 'temperature',
+            'sensor temperatura': 'temperature',
+            'humidity': 'humidity',
+            'humedad': 'humidity',
+            'ec': 'ec',
+            'conductividad electrica': 'ec'
+          };
+
+          const normalizedType = sensorTypeMap[sensor.sensorType.toLowerCase()] || sensor.sensorType.toLowerCase();
+
+          if (['temperature', 'humidity', 'ec'].includes(normalizedType)) {
+            result[normalizedType] = {
+              current: parseFloat(sensorData.current.readingValue),
+              unit: normalizedType === 'temperature' ? '°C' : normalizedType === 'humidity' ? '%' : 'mS/cm',
+              trend: sensorData.trend?.value || 'Estable',
+              trendDirection: sensorData.trend?.direction || 'stable',
+              trendTime: sensorData.trend?.time || 'Sin datos'
+            };
+          }
+        }
+      });
+
+      return result;
     }
 
-    const result = {};
+    // Si no hay datos en tiempo real, usar las últimas lecturas manuales
+    console.log('Usando lecturas manuales:', readings);
 
-    // Procesar cada sensor
-    Object.entries(realTimeData).forEach(([sensorId, sensorData]) => {
-      const sensor = sensors.find(s => s.id === parseInt(sensorId));
-      if (sensor && sensorData.current) {
-        const sensorType = sensor.type.toLowerCase();
-        if (['temperature', 'humidity', 'ec'].includes(sensorType)) {
-          result[sensorType] = {
-            current: sensorData.current.readingValue,
-            unit: sensorType === 'temperature' ? '°C' : sensorType === 'humidity' ? '%' : 'mS/cm',
-            trend: sensorData.trend?.value || 'Estable',
-            trendDirection: sensorData.trend?.direction || 'stable',
-            trendTime: sensorData.trend?.time || 'Sin datos'
-          };
-        }
+    // Crear un mapa para almacenar la última lectura de cada tipo de sensor
+    const latestReadings = {};
+
+    // Iterar sobre todas las lecturas para encontrar las más recientes por tipo
+    readings.forEach(reading => {
+      const sensorTypeMap = {
+        'temperature': 'temperature',
+        'temperatura': 'temperature',
+        'sensor temperatura': 'temperature',
+        'humidity': 'humidity',
+        'humedad': 'humidity',
+        'ec': 'ec',
+        'conductividad electrica': 'ec'
+      };
+
+      const normalizedType = sensorTypeMap[reading.sensorType.toLowerCase()] || reading.sensorType.toLowerCase();
+
+      const currentLatest = latestReadings[normalizedType];
+
+      // Si no hay lectura previa o esta es más reciente, actualizar
+      if (!currentLatest || new Date(reading.readingDate) > new Date(currentLatest.readingDate)) {
+        latestReadings[normalizedType] = reading;
       }
     });
 
+    // Crear el objeto de respuesta con el formato esperado
+    const result = {
+      temperature: {
+        current: 0,
+        unit: "°C",
+        trend: "Sin datos",
+        trendTime: ""
+      },
+      humidity: {
+        current: 0,
+        unit: "%",
+        trend: "Sin datos",
+        trendTime: ""
+      },
+      ec: {
+        current: 0,
+        unit: "mS/cm",
+        trend: "Sin datos",
+        trendTime: ""
+      }
+    };
+
+    // Actualizar los valores con las últimas lecturas
+    Object.entries(latestReadings).forEach(([type, reading]) => {
+      if (result[type]) {
+        result[type] = {
+          current: parseFloat(reading.readingValue),
+          unit: reading.unitOfMeasurement,
+          trend: "Estable",
+          trendTime: new Date(reading.readingDate).toLocaleString(),
+          trendDirection: 'stable'
+        };
+      }
+    });
+
+    console.log('Datos procesados:', result);
     return result;
   };
 
   const displayData = getCurrentSensorData();
 
   // Estado de carga
-  if (loading && !sensors.length) {
+  if (globalLoading && !sensors.length) {
     return (
       <div className="p-6">
         <div className="flex justify-center items-center h-64">
@@ -140,13 +253,13 @@ export const RealTimeLayout = () => {
     );
   }
 
-  if (error) {
+  if (globalError) {
     return (
       <div className="p-6">
         <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-red-700">Error: {error}</p>
+          <p className="text-red-700">Error: {globalError}</p>
           <button
-            onClick={() => fetchSensorsByCropId(selectedCrop?.id)}
+            onClick={() => window.location.reload()}
             className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
           >
             Reintentar
@@ -171,6 +284,30 @@ export const RealTimeLayout = () => {
             className="mt-4 inline-block bg-primary text-white px-4 py-2 rounded hover:bg-green-700"
           >
             Ver cultivos
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Mensaje cuando no hay sensores configurados
+  if (!hasSensorsConfigured) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+          <div className="text-gray-400 text-5xl mb-4">🌱</div>
+          <h3 className="text-xl font-medium text-gray-900 mb-2">
+            No hay sensores configurados
+          </h3>
+          <p className="text-gray-600 mb-6">
+            Este cultivo aún no tiene sensores asociados. Necesitas configurar sensores para poder establecer umbrales y monitorear en tiempo real.
+          </p>
+          <Link
+            to="/monitoring/crops"
+            className="inline-flex items-center px-4 py-2 bg-primary text-white rounded hover:bg-green-700 transition-colors"
+          >
+            <span className="mr-2">➕</span>
+            Configurar sensores
           </Link>
         </div>
       </div>
@@ -210,7 +347,6 @@ export const RealTimeLayout = () => {
         {/* Controles según la sección activa */}
         {activeSection === 'monitoring' && (
           <div className="flex items-center gap-4">
-            <TimeSelector value={timeRange} onChange={changeTimeRange} />
             <button
               onClick={isMonitoring ? stopMonitoring : startMonitoring}
               className={`flex items-center gap-2 px-4 py-2 rounded-md ${isMonitoring
@@ -233,22 +369,12 @@ export const RealTimeLayout = () => {
               {activeSection === 'monitoring' ? 'Monitoreo en Tiempo Real' : 'Lecturas Manuales'}
             </h1>
             <p className="text-gray-600 mt-1">
-              Cultivo: <span className="font-medium">{selectedCrop?.name}</span>
+              Cultivo: <span className="font-medium">{selectedCrop?.cropName}</span>
               <span className="ml-4 text-sm">
-                {sensors.filter(s => s.cropId === selectedCrop?.id).length} sensores asociados
+                {`${sensors.length} sensores asociados`}
               </span>
             </p>
           </div>
-
-          {activeSection === 'monitoring' && (
-            <div className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${isMonitoring ? 'bg-green-400 animate-pulse' : 'bg-gray-300'
-                }`}></div>
-              <span className="text-sm text-gray-600">
-                {isMonitoring ? 'En vivo' : 'Detenido'}
-              </span>
-            </div>
-          )}
         </div>
       </div>
 
@@ -293,7 +419,7 @@ export const RealTimeLayout = () => {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Gráficos en Tiempo Real</h2>
               <div className="text-sm text-gray-500">
-                Actualización automática cada {isMonitoring ? '1 minuto' : 'detenida'}
+                Actualización automática cada 5 segundos
               </div>
             </div>
             <RealTimeChart />

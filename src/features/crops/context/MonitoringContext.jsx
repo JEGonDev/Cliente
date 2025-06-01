@@ -5,6 +5,7 @@ import { useReadings } from '../hooks/useReadings';
 import { useAlerts } from '../hooks/useAlerts';
 import { useRealTimeMonitoring } from '../hooks/useRealTimeMonitoring';
 import { useMonitoringThresholds } from '../hooks/useMonitoringThresholds';
+import { cropService } from '../services/cropService';
 
 // Crear el contexto
 export const MonitoringContext = createContext({
@@ -44,6 +45,7 @@ export const MonitoringContext = createContext({
   addSensorToCropWithThresholds: () => { },
   updateSensorThresholds: () => { },
   removeSensorFromCrop: () => { },
+  removeSensorAndDelete: () => { },
   createSensorAndAssociateToCrop: () => { },
 
   // Métodos para lecturas
@@ -71,7 +73,10 @@ export const MonitoringContext = createContext({
   updateAllThresholds: () => { },
 
   // Navegación
-  setActiveSection: () => { }
+  setActiveSection: () => { },
+
+  // Nuevo método
+  getReadingsByCropId: () => { }
 });
 
 // Proveedor del contexto
@@ -109,6 +114,7 @@ export const MonitoringProvider = ({ children }) => {
     addSensorToCropWithThresholds,
     updateSensorThresholds,
     removeSensorFromCrop,
+    removeSensorAndDelete,
     createSensorAndAssociateToCrop,
     setSelectedSensor: selectSensor
   } = useSensors();
@@ -203,7 +209,19 @@ export const MonitoringProvider = ({ children }) => {
     }
   }, [realTimeData, fetchUserAlerts]);
 
-  // Valor del contexto con todos los estados y métodos
+  const getReadingsByCropId = useCallback(async (cropId) => {
+    if (!cropId) return { data: [] };
+
+    try {
+      const response = await cropService.getReadingsByCropId(cropId);
+      return response;
+    } catch (error) {
+      console.error('Error al obtener lecturas del cultivo:', error);
+      return { data: [] };
+    }
+  }, []);
+
+  // Valor del contexto
   const contextValue = {
     // Estado
     crops,
@@ -241,6 +259,7 @@ export const MonitoringProvider = ({ children }) => {
     addSensorToCropWithThresholds,
     updateSensorThresholds,
     removeSensorFromCrop,
+    removeSensorAndDelete,
     createSensorAndAssociateToCrop,
 
     // Métodos para lecturas
@@ -269,7 +288,10 @@ export const MonitoringProvider = ({ children }) => {
     updateAllThresholds,
 
     // Navegación
-    setActiveSection
+    setActiveSection,
+
+    // Nuevo método
+    getReadingsByCropId
   };
 
   return (

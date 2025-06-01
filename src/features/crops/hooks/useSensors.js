@@ -12,17 +12,21 @@ export const useSensors = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Ref para evitar múltiples llamadas simultáneas
-  const loadingRef = useRef(false);
+  // Refs independientes para cada tipo de carga
+  const loadingRefs = useRef({
+    userSensors: false,
+    cropSensors: false,
+    general: false
+  });
 
   /**
    * Obtiene todos los sensores disponibles
    */
   const fetchAllSensors = useCallback(async () => {
-    if (loadingRef.current) return;
+    if (loadingRefs.current.general) return;
 
     setLoading(true);
-    loadingRef.current = true;
+    loadingRefs.current.general = true;
     setError(null);
 
     try {
@@ -33,7 +37,7 @@ export const useSensors = () => {
       setError(err.message || 'Error al cargar los sensores.');
     } finally {
       setLoading(false);
-      loadingRef.current = false;
+      loadingRefs.current.general = false;
     }
   }, []);
 
@@ -41,21 +45,27 @@ export const useSensors = () => {
    * Obtiene los sensores del usuario
    */
   const fetchUserSensors = useCallback(async () => {
-    if (loadingRef.current) return;
+    if (loadingRefs.current.userSensors) {
+      console.log('Already loading user sensors, waiting...');
+      return { data: [] };
+    }
 
     setLoading(true);
-    loadingRef.current = true;
+    loadingRefs.current.userSensors = true;
     setError(null);
 
     try {
+      console.log('Fetching user sensors...');
       const response = await cropService.getUserSensors();
-      setSensors(response.data || []);
+      console.log('User sensors response:', response);
+      return response;
     } catch (err) {
       console.error('Error al obtener sensores del usuario:', err);
       setError(err.message || 'Error al cargar los sensores del usuario.');
+      return { data: [] };
     } finally {
       setLoading(false);
-      loadingRef.current = false;
+      loadingRefs.current.userSensors = false;
     }
   }, []);
 
@@ -65,10 +75,10 @@ export const useSensors = () => {
    * @param {number} sensorId - ID del sensor
    */
   const fetchSensorById = useCallback(async (sensorId) => {
-    if (!sensorId || loadingRef.current) return;
+    if (!sensorId || loadingRefs.current.general) return;
 
     setLoading(true);
-    loadingRef.current = true;
+    loadingRefs.current.general = true;
     setError(null);
 
     try {
@@ -79,7 +89,7 @@ export const useSensors = () => {
       setError(err.message || 'Error al cargar el sensor.');
     } finally {
       setLoading(false);
-      loadingRef.current = false;
+      loadingRefs.current.general = false;
     }
   }, []);
 
@@ -89,21 +99,32 @@ export const useSensors = () => {
    * @param {number} cropId - ID del cultivo
    */
   const fetchSensorsByCropId = useCallback(async (cropId) => {
-    if (!cropId || loadingRef.current) return;
+    if (!cropId || loadingRefs.current.cropSensors) {
+      console.log('Invalid cropId or already loading crop sensors:', { cropId, loading: loadingRefs.current.cropSensors });
+      return [];
+    }
 
     setLoading(true);
-    loadingRef.current = true;
+    loadingRefs.current.cropSensors = true;
     setError(null);
 
     try {
+      console.log('Fetching sensors for crop:', cropId);
       const response = await cropService.getSensorsByCropId(cropId);
-      setSensors(response.data || []);
+      console.log('Crop sensors response:', response);
+
+      // Asegurarnos de que los sensores tengan la estructura correcta
+      const sensors = response?.data || [];
+      console.log('Setting sensors state with:', sensors);
+      setSensors(sensors);
+      return sensors;
     } catch (err) {
       console.error(`Error al obtener sensores del cultivo ${cropId}:`, err);
       setError(err.message || 'Error al cargar los sensores del cultivo.');
+      return [];
     } finally {
       setLoading(false);
-      loadingRef.current = false;
+      loadingRefs.current.cropSensors = false;
     }
   }, []);
 
@@ -307,6 +328,40 @@ export const useSensors = () => {
   }, []);
 
   /**
+   * Desasocia y elimina un sensor de un cultivo
+   * 
+   * @param {number} cropId - ID del cultivo
+   * @param {number} sensorId - ID del sensor
+   * @returns {Promise<boolean>} Resultado de la operación
+   */
+  const removeSensorAndDelete = useCallback(async (cropId, sensorId) => {
+    if (!cropId || !sensorId) return false;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      await cropService.removeSensorAndDelete(cropId, sensorId);
+
+      // Actualizar la lista de sensores
+      setSensors(prevSensors => prevSensors.filter(sensor => sensor.id !== sensorId));
+
+      // Limpiar selectedSensor si es el que se está eliminando
+      if (selectedSensor && selectedSensor.id === sensorId) {
+        setSelectedSensor(null);
+      }
+
+      return true;
+    } catch (err) {
+      console.error(`Error al desasociar y eliminar sensor ${sensorId} de cultivo ${cropId}:`, err);
+      setError(err.message || 'Error al desasociar y eliminar el sensor.');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedSensor]);
+
+  /**
    * Crea un sensor y lo asocia a un cultivo con umbrales
    * 
    * @param {number} cropId - ID del cultivo
@@ -352,6 +407,7 @@ export const useSensors = () => {
     addSensorToCropWithThresholds,
     updateSensorThresholds,
     removeSensorFromCrop,
+    removeSensorAndDelete,
     createSensorAndAssociateToCrop,
     setSelectedSensor
   };

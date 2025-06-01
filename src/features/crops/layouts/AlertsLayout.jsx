@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useMonitoring } from '../hooks/useMonitoring';
-import { ThresholdConfig } from '../ui/ThresholdConfig';
 import { AlertItem } from '../ui/AlertItem';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import PropTypes from 'prop-types';
 
 /**
  * Layout para la sección de alertas y configuración
@@ -27,6 +28,8 @@ export const AlertsLayout = ({ alerts = [] }) => {
   });
 
   const [initialLoad, setInitialLoad] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
   // Cargar alertas al montar el componente y configurar actualización periódica
   useEffect(() => {
@@ -56,11 +59,16 @@ export const AlertsLayout = ({ alerts = [] }) => {
   // Mapear nivel de alerta a tipo de UI
   const mapAlertLevelToType = (level) => {
     const levelMap = {
-      'critical': 'error',
-      'warning': 'warning',
-      'info': 'info'
+      'CRITICAL': 'error',
+      'HIGH': 'error',
+      'MEDIUM': 'warning',
+      'LOW': 'warning',
+      'INFO': 'info'
     };
-    return levelMap[level] || 'info';
+
+    // Normalizar el nivel a mayúsculas para hacer la comparación más robusta
+    const normalizedLevel = level?.toUpperCase();
+    return levelMap[normalizedLevel] || 'info';
   };
 
   // Formatear fecha para mostrar tiempo transcurrido
@@ -82,12 +90,52 @@ export const AlertsLayout = ({ alerts = [] }) => {
 
   // Extraer el valor y umbral del mensaje de alerta (si existe)
   const extractValueAndThreshold = (message) => {
-    const valueMatch = message.match(/:\s*([\d.]+)\s*([°\w/]+)/);
-    return valueMatch ? {
-      value: `${valueMatch[1]}${valueMatch[2]}`,
-      threshold: '-' // Si no tenemos el umbral explícito, mostramos un guión
-    } : {
-      value: '-',
+    // Patrones para diferentes formatos de mensaje
+    const patterns = [
+      // Formato general: "Valor por encima/debajo del umbral máximo/mínimo de [tipo sensor]: X [unidad] (máximo/mínimo: Y)"
+      /.*?:\s*([\d.,]+)\s*([°%\w/]+)\s*\((?:máximo|mínimo):\s*([\d.,]+)(?:\s*([°%\w/]+))?\)/i,
+
+      // Formato específico para humedad: "Valor de humedad: X% (umbral: Y%)"
+      /.*?humedad:\s*([\d.,]+)\s*([%])\s*\((?:umbral|máximo|mínimo):\s*([\d.,]+)(?:\s*([%]))?\)/i,
+
+      // Formato para conductividad: "Valor de conductividad: X mS/cm (umbral: Y mS/cm)"
+      /.*?conductividad:\s*([\d.,]+)\s*(mS\/cm)\s*\((?:umbral|máximo|mínimo):\s*([\d.,]+)(?:\s*(mS\/cm))?\)/i,
+
+      // Formatos anteriores
+      /Valor:\s*([\d.,]+)\s*([°%\w/]+)\s*\(Umbral:\s*([\d.,]+)\s*([°%\w/]+)\)/i,
+      /([\d.,]+)\s*([°%\w/]+)\s*excede\s*(?:el\s*umbral\s*de)\s*([\d.,]+)\s*([°%\w/]+)/i,
+      /([\d.,]+)\s*([°%\w/]+)\s*está\s*por\s*debajo\s*del\s*umbral\s*([\d.,]+)\s*([°%\w/]+)/i
+    ];
+
+    for (const pattern of patterns) {
+      const match = message.match(pattern);
+      if (match) {
+        // Si encontramos una coincidencia, asegurarnos de que los valores usen punto como separador decimal
+        const value = match[1].replace(',', '.');
+        const unit = match[2] || '';
+        const threshold = (match[3] || '').replace(',', '.');
+        const thresholdUnit = match[4] || unit; // Usar la unidad del valor si no hay unidad específica para el umbral
+
+        return {
+          value: `${value}${unit}`,
+          threshold: threshold ? `${threshold}${thresholdUnit}` : '-'
+        };
+      }
+    }
+
+    // Buscar valores específicos de humedad si los patrones anteriores fallan
+    const humidityMatch = message.match(/.*?humedad.*?([\d.,]+)\s*%.*?(?:máximo|mínimo):\s*([\d.,]+)/i);
+    if (humidityMatch) {
+      return {
+        value: `${humidityMatch[1].replace(',', '.')}%`,
+        threshold: `${humidityMatch[2].replace(',', '.')}%`
+      };
+    }
+
+    // Si no se encuentra un patrón conocido, buscar al menos el valor
+    const valueMatch = message.match(/:\s*([\d.,]+)\s*([°%\w/]+)/);
+    return {
+      value: valueMatch ? `${valueMatch[1].replace(',', '.')}${valueMatch[2]}` : '-',
       threshold: '-'
     };
   };
@@ -95,13 +143,77 @@ export const AlertsLayout = ({ alerts = [] }) => {
   // Filtrar y ordenar alertas según los filtros seleccionados
   const filteredAlerts = alertsToShow
     .filter(alert => {
+      // Filtro por tipo de alerta
       if (filters.type !== 'all' && mapAlertLevelToType(alert.alertLevel) !== filters.type) return false;
-      if (filters.parameter !== 'all' && alert.sensorType !== filters.parameter) return false;
-      if (filters.crop !== 'all' && alert.cropId.toString() !== filters.crop) return false;
-      // Aquí podrías agregar filtro por período usando alertDatetime
+
+      // Filtro por parámetro (tipo de sensor)
+      if (filters.parameter !== 'all') {
+        const normalizedSensorType = alert.sensorType?.toLowerCase();
+        const normalizedFilter = filters.parameter.toLowerCase();
+
+        // Mapeo de tipos de sensores
+        const sensorTypeMap = {
+          'temperature': ['temperatura', 'sensor temperatura'],
+          'humidity': ['humedad'],
+          'ec': ['conductividad', 'conductividad electrica']
+        };
+
+        const validTypes = sensorTypeMap[normalizedFilter] || [];
+        if (!validTypes.some(type => normalizedSensorType?.includes(type))) {
+          return false;
+        }
+      }
+
+      // Filtro por cultivo
+      if (filters.crop !== 'all' && alert.cropId?.toString() !== filters.crop) return false;
+
+      // Filtro por período
+      if (filters.period !== 'all') {
+        const alertDate = new Date(alert.alertDatetime);
+        const now = new Date();
+
+        switch (filters.period) {
+          case 'today':
+            return alertDate.toDateString() === now.toDateString();
+          case 'yesterday': {
+            const yesterday = new Date(now);
+            yesterday.setDate(now.getDate() - 1);
+            return alertDate.toDateString() === yesterday.toDateString();
+          }
+          case 'week': {
+            const weekAgo = new Date(now);
+            weekAgo.setDate(now.getDate() - 7);
+            return alertDate >= weekAgo;
+          }
+          case 'month': {
+            const monthAgo = new Date(now);
+            monthAgo.setMonth(now.getMonth() - 1);
+            return alertDate >= monthAgo;
+          }
+          default:
+            return true;
+        }
+      }
+
       return true;
     })
-    .sort((a, b) => new Date(b.alertDatetime) - new Date(a.alertDatetime)); // Ordenar de más nueva a más antigua
+    .sort((a, b) => new Date(b.alertDatetime) - new Date(a.alertDatetime));
+
+  // Calcular índices para paginación
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentAlerts = filteredAlerts.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredAlerts.length / itemsPerPage);
+
+  // Funciones de navegación
+  const goToPage = (pageNumber) => {
+    setCurrentPage(Math.max(1, Math.min(pageNumber, totalPages)));
+  };
+
+  // Resetear a la primera página cuando cambian los filtros
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
 
   const handleFilterChange = (filterType, value) => {
     setFilters(prev => ({
@@ -159,7 +271,6 @@ export const AlertsLayout = ({ alerts = [] }) => {
               <option value="all">Todas</option>
               <option value="error">Error</option>
               <option value="warning">Advertencia</option>
-              <option value="info">Información</option>
             </select>
           </div>
 
@@ -227,29 +338,122 @@ export const AlertsLayout = ({ alerts = [] }) => {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredAlerts.map(alert => {
-              const { value, threshold } = extractValueAndThreshold(alert.alertMessage);
-              return (
-                <AlertItem
-                  key={alert.id}
-                  type={mapAlertLevelToType(alert.alertLevel)}
-                  parameter={alert.sensorType}
-                  crop={alert.cropName}
-                  message={alert.alertMessage}
-                  value={value}
-                  threshold={threshold}
-                  time={formatTimeAgo(alert.alertDatetime)}
-                  onDelete={() => handleDeleteAlert(alert.id)}
-                />
-              );
-            })}
-          </div>
+          <>
+            <div className="space-y-4">
+              {currentAlerts.map(alert => {
+                const { value, threshold } = extractValueAndThreshold(alert.alertMessage);
+                return (
+                  <AlertItem
+                    key={alert.id}
+                    type={mapAlertLevelToType(alert.alertLevel)}
+                    parameter={alert.sensorType}
+                    crop={alert.cropName}
+                    message={alert.alertMessage}
+                    value={value}
+                    threshold={threshold}
+                    time={formatTimeAgo(alert.alertDatetime)}
+                    onDelete={() => handleDeleteAlert(alert.id)}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Controles de paginación */}
+            {totalPages > 1 && (
+              <div className="mt-6 flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
+                <div className="flex flex-1 justify-between sm:hidden">
+                  <button
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className={`relative inline-flex items-center rounded-md px-4 py-2 text-sm font-medium ${currentPage === 1
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                      } border border-gray-300`}
+                  >
+                    Anterior
+                  </button>
+                  <button
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className={`relative ml-3 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium ${currentPage === totalPages
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                      } border border-gray-300`}
+                  >
+                    Siguiente
+                  </button>
+                </div>
+                <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm text-gray-700">
+                      Mostrando <span className="font-medium">{indexOfFirstItem + 1}</span> a{' '}
+                      <span className="font-medium">
+                        {Math.min(indexOfLastItem, filteredAlerts.length)}
+                      </span>{' '}
+                      de <span className="font-medium">{filteredAlerts.length}</span> alertas
+                    </p>
+                  </div>
+                  <div>
+                    <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                      <button
+                        onClick={() => goToPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className={`relative inline-flex items-center rounded-l-md px-2 py-2 ${currentPage === 1
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-500 hover:bg-gray-50'
+                          } border border-gray-300`}
+                      >
+                        <span className="sr-only">Anterior</span>
+                        <ChevronLeft className="h-5 w-5" />
+                      </button>
+                      {/* Números de página */}
+                      {[...Array(totalPages)].map((_, index) => {
+                        const pageNumber = index + 1;
+                        const isCurrentPage = pageNumber === currentPage;
+
+                        return (
+                          <button
+                            key={pageNumber}
+                            onClick={() => goToPage(pageNumber)}
+                            className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${isCurrentPage
+                              ? 'z-10 bg-primary text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+                              : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-offset-0'
+                              }`}
+                          >
+                            {pageNumber}
+                          </button>
+                        );
+                      })}
+                      <button
+                        onClick={() => goToPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className={`relative inline-flex items-center rounded-r-md px-2 py-2 ${currentPage === totalPages
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-500 hover:bg-gray-50'
+                          } border border-gray-300`}
+                      >
+                        <span className="sr-only">Siguiente</span>
+                        <ChevronRight className="h-5 w-5" />
+                      </button>
+                    </nav>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
-
-      {/* Configuración de umbrales */}
-      <ThresholdConfig />
     </div>
   );
+};
+
+AlertsLayout.propTypes = {
+  alerts: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    alertLevel: PropTypes.string,
+    alertMessage: PropTypes.string,
+    alertDatetime: PropTypes.string,
+    sensorType: PropTypes.string,
+    cropName: PropTypes.string
+  }))
 };
