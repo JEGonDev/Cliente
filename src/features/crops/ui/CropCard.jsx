@@ -35,61 +35,136 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
       setIsLoading(true);
       setError(null);
       try {
-        // Cargar sensores, alertas y lecturas recientes
-        const [sensorsResponse, alertsResponse, readingsResponse] = await Promise.all([
+        console.log(`[CropCard ${crop.id}] Iniciando carga de datos`);
+
+        // Cargar sensores y lecturas recientes
+        const [sensorsResponse, readingsResponse] = await Promise.all([
           fetchSensorsByCropId(crop.id),
-          fetchAlertsByCropId(crop.id),
           cropService.getReadingsByCropId(crop.id)
         ]);
+
+        console.log(`[CropCard ${crop.id}] Respuesta de sensores:`, sensorsResponse);
+        console.log(`[CropCard ${crop.id}] Respuesta de lecturas:`, readingsResponse);
 
         if (!isMounted) return;
 
         // Procesar sensores
-        const sensors = Array.isArray(sensorsResponse) ? sensorsResponse :
+        let sensors = Array.isArray(sensorsResponse) ? sensorsResponse :
           Array.isArray(sensorsResponse?.data) ? sensorsResponse.data : [];
 
         // Obtener las lecturas y ordenarlas por fecha
         const readings = readingsResponse?.data || [];
         const latestReadings = new Map();
 
+        console.log(`[CropCard ${crop.id}] Lecturas obtenidas:`, readings);
+
+        // Si no hay sensores pero hay lecturas, reconstruir los sensores desde las lecturas
+        if (sensors.length === 0 && readings.length > 0) {
+          console.log(`[CropCard ${crop.id}] Reconstruyendo sensores desde lecturas`);
+
+          // Crear un Map para agrupar lecturas por sensorId
+          const sensorReadings = new Map();
+          readings.forEach(reading => {
+            if (!sensorReadings.has(reading.sensorId)) {
+              sensorReadings.set(reading.sensorId, {
+                id: reading.sensorId,
+                sensorType: reading.sensorType,
+                unitOfMeasurement: reading.unitOfMeasurement,
+                cropId: reading.cropId
+              });
+            }
+          });
+
+          sensors = Array.from(sensorReadings.values());
+          console.log(`[CropCard ${crop.id}] Sensores reconstruidos:`, sensors);
+        }
+
+        console.log(`[CropCard ${crop.id}] Sensores procesados:`, sensors);
+
         // Procesar las lecturas para obtener la más reciente de cada sensor
         readings.forEach(reading => {
-          const currentLatest = latestReadings.get(reading.sensorId);
+          const sensorId = reading.sensorId;
+          const currentLatest = latestReadings.get(sensorId);
           if (!currentLatest || new Date(reading.readingDate) > new Date(currentLatest.readingDate)) {
-            latestReadings.set(reading.sensorId, reading);
+            latestReadings.set(sensorId, reading);
           }
         });
 
+        console.log(`[CropCard ${crop.id}] Últimas lecturas por sensor:`, Object.fromEntries(latestReadings));
+
         // Asociar las lecturas más recientes a cada sensor
         const sensorsWithReadings = sensors.map(sensor => {
-          const sensorId = sensor.id || sensor.sensorId;
+          const sensorId = sensor.id;
           const latestReading = latestReadings.get(sensorId);
-          return {
-            ...sensor,
-            lastReading: latestReading ? latestReading.readingValue : 0,
-            readingDate: latestReading ? latestReading.readingDate : null
+
+          console.log(`[CropCard ${crop.id}] Procesando sensor:`, {
+            sensorId,
+            sensorType: sensor.sensorType,
+            type: sensor.type,
+            latestReading
+          });
+
+          // Normalizar el tipo de sensor
+          const sensorTypeMap = {
+            'temperature': 'temperature',
+            'temperatura': 'temperature',
+            'sensor temperatura': 'temperature',
+            'humidity': 'humidity',
+            'humedad': 'humidity',
+            'sensor humedad': 'humidity',
+            'ec': 'ec',
+            'conductividad': 'ec',
+            'conductividad electrica': 'ec'
           };
+
+          // Intentar obtener el tipo de diferentes propiedades
+          const rawType = (sensor.sensorType || sensor.type || '').toLowerCase();
+          const normalizedType = sensorTypeMap[rawType] || rawType;
+
+          console.log(`[CropCard ${crop.id}] Tipo de sensor normalizado:`, {
+            rawType,
+            normalizedType
+          });
+
+          // Intentar obtener el valor de diferentes propiedades posibles
+          let readingValue = 0;
+          if (latestReading) {
+            readingValue = latestReading.readingValue;
+            console.log(`[CropCard ${crop.id}] Valor obtenido de latestReading:`, readingValue);
+          } else if (sensor.lastReading) {
+            readingValue = sensor.lastReading;
+            console.log(`[CropCard ${crop.id}] Valor obtenido de sensor.lastReading:`, readingValue);
+          } else if (sensor.readings && sensor.readings.length > 0) {
+            // Si hay lecturas en el sensor, tomar la más reciente
+            const sortedReadings = [...sensor.readings].sort((a, b) =>
+              new Date(b.readingDate) - new Date(a.readingDate)
+            );
+            readingValue = sortedReadings[0].readingValue;
+            console.log(`[CropCard ${crop.id}] Valor obtenido de sensor.readings:`, readingValue);
+          }
+
+          const processedSensor = {
+            ...sensor,
+            type: normalizedType,
+            lastReading: readingValue,
+            readingDate: latestReading ? latestReading.readingDate : (
+              sensor.readings && sensor.readings.length > 0
+                ? sensor.readings[0].readingDate
+                : null
+            )
+          };
+
+          console.log(`[CropCard ${crop.id}] Sensor procesado:`, processedSensor);
+          return processedSensor;
         });
 
-        // Procesar alertas
-        let alerts;
-        if (Array.isArray(alertsResponse)) {
-          alerts = alertsResponse;
-        } else if (alertsResponse?.data) {
-          alerts = Array.isArray(alertsResponse.data) ? alertsResponse.data : [alertsResponse.data];
-        } else {
-          alerts = [];
-        }
-
-        // Filtrar solo alertas activas
-        alerts = alerts.filter(alert => alert.status === 'ACTIVE' || !alert.resolved);
+        console.log(`[CropCard ${crop.id}] Todos los sensores procesados:`, sensorsWithReadings);
 
         if (isMounted) {
           setCropSensors(sensorsWithReadings);
-          setCropAlerts(alerts);
         }
       } catch (error) {
-        console.error('Error cargando datos:', error);
+        console.error(`[CropCard ${crop.id}] Error cargando datos:`, error);
         if (isMounted) {
           setError('Error al cargar los datos');
         }
@@ -119,35 +194,39 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
         clearInterval(intervalId);
       }
     };
-  }, [crop?.id, fetchSensorsByCropId, fetchAlertsByCropId]);
+  }, [crop?.id, fetchSensorsByCropId]);
 
   // Procesar datos de sensores de manera eficiente usando useMemo
   const sensorData = useMemo(() => {
     const data = { humidity: 0, temperature: 0, conductivity: 0 };
 
+    console.log(`[CropCard ${crop.id}] Calculando sensorData con sensores:`, cropSensors);
+
     cropSensors.forEach(sensor => {
-      const type = (sensor.sensorType || sensor.type || '').toLowerCase();
       const value = parseFloat(sensor.lastReading || 0);
 
-      switch (type) {
+      console.log(`[CropCard ${crop.id}] Procesando valor para sensorData:`, {
+        sensorType: sensor.type,
+        value,
+        rawLastReading: sensor.lastReading
+      });
+
+      switch (sensor.type) {
         case 'humidity':
-        case 'humedad':
           data.humidity = value;
           break;
         case 'temperature':
-        case 'temperatura':
           data.temperature = value;
           break;
         case 'ec':
-        case 'conductividad':
-        case 'conductividad electrica':
           data.conductivity = value;
           break;
       }
     });
 
+    console.log(`[CropCard ${crop.id}] SensorData final:`, data);
     return data;
-  }, [cropSensors]);
+  }, [cropSensors, crop.id]);
 
   // Función para obtener el número de sensores
   const getSensorsCount = () => {
