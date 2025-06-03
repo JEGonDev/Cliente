@@ -1,5 +1,5 @@
 import React from "react";
-import { ConfirmationDialog } from "../ui/ConfirmationDialog";
+import { ConfirmationDialog } from "./ConfirmationDialog";
 
 export const ThreadDeleteDialog = ({
   isOpen,
@@ -9,6 +9,7 @@ export const ThreadDeleteDialog = ({
   onCancel
 }) => {
   if (!isOpen) return null;
+
   return (
     <ConfirmationDialog
       title="Confirmar Eliminación"
@@ -16,7 +17,9 @@ export const ThreadDeleteDialog = ({
         <>
           ¿Eliminar este hilo?
           <br />
-          <span className="font-semibold text-gray-900">Esta acción no se puede deshacer. El hilo "{threadTitle}" será eliminado permanentemente.</span>
+          <span className="font-semibold text-gray-900">
+            Esta acción no se puede deshacer. El hilo "{threadTitle}" será eliminado permanentemente.
+          </span>
         </>
       }
       confirmText="Eliminar"
