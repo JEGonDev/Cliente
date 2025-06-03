@@ -35,7 +35,17 @@ export const GroupListView = () => {
 
   // Loading y error manejados de forma modular
   if (loading) return <div>Cargando grupos...</div>;
-  if (error) return <div className="text-red-500">{error}</div>;
+  if (error) return (
+    <div className="text-center p-8">
+      <p className="text-gray-600 mb-4">No hay grupos disponibles en este momento.</p>
+      <button
+        onClick={() => setIsModalOpen(true)}
+        className="bg-primary text-white px-4 py-2 rounded-md hover:bg-green-600"
+      >
+        Crear Grupo
+      </button>
+    </div>
+  );
 
   return (
     <div className="p-4">

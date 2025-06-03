@@ -118,16 +118,26 @@ export const communityService = {
 
   updatePost: async (id, updateData) => {
     try {
-      // Detectar si estamos enviando FormData
-      const isFormData = updateData instanceof FormData;
+      // Siempre crear un FormData
+      const formData = updateData instanceof FormData ? updateData : new FormData();
 
-      // Configurar headers correctamente según el tipo de datos
-      const config = isFormData ? {
+      // Si updateData no es FormData, agregar sus campos al FormData
+      if (!(updateData instanceof FormData)) {
+        Object.keys(updateData).forEach(key => {
+          if (key === 'file' && updateData[key]) {
+            formData.append('file', updateData[key]);
+          } else {
+            formData.append(key, updateData[key]);
+          }
+        });
+      }
+
+      // Configurar headers para multipart/form-data
+      const config = {
         headers: { 'Content-Type': 'multipart/form-data' }
-      } : undefined;
+      };
 
-      // Realizar la petición con la configuración adecuada
-      const response = await API.put(`${ENDPOINTS.POST_BY_ID(id)}`, updateData, config);
+      const response = await API.put(ENDPOINTS.POST_BY_ID(id), formData, config);
       return response.data;
     } catch (error) {
       handleError(error, `actualizar post con ID ${id}`);

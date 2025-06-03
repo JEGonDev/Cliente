@@ -47,7 +47,7 @@ export const PostListView = () => {
       setShowOnlyUserPosts(false);
     } catch (error) {
       console.error("Error al obtener publicaciones:", error);
-      setLoadError("No se pudieron cargar las publicaciones. Intente nuevamente.");
+      setLoadError("En el momento no hay publicaciones para mostrar, ¡sé el primero en crear una!");
       setPosts([]);
       setFilteredPosts([]);
     } finally {
