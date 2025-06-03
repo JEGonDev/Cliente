@@ -418,9 +418,6 @@ export const RealTimeLayout = () => {
           <div className="bg-white p-6 rounded-lg shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Gráficos en Tiempo Real</h2>
-              <div className="text-sm text-gray-500">
-                Actualización automática cada 5 segundos
-              </div>
             </div>
             <RealTimeChart />
           </div>

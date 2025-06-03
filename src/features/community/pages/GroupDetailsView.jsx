@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { FaHashtag, FaPlus, FaTrash, FaEdit } from "react-icons/fa";
 import { ThreadList } from "../ui/ThreadList";
 import { useGroup } from "../hooks/useGroup";
@@ -18,6 +18,7 @@ import { communityService } from "../services/communityService";
 export const GroupDetailsView = () => {
   const { groupId } = useParams();
   const reloadThreadsRef = useRef(null);
+  const navigate = useNavigate();
 
   // Estados locales para modales
   const [showThreadModal, setShowThreadModal] = useState(false);
@@ -167,7 +168,7 @@ export const GroupDetailsView = () => {
   const handleConfirmDelete = async () => {
     const success = await handleDeleteGroup(group.id);
     if (success) {
-      fetchGroups();
+      navigate('/groups');
       setShowDeleteConfirmation(false);
     }
   };

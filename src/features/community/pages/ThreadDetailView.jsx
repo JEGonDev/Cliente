@@ -350,22 +350,23 @@ export const ThreadDetailView = () => {
       {/* Modales */}
       {isEditModalOpen && (
         <ThreadEditModal
-          thread={thread}
+          isOpen={isEditModalOpen}
+          isUpdating={isUpdating}
           formData={formData}
           formErrors={formErrors}
-          isLoading={isUpdating}
-          onSubmit={handleUpdateSubmit}
-          onChange={handleChange}
-          onClose={handleCancelEdit}
+          handleChange={handleChange}
+          handleSubmit={handleUpdateSubmit}
+          handleCancel={() => setIsEditModalOpen(false)}
         />
       )}
 
       {isDeleteDialogOpen && (
         <ThreadDeleteDialog
           isOpen={isDeleteDialogOpen}
-          isLoading={isDeleting}
+          loading={isDeleting}
+          threadTitle={thread?.title}
           onConfirm={handleDeleteConfirm}
-          onClose={() => setIsDeleteDialogOpen(false)}
+          onCancel={() => setIsDeleteDialogOpen(false)}
         />
       )}
 
