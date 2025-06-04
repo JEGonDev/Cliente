@@ -37,11 +37,8 @@ export const ThreadContentList = ({
   const fetchThreadPosts = async () => {
     setLoadingPosts(true);
     try {
-      // TODO: Cuando el endpoint esté disponible, usar communityService.getPostsByThread
-      // Por ahora retornamos un array vacío
-      // const response = await communityService.getPostsByThread(threadId);
-      // setPosts(response?.data || []);
-      setPosts([]);
+      const response = await communityService.getPostsByThreadId(threadId);
+      setPosts(response?.data || []);
       setHasNewContent(false);
     } catch (err) {
       console.error('Error al cargar posts del hilo:', err);
@@ -62,12 +59,11 @@ export const ThreadContentList = ({
   useEffect(() => {
     const checkNewContent = async () => {
       try {
-        // TODO: Cuando el endpoint esté disponible, verificar nuevos posts
-        // const response = await communityService.getPostsByThread(threadId);
-        // const newPosts = response?.data || [];
-        // if (newPosts.length > posts.length) {
-        //   setHasNewContent(true);
-        // }
+        const response = await communityService.getPostsByThreadId(threadId);
+        const newPosts = response?.data || [];
+        if (newPosts.length > posts.length) {
+          setHasNewContent(true);
+        }
       } catch (error) {
         console.error('Error al verificar nuevo contenido:', error);
       }
