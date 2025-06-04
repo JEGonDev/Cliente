@@ -33,7 +33,7 @@ export const DataChart = ({
         // Agregar otros tipos de sensores si están disponibles
         temp: item.temp || item.temperature || (item.readingValue && sensorType === 'temperature' ? item.readingValue : 0),
         humidity: item.humidity || (item.readingValue && sensorType === 'humidity' ? item.readingValue : 0),
-        ec: item.ec || item.conductivity || (item.readingValue && sensorType === 'ec' ? item.readingValue : 0)
+        tds: item.tds || item.conductivity || (item.readingValue && sensorType === 'tds' ? item.readingValue : 0)
       };
 
       return normalizedItem;
@@ -55,7 +55,7 @@ export const DataChart = ({
         label: 'Humedad',
         yAxisDomain: [0, 100]
       },
-      ec: {
+      tds: {
         color: '#10b981',
         unit: 'mS/cm',
         label: 'Conductividad',
@@ -295,11 +295,11 @@ DataChart.propTypes = {
     temperature: PropTypes.number,
     readingValue: PropTypes.number,
     humidity: PropTypes.number,
-    ec: PropTypes.number,
+    tds: PropTypes.number,
     conductivity: PropTypes.number
   })),
   type: PropTypes.string,
-  sensorType: PropTypes.oneOf(['temperature', 'humidity', 'ec']),
+  sensorType: PropTypes.oneOf(['temperature', 'humidity', 'tds']),
   showGrid: PropTypes.bool,
   height: PropTypes.number
 };

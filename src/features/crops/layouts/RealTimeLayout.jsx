@@ -151,13 +151,13 @@ export const RealTimeLayout = () => {
             'sensor temperatura': 'temperature',
             'humidity': 'humidity',
             'humedad': 'humidity',
-            'ec': 'ec',
-            'conductividad electrica': 'ec'
+            'tds': 'tds',
+            'conductividad electrica': 'tds'
           };
 
           const normalizedType = sensorTypeMap[sensor.sensorType.toLowerCase()] || sensor.sensorType.toLowerCase();
 
-          if (['temperature', 'humidity', 'ec'].includes(normalizedType)) {
+          if (['temperature', 'humidity', 'tds'].includes(normalizedType)) {
             result[normalizedType] = {
               current: parseFloat(sensorData.current.readingValue),
               unit: normalizedType === 'temperature' ? '°C' : normalizedType === 'humidity' ? '%' : 'mS/cm',
@@ -186,8 +186,8 @@ export const RealTimeLayout = () => {
         'sensor temperatura': 'temperature',
         'humidity': 'humidity',
         'humedad': 'humidity',
-        'ec': 'ec',
-        'conductividad electrica': 'ec'
+        'tds': 'tds',
+        'conductividad electrica': 'tds'
       };
 
       const normalizedType = sensorTypeMap[reading.sensorType.toLowerCase()] || reading.sensorType.toLowerCase();
@@ -214,7 +214,7 @@ export const RealTimeLayout = () => {
         trend: "Sin datos",
         trendTime: ""
       },
-      ec: {
+      tds: {
         current: 0,
         unit: "mS/cm",
         trend: "Sin datos",
@@ -405,11 +405,11 @@ export const RealTimeLayout = () => {
 
             <RealTimeIndicator
               label="EC"
-              value={displayData.ec.current}
-              unit={displayData.ec.unit}
-              trend={displayData.ec.trend}
-              trendDirection={displayData.ec.trendDirection}
-              trendTime={displayData.ec.trendTime}
+              value={displayData.tds.current}
+              unit={displayData.tds.unit}
+              trend={displayData.tds.trend}
+              trendDirection={displayData.tds.trendDirection}
+              trendTime={displayData.tds.trendTime}
               icon="conductivity"
             />
           </div>

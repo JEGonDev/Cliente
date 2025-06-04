@@ -175,7 +175,7 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
               return '°C';
             case 'humidity':
               return '%';
-            case 'ec':
+            case 'tds':
               return 'mS/cm';
             default:
               return '';
@@ -326,7 +326,7 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                         case 'humidity':
                           defaultThresholds = { minThreshold: '60', maxThreshold: '80' };
                           break;
-                        case 'ec':
+                        case 'tds':
                           defaultThresholds = { minThreshold: '1', maxThreshold: '1.6' };
                           break;
                       }
@@ -343,7 +343,7 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                     <option value="">Seleccionar tipo de sensor</option>
                     <option value="temperature">Temperatura</option>
                     <option value="humidity">Humedad</option>
-                    <option value="ec">Conductividad Eléctrica (EC)</option>
+                    <option value="tds">Conductividad Eléctrica (EC)</option>
                   </select>
                   <p className="text-sm text-gray-500">
                     Seleccione el tipo de sensor que desea crear
@@ -364,7 +364,7 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                           return 'Grados centígrados (°C)';
                         case 'humidity':
                           return 'Porcentaje (%)';
-                        case 'ec':
+                        case 'tds':
                           return 'Conductividad eléctrica (mS/cm)';
                         default:
                           return '';
@@ -389,7 +389,7 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                     <div className="relative">
                       <input
                         type="number"
-                        step={newSensorData.sensorType === 'ec' ? '0.1' : '1'}
+                        step={newSensorData.sensorType === 'tds' ? '0.1' : '1'}
                         value={newSensorData.thresholds.minThreshold}
                         onChange={(e) => setNewSensorData(prev => ({
                           ...prev,
@@ -408,7 +408,7 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                               return '°C';
                             case 'humidity':
                               return '%';
-                            case 'ec':
+                            case 'tds':
                               return 'mS/cm';
                             default:
                               return '';
@@ -420,7 +420,7 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                       <p className="text-xs text-gray-500 mt-1">
                         {newSensorData.sensorType === 'temperature' && 'Rango válido: -10°C - 50°C | Recomendado: 18°C - 26°C'}
                         {newSensorData.sensorType === 'humidity' && 'Rango válido: 0% - 100% | Recomendado: 60% - 80%'}
-                        {newSensorData.sensorType === 'ec' && 'Rango válido: 0mS/cm - 5mS/cm | Recomendado: 1mS/cm - 1.6mS/cm'}
+                        {newSensorData.sensorType === 'tds' && 'Rango válido: 0mS/cm - 5mS/cm | Recomendado: 1mS/cm - 1.6mS/cm'}
                       </p>
                     )}
                   </div>
@@ -431,7 +431,7 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                     <div className="relative">
                       <input
                         type="number"
-                        step={newSensorData.sensorType === 'ec' ? '0.1' : '1'}
+                        step={newSensorData.sensorType === 'tds' ? '0.1' : '1'}
                         value={newSensorData.thresholds.maxThreshold}
                         onChange={(e) => setNewSensorData(prev => ({
                           ...prev,
@@ -450,7 +450,7 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                               return '°C';
                             case 'humidity':
                               return '%';
-                            case 'ec':
+                            case 'tds':
                               return 'mS/cm';
                             default:
                               return '';

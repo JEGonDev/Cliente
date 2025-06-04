@@ -112,9 +112,9 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
             'humidity': 'humidity',
             'humedad': 'humidity',
             'sensor humedad': 'humidity',
-            'ec': 'ec',
-            'conductividad': 'ec',
-            'conductividad electrica': 'ec'
+            'tds': 'tds',
+            'conductividad': 'tds',
+            'conductividad electrica': 'tds'
           };
 
           // Intentar obtener el tipo de diferentes propiedades
@@ -218,7 +218,7 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
         case 'temperature':
           data.temperature = value;
           break;
-        case 'ec':
+        case 'tds':
           data.conductivity = value;
           break;
       }
@@ -281,6 +281,14 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
 
   const sensorsCount = getSensorsCount();
   const normalizedStatus = getNormalizedStatus();
+
+  const getSensorIcon = (type) => {
+    const normalizedType = type.toLowerCase();
+    if (normalizedType.includes('temperature')) return '🌡️';
+    if (normalizedType.includes('humidity')) return '💧';
+    if (normalizedType.includes('tds')) return '⚡';
+    return '📊'; // Icono por defecto
+  };
 
   return (
     <>
@@ -364,7 +372,7 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
             <span className={`text-sm font-medium ${sensorData.conductivity > 0 ? 'text-purple-700' : 'text-gray-500'}`}>
               {sensorData.conductivity.toFixed(2)} mS/cm
             </span>
-            <span className="text-xs text-gray-600">EC</span>
+            <span className="text-xs text-gray-600">TDS</span>
           </div>
         </div>
 

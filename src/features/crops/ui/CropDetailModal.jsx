@@ -60,7 +60,7 @@ export const CropDetailModal = ({ isOpen, crop, onClose }) => {
     const defaultReadings = {
       temperature: { value: 0, unit: '°C', status: 'sin-datos' },
       humidity: { value: 0, unit: '%', status: 'sin-datos' },
-      ec: { value: 0, unit: 'mS/cm', status: 'sin-datos' }
+      tds: { value: 0, unit: 'mS/cm', status: 'sin-datos' }
     };
 
     cropSensors.forEach(sensor => {
@@ -79,8 +79,8 @@ export const CropDetailModal = ({ isOpen, crop, onClose }) => {
           unit: '%',
           status: getReadingStatus(reading, 60, 80)
         };
-      } else if (sensorType.includes('ec') || sensorType.includes('conductivity')) {
-        defaultReadings.ec = {
+      } else if (sensorType.includes('tds') || sensorType.includes('conductivity')) {
+        defaultReadings.tds = {
           value: reading,
           unit: 'mS/cm',
           status: getReadingStatus(reading, 1.0, 3.0)
@@ -187,8 +187,8 @@ export const CropDetailModal = ({ isOpen, crop, onClose }) => {
               <SensorItem
                 label="Conductividad"
                 icon={<Zap className="h-5 w-5 text-purple-500" />}
-                value={`${sensorReadings.ec.value} ${sensorReadings.ec.unit}`}
-                className={getReadingClass(sensorReadings.ec.status)}
+                value={`${sensorReadings.tds.value} ${sensorReadings.tds.unit}`}
+                className={getReadingClass(sensorReadings.tds.status)}
               />
               <SensorItem
                 label="Temperatura"

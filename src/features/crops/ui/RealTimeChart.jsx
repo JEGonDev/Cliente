@@ -103,7 +103,7 @@ export const RealTimeChart = () => {
         case 'humedad':
           point.hum = reading.readingValue;
           break;
-        case 'ec':
+        case 'tds':
         case 'conductividad electrica':
           point.cond = reading.readingValue;
           break;

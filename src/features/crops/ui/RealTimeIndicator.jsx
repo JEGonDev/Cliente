@@ -33,7 +33,7 @@ export const RealTimeIndicator = ({
     temperature: <Thermometer size={24} className="text-red-500" />,
     humidity: <Droplets size={24} className="text-blue-500" />,
     conductivity: <Activity size={24} className="text-green-500" />,
-    ec: <Activity size={24} className="text-purple-500" />,
+    tds: <Activity size={24} className="text-purple-500" />,
     ph: <Activity size={24} className="text-yellow-500" />
   };
 
@@ -66,7 +66,7 @@ export const RealTimeIndicator = ({
       return val.toFixed(1);
     } else if (icon === 'humidity') {
       return Math.round(val).toString();
-    } else if (icon === 'conductivity' || icon === 'ec') {
+    } else if (icon === 'conductivity' || icon === 'tds') {
       return val.toFixed(2);
     } else if (icon === 'ph') {
       return val.toFixed(1);
@@ -170,7 +170,7 @@ RealTimeIndicator.propTypes = {
   trend: PropTypes.string,
   trendDirection: PropTypes.oneOf(['up', 'down', 'stable']),
   trendTime: PropTypes.string,
-  icon: PropTypes.oneOf(['temperature', 'humidity', 'conductivity', 'ec', 'ph']),
+  icon: PropTypes.oneOf(['temperature', 'humidity', 'conductivity', 'tds', 'ph']),
   isLoading: PropTypes.bool,
   hasError: PropTypes.bool,
   errorMessage: PropTypes.string
