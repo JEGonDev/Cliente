@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef, useEffect } from "react";
+import { useMemo, useState, useRef, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaHashtag, FaPlus, FaTrash, FaEdit } from "react-icons/fa";
 import { ThreadList } from "../ui/ThreadList";
@@ -14,11 +14,13 @@ import { websocketService } from "../../../common/services/webSocketService";
 import { PostFormModal } from "../ui/PostFormModal";
 import { GroupContentList } from "../ui/GroupContentList";
 import { communityService } from "../services/communityService";
+import { AuthContext } from "../../authentication/context/AuthContext";
 
 export const GroupDetailsView = () => {
   const { groupId } = useParams();
   const reloadThreadsRef = useRef(null);
   const navigate = useNavigate();
+  const groupContentListRef = useRef(null);
 
   // Estados locales para modales
   const [showThreadModal, setShowThreadModal] = useState(false);
@@ -33,6 +35,7 @@ export const GroupDetailsView = () => {
 
   // Hooks de permisos
   const { isAdmin, canModerateContent } = useAuthRoles();
+  const { isModerator } = useContext(AuthContext);
 
   // Hook de grupo
   const {
@@ -179,10 +182,24 @@ export const GroupDetailsView = () => {
   };
 
   // Handler para cuando se crea un post
-  const handlePostCreated = async (newPost) => {
+  const handlePostCreated = (newPost) => {
     setShowPostModal(false);
-    // No necesitamos hacer nada más aquí, el indicador de nuevo contenido
-    // se activará automáticamente en el siguiente intervalo de verificación
+
+    // Asegurarnos de que el post tenga toda la información necesaria
+    const enrichedPost = {
+      ...newPost,
+      groupId: parseInt(groupId),
+      id: newPost.id || newPost.post_id || Date.now(),
+      postDate: newPost.postDate || newPost.creation_date || new Date().toISOString()
+    };
+
+    // Actualizar la vista inmediatamente (optimistic update)
+    if (groupContentListRef.current) {
+      groupContentListRef.current.updatePostsLocally(enrichedPost);
+    }
+
+    // Recargar en segundo plano para asegurar sincronización
+    loadMessagesByType('group', groupId);
   };
 
   // Handler para eliminar post
@@ -368,8 +385,9 @@ export const GroupDetailsView = () => {
           // Sección de Mensajes y Posts
           <div className="flex flex-col h-[calc(100vh-400px)] max-h-[600px]">
             {/* Lista unificada de mensajes y posts - Área scrolleable */}
-            <div className="flex-1 overflow-y-auto mb-4">
+            <div className="flex-1 overflow-y-auto p-4">
               <GroupContentList
+                ref={groupContentListRef}
                 groupId={parseInt(groupId)}
                 messages={getMessagesByType('group', parseInt(groupId))}
                 isLoading={messagesLoading}
