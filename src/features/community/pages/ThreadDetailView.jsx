@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Hash, ChevronRightIcon } from "lucide-react";
 import { AuthContext } from "../../authentication/context/AuthContext";
@@ -19,6 +19,7 @@ export const ThreadDetailView = () => {
   const { isAdmin, isModerator } = useContext(AuthContext);
   const { threadId } = useParams();
   const navigate = useNavigate();
+  const threadContentListRef = useRef(null);
 
   // Estados locales para modales
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -199,12 +200,22 @@ export const ThreadDetailView = () => {
   // Handler para cuando se crea un post
   const handlePostCreated = (newPost) => {
     setShowPostModal(false);
-    // Recargar mensajes y posts después de crear un post
-    loadMessagesByType('thread', threadId);
-    // Forzar la recarga de posts en el ThreadContentList
-    if (onRefresh) {
-      onRefresh();
+
+    // Asegurarnos de que el post tenga toda la información necesaria
+    const enrichedPost = {
+      ...newPost,
+      threadId: parseInt(threadId),
+      id: newPost.id || newPost.post_id || Date.now(),
+      postDate: newPost.postDate || newPost.creation_date || new Date().toISOString()
+    };
+
+    // Actualizar la vista inmediatamente (optimistic update)
+    if (threadContentListRef.current) {
+      threadContentListRef.current.updatePostsLocally(enrichedPost);
     }
+
+    // Recargar en segundo plano para asegurar sincronización
+    loadMessagesByType('thread', threadId);
   };
 
   // Handler para eliminar post
@@ -346,6 +357,7 @@ export const ThreadDetailView = () => {
               {/* Lista de mensajes - Área scrolleable */}
               <div className="flex-1 overflow-y-auto p-4">
                 <ThreadContentList
+                  ref={threadContentListRef}
                   threadId={parseInt(threadId)}
                   messages={getMessagesByType('thread', parseInt(threadId))}
                   isLoading={messagesLoading}

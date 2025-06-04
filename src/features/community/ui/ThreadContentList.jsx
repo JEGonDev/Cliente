@@ -9,7 +9,7 @@ import PropTypes from 'prop-types';
  * Componente que muestra una lista unificada de mensajes y posts de un hilo
  * ordenados cronológicamente (del más antiguo al más nuevo)
  */
-export const ThreadContentList = ({
+export const ThreadContentList = React.forwardRef(({
   threadId,
   messages = [],
   isLoading = false,
@@ -17,7 +17,7 @@ export const ThreadContentList = ({
   onDeleteMessage,
   onDeletePost,
   onRefresh
-}) => {
+}, ref) => {
   const [posts, setPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [postsError, setPostsError] = useState(null);
@@ -25,6 +25,16 @@ export const ThreadContentList = ({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const contentEndRef = useRef(null);
   const prevContentLengthRef = useRef(0);
+
+  // Exponer métodos a través de la referencia
+  React.useImperativeHandle(ref, () => ({
+    updatePostsLocally: (newPost) => {
+      setPosts(prevPosts => {
+        const updatedPosts = [newPost, ...prevPosts];
+        return updatedPosts;
+      });
+    }
+  }));
 
   // Función para hacer scroll al final
   const scrollToBottom = (behavior = 'smooth') => {
@@ -211,7 +221,7 @@ export const ThreadContentList = ({
       </div>
     </div>
   );
-};
+});
 
 // Agregar PropTypes para validación
 ThreadContentList.propTypes = {
