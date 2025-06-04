@@ -34,7 +34,11 @@ export default {
           dark: "#273444",
           DEFAULT: "#8492a6",
           light: "#d3dce6",
-        },
+      },
+      },
+      fontFamily: {
+        inter: ['Inter', 'sans-serif '],
+         chonburi: ['Chonburi'],
       },
     },
   },

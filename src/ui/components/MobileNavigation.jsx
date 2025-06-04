@@ -41,20 +41,20 @@ export const MobileNavigation = ({ isOpen, onClose, logoProps }) => {
                 <>                  
                   <ItemsNavbar
                     link="/"
-                    style="block text-white hover:text-gray-300 py-2"
+                    style="block text-white hover:text-gray-300 py-2 font-inter"
                     text="Inicio"
                     onClick={onClose}
                   />
                   <a
                     href="#nosotros"
-                    className="block text-white hover:text-gray-300 py-2"
+                    className="block text-white hover:text-gray-300 py-2 font-inter"
                     onClick={onClose}
                   >
                     Acerca de nosotros
                   </a>
                   <a
                     href="#servicios"
-                    className="block text-white hover:text-gray-300 py-2"
+                    className="block text-white hover:text-gray-300 py-2 font-inter"
                     onClick={onClose}
                   >
                     Servicios
@@ -64,26 +64,26 @@ export const MobileNavigation = ({ isOpen, onClose, logoProps }) => {
                 <>
                   <ItemsNavbar
                     link="/community"
-                    style="block text-white hover:text-gray-300 py-2"
+                    style="block text-white hover:text-gray-300 py-2 font-inter"
                     text="Comunidad"
                     onClick={onClose}
                   />
                   <ItemsNavbar
                     link="/education"
-                    style="block text-white hover:text-gray-300 py-2"
+                    style="block text-white hover:text-gray-300 py-2 font-inter"
                     text="Educación"
                     onClick={onClose}
                   />
                   <ItemsNavbar
                     link="/monitoring"
-                    style="block text-white hover:text-gray-300 py-2"
+                    style="block text-white hover:text-gray-300 py-2 font-inter"
                     text="Monitoreo"
                     onClick={onClose}
                   />
                   {(isAdmin || isModerator) && (
                     <ItemsNavbar
                       link="/admin"
-                      style="block text-white hover:text-gray-300 py-2"
+                      style="block text-white hover:text-gray-300 py-2 font-inter"
                       text="Administración"
                       onClick={onClose}
                     />
@@ -99,7 +99,7 @@ export const MobileNavigation = ({ isOpen, onClose, logoProps }) => {
                   <AuthNav />
                   <button
                     onClick={handleLogout}
-                    className="block w-full text-left text-white hover:text-gray-300 py-2"
+                    className="block w-full text-left text-white hover:text-gray-300 py-2 font-poppins"
                   >
                     Cerrar sesión
                   </button>

@@ -21,8 +21,7 @@ export const Navbar = () => {
             <ItemsNavbar link='/' style='text-white' text='Inicio' />
             <ItemsNavbar link='/community' style='text-white' text='Comunidad' />
             
-            
-
+        
         </nav>
     )
 }
