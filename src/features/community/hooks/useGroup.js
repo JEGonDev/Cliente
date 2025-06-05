@@ -222,7 +222,7 @@ export const useGroup = (groupId = null) => {
       // Si el usuario está viendo el grupo eliminado, lo redirige al listado
       if (selectedGroup && selectedGroup.id === parseInt(targetGroupId)) {
         setTimeout(() => {
-          navigate('/community');
+          navigate('/groups');
         }, 1500);
       }
       return true;
