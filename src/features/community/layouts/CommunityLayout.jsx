@@ -1,6 +1,6 @@
 import  { useState } from "react";
 import { Outlet } from "react-router-dom";
-import { BarIcons_layout } from "../ui/BarIcons_layout";
+import { BarIcons } from "../../../ui/components/BarIcons";
 
 
 export const CommunityLayout = () => {
@@ -9,7 +9,7 @@ export const CommunityLayout = () => {
   return (
     <div className="flex h-screen">
       {/* Barra lateral izquierda con iconos */}
-      <BarIcons_layout activeSection={activeSection} />
+      <BarIcons activeSection={activeSection} />
 
 
       {/* Contenido principal */}

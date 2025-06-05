@@ -39,17 +39,17 @@ export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
       cultivos: {
         count: crops.length,
         hasAlert: crops.some(crop => crop.status === 'ALERT' || crop.status === 'alert'),
-        badge: crops.filter(crop => crop.status === 'ACTIVE' || crop.status === 'active').length
+        badge: crops.filter(crop => crop.status === 'ACTIVE' || crop.status === 'active').length,
       },
       alertas: {
         count: alerts.length,
         hasAlert: alerts.some(alert => alert.type === 'error'),
-        badge: alerts.filter(alert => alert.status === 'ACTIVE' || !alert.resolved).length
+        badge: alerts.filter(alert => alert.status === 'ACTIVE' || !alert.resolved).length,
       },
       historial: {
         count: sensors.length,
         hasAlert: false,
-        badge: sensors.filter(sensor => sensor.status === 'ACTIVE').length
+        badge: sensors.filter(sensor => sensor.status === 'ACTIVE').length,
       }
     };
 
@@ -65,7 +65,7 @@ export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
       path: '/monitoring/crops',
       badge: notifications.cultivos?.badge,
       hasAlert: notifications.cultivos?.hasAlert,
-      description: `${notifications.cultivos?.count || 0} cultivos registrados`
+      description: `${notifications.cultivos?.count || 0} cultivos registrados`,
     },
     {
       id: 'historial',
@@ -74,7 +74,7 @@ export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
       path: '/monitoring/history',
       badge: notifications.historial?.badge,
       hasAlert: notifications.historial?.hasAlert,
-      description: `${notifications.historial?.count || 0} sensores activos`
+      description: `${notifications.historial?.count || 0} sensores activos`,
     },
     {
       id: 'alertas',
@@ -83,11 +83,11 @@ export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
       path: '/monitoring/alerts',
       badge: notifications.alertas?.badge,
       hasAlert: notifications.alertas?.hasAlert,
-      description: `${notifications.alertas?.count || 0} alertas totales`
-    }
+      description: `${notifications.alertas?.count || 0} alertas totales`,
+    },
   ];
 
-  // Función para obtener clases CSS del elemento de navegación
+  // Obtener clases CSS para el elemento de navegación
   const getNavItemClasses = (item) => {
     const baseClasses = "flex items-center px-4 py-3 text-sm transition-colors duration-200 group";
 
@@ -102,24 +102,27 @@ export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
     return `${baseClasses} text-gray-700 hover:bg-gray-100`;
   };
 
-  // Función para renderizar badge
+  // Renderizar badge o indicador de alerta
   const renderBadge = (item) => {
     if (!item.badge && !item.hasAlert) return null;
 
     if (item.hasAlert) {
       return (
-        <span className="ml-auto w-2 h-2 bg-red-500 rounded-full animate-pulse" title="Requiere atención">
-        </span>
+        <span
+          className="ml-auto w-2 h-2 bg-red-500 rounded-full animate-pulse"
+          title="Requiere atención"
+        />
       );
     }
 
     if (item.badge > 0) {
       return (
         <span
-          className={`ml-auto px-2 py-1 text-xs rounded-full ${activeSection === item.id
-            ? 'bg-green-200 text-green-800'
-            : 'bg-gray-200 text-gray-700'
-            }`}
+          className={`ml-auto px-2 py-1 text-xs rounded-full ${
+            activeSection === item.id
+              ? 'bg-green-200 text-green-800'
+              : 'bg-gray-200 text-gray-700'
+          }`}
           title={item.description}
         >
           {item.badge > 99 ? '99+' : item.badge}
@@ -174,7 +177,11 @@ export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
       <div className="p-4 bg-white border-t border-gray-200">
         {/* Indicador de conectividad */}
         <div className="flex items-center text-xs">
-          <div className={`w-2 h-2 rounded-full mr-2 ${loading ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`}></div>
+          <div
+            className={`w-2 h-2 rounded-full mr-2 ${
+              loading ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'
+            }`}
+          />
           <span className="text-gray-600">
             Sistema {loading ? 'sincronizando...' : 'conectado'}
           </span>
@@ -185,5 +192,5 @@ export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
 };
 
 MonitoringSidebar.propTypes = {
-  activeSection: PropTypes.string
+  activeSection: PropTypes.string,
 };

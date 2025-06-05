@@ -1,12 +1,13 @@
 import React from "react";
 import { useContent } from "../hooks/useContent";
 import { Header } from "../../../ui/layouts/Header";
-import { BarIcons_layout } from "../layouts/BarIcons_layout";
+
 import { Navbar_layout } from "../layouts/Navbar_layout";
 import { Groups } from "../layouts/Groups";
 import { Forum } from "../layouts/Forum";
 import { HomeComunity } from "../layouts/HomeComunity";
 import { Threads } from "../layouts/Threads";
+import { BarIcons } from "../../../ui/components/BarIcons";
 
 
 export const ComunityPage = () => {
@@ -41,7 +42,7 @@ export const ComunityPage = () => {
     <>
       <Header />
       <div className="flex flex-col md:flex-row bg-gray-100 min-h-screen">
-        <BarIcons_layout 
+        <BarIcons
           activeSection={activeContent}
           onSectionChange={handleSectionChange}
         />

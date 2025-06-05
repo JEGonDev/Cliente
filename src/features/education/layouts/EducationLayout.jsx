@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import { Header } from '../../../ui/layouts/Header';
-import { SidebarLayout } from './SidebarLayout ';
 import { SearchFilterBar } from '../ui/SearchFilterBar';
+import { BarIcons } from '../../../ui/components/BarIcons';
 
 /**
  * Layout principal para las páginas del módulo educativo
@@ -36,10 +36,7 @@ export const EducationLayout = ({
       
       <div className="flex flex-1">
         {/* Barra lateral izquierda */}
-        <SidebarLayout 
-          activeIcon={activeIcon}
-          onIconClick={onIconClick}
-        />
+        <BarIcons activeSection={activeIcon} />
         
         {/* Contenido principal */}
         <main className="flex-1 p-6">
