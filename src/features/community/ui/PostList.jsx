@@ -61,7 +61,7 @@ export const PostList = ({
   // Renderizar la lista de publicaciones
   return (
     <div className="space-y-6">
-      {posts.map(post => (
+      {posts.map(post => (       
         <PostCard 
           key={post.id || post.post_id} 
           post={post} 

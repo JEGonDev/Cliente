@@ -160,24 +160,26 @@ export const usePost = () => {
    * Obtiene todas las publicaciones desde el backend
    */
   const fetchAllPosts = async () => {
-    setLoading(true);
-    setError(null);
+  setLoading(true);
+  setError(null);
 
-    try {
-      const response = await communityService.getAllPosts();
+  try {
+    const response = await communityService.getAllPosts();
+    console.log('Publicaciones obtenidas:', response);
 
-      if (response) {
-        setPosts(Array.isArray(response) ? response : []);
-      } else {
-        setPosts([]);
-      }
-    } catch (err) {
-      console.error('Error al obtener publicaciones:', err);
-      setError('Error al cargar las publicaciones. Inténtalo de nuevo.');
-    } finally {
-      setLoading(false);
+    if (response && Array.isArray(response.data)) {
+      setPosts(response.data);
+    } else {
+      setPosts([]);
     }
-  };
+  } catch (err) {
+    console.error('Error al obtener publicaciones:', err);
+    setError('Error al cargar las publicaciones. Inténtalo de nuevo.');
+    setPosts([]); // Asegúrate de limpiar los posts en caso de error
+  } finally {
+    setLoading(false);
+  }
+};
 
   /**
    * Obtiene publicaciones por ID de grupo

@@ -7,6 +7,7 @@ import { LoginPage } from "../features/authentication/pages/LoginPage";
 import { RegisterPage } from "../features/authentication/pages/RegisterPage";
 import { ForgotPasswordPage } from "../features/authentication/pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "../features/authentication/pages/ResetPasswordPage";
+
 // Importaciones del modulo de comunidad
 import { CommunityLayout } from "../features/community/layouts/CommunityLayout";
 import { PostListView } from "../features/community/pages/PostListView";
@@ -24,6 +25,7 @@ import { ModuleFormPage } from "../features/education/pages/ModuleFormPage";
 // Importaciones del modulo de perfil
 import { ProfileAdminPage } from "../features/profile/pages/ProfileAdminPage";
 import { ProfileEditPage } from "../features/profile/pages/ProfileEditPage";
+import { ProfileView } from "../features/profile/ui/ProfileView";
 // Importaciones del modulo de Monitoreo
 import { MonitoringPage } from "../pages/MonitoringPage";
 import { AlertsPage } from "../features/crops/pages/AlertsPage";
@@ -31,6 +33,10 @@ import { DataHistoryPage } from "../features/crops/pages/DataHistoryPage";
 import { CropsPage } from "../features/crops/pages/CropsPage";
 import { RealTimeMonitoringPage } from "../features/crops/pages/RealTimeMonitoringPage";
 import { CreateCultivationPage } from "../features/crops/pages/CreateCultivationPage";
+
+// Importaciones de administracion
+import { AdminPage } from "../pages/AdminPage";
+import { AdminRegisterPage } from "../features/authentication/pages/AdminRegisterPage";
 
 export const RouterApp = () => { 
   return (
@@ -75,7 +81,7 @@ export const RouterApp = () => {
           <Route path="groups" element={<GroupListView />} />
           <Route path="groups/:groupId" element={<GroupDetailsView />} />
           <Route path="ThreadForum" element={<ThreadForumView />} />
-          <Route path="admin" element={<AdminCommunityView />} />
+          <Route path="admin_comunity" element={<AdminCommunityView />} />
           
           <Route path="thread/:threadId" element={<ThreadDetailView />} />
         </Route>
@@ -83,6 +89,13 @@ export const RouterApp = () => {
         {/* Rutas del modulo de profile */}
         <Route path="/profile/edit" element={<ProfileEditPage />} />
         <Route path="/profile/admin" element={<ProfileAdminPage />} />
+        <Route path="/profile/view/:id" element={<ProfileView />} />
+
+        {/* Rutas del modulo de administracion */}
+        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin/register" element={<AdminRegisterPage />} />
+        
+        {/* Rutas de administracion de comunidad */}
 
 
       </Route>

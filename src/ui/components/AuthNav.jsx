@@ -1,38 +1,44 @@
 import { useContext, useEffect } from "react";
-import { Menu } from '@headlessui/react';
-import { BellIcon } from '@heroicons/react/24/outline';
-import { useNavigate } from 'react-router-dom';
-import { ProfileContext } from '../../features/profile/context/ProfileContext';
-import { AuthContext } from '../../features/authentication/context/AuthContext';
+import { Menu } from "@headlessui/react";
+import { BellIcon } from "@heroicons/react/24/outline";
+import { useNavigate, Link } from "react-router-dom";
+import { ProfileContext } from "../../features/profile/context/ProfileContext";
+import { AuthContext } from "../../features/authentication/context/AuthContext";
 
 export const AuthNav = () => {
   const navigate = useNavigate();
-  
+
   // Obtener datos del perfil
   const { profile, loading: profileLoading } = useContext(ProfileContext);
-  
+
   // Obtener datos de autenticación
-  const { user, isAuthenticated, isAdmin, isModerator, logout } = useContext(AuthContext);
-  
+  const { user, isAuthenticated, isAdmin, isModerator, logout } =
+    useContext(AuthContext);
+
   // Log para depuración
   useEffect(() => {
     console.log("Datos de perfil:", { profile, profileLoading });
-    console.log("Datos de autenticación:", { user, isAuthenticated, isAdmin, isModerator });
+    console.log("Datos de autenticación:", {
+      user,
+      isAuthenticated,
+      isAdmin,
+      isModerator,
+    });
   }, [profile, profileLoading, user, isAuthenticated, isAdmin, isModerator]);
 
   // Función para manejar el cierre de sesión
   const handleLogout = () => {
-    if (typeof logout === 'function') {
+    if (typeof logout === "function") {
       logout();
-      navigate('/');
+      navigate("/");
     }
   };
 
   // Determinar el rol para mostrar
   const getUserRole = () => {
-    if (isAdmin) return 'Administrador';
-    if (isModerator) return 'Moderador';
-    return user?.authorities?.[0] || profile?.role || 'Usuario';
+    if (isAdmin) return "Administrador";
+    if (isModerator) return "Moderador";
+    return user?.authorities?.[0] || profile?.role || "Usuario";
   };
 
   // Determinar el nombre de usuario a mostrar
@@ -43,20 +49,22 @@ export const AuthNav = () => {
     if (user?.firstName && user?.lastName) {
       return `${user.firstName} ${user.lastName}`;
     }
-    return profile?.username || user?.username || user?.email || 'Usuario';
+    return profile?.username || user?.username || user?.email || "Usuario";
   };
 
   // Generar avatar por defecto con las iniciales del usuario
   const getDefaultAvatar = () => {
     const name = getDisplayName();
     const initials = name
-      .split(' ')
-      .map(part => part?.[0] || '')
-      .join('')
+      .split(" ")
+      .map((part) => part?.[0] || "")
+      .join("")
       .toUpperCase()
       .substring(0, 2);
-    
-    return `https://ui-avatars.com/api/?name=${initials || 'U'}&background=random&color=fff`;
+
+    return `https://ui-avatars.com/api/?name=${
+      initials || "U"
+    }&background=random&color=fff`;
   };
 
   // Obtener URL del avatar
@@ -70,7 +78,6 @@ export const AuthNav = () => {
 
   return (
     <div className="flex items-center space-x-4">
-      
       {/* Menú de usuario */}
       <Menu as="div" className="relative">
         <Menu.Button className="relative flex items-center justify-center rounded-full bg-gray-800 text-sm focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden">
@@ -90,7 +97,7 @@ export const AuthNav = () => {
             />
           )}
         </Menu.Button>
-        
+
         <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 ring-1 shadow-lg ring-black/5 transition focus:outline-hidden">
           <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100">
             {isLoading ? (
@@ -102,34 +109,40 @@ export const AuthNav = () => {
               </>
             )}
           </div>
-          
+
           <Menu.Item>
             {({ active }) => (
-              <a
-                href="/profile"
-                className={`block px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''} flex items-center`}
+              <Link
+                to={`/profile/view/${profile?.id || user?.id}`}
+                className={`block px-4 py-2 text-sm text-gray-700 ${
+                  active ? "bg-gray-100" : ""
+                } flex items-center`}
               >
                 Mi Perfil
-              </a>
+              </Link>
             )}
           </Menu.Item>
-          
+
           <Menu.Item>
             {({ active }) => (
               <a
                 href="/settings"
-                className={`block px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''} flex items-center`}
+                className={`block px-4 py-2 text-sm text-gray-700 ${
+                  active ? "bg-gray-100" : ""
+                } flex items-center`}
               >
                 Configuración
               </a>
             )}
           </Menu.Item>
-          
+
           <Menu.Item>
             {({ active }) => (
               <button
                 onClick={handleLogout}
-                className={`w-full text-left px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''} flex items-center`}
+                className={`w-full text-left px-4 py-2 text-sm text-gray-700 ${
+                  active ? "bg-gray-100" : ""
+                } flex items-center`}
               >
                 Cerrar sesión
               </button>
