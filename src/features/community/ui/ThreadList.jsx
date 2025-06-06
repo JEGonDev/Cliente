@@ -51,29 +51,7 @@ export const ThreadList = ({
     }
   }, [refetchRef, groupId, userId, threadId]);
 
-  // ✅ Efecto simplificado sin dependencias de funciones
-  // useEffect(() => {
-  //   const loadThreads = async () => {
-  //     try {
-  //       if (threadId) {
-  //         await fetchThreadById(threadId);
-  //       } else if (groupId) {
-  //         await fetchThreadsByGroup(groupId);
-  //       } else if (userId) {
-  //         await fetchThreadsByUser(userId);
-  //       } else {
-  //         // Para el foro general (cuando groupId es null)
-  //         await fetchForumThreads();
-  //       }
-  //     } catch (err) {
-  //       console.error('Error cargando hilos:', err);
-  //     }
-  //   };
-
-  //   loadThreads();
-    
-  //   // ✅ Solo dependencias de valores, NO de funciones
-  // }, [groupId, userId, threadId]);
+  
 
   // ✅ Notificar al padre cuando los hilos cambien
   useEffect(() => {

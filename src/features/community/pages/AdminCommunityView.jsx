@@ -1,20 +1,26 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
+
 import {
-  FaSearch, FaCog, FaBell, FaUser, FaExclamationTriangle,
-  FaUserSlash, FaUserCircle, FaFileAlt, FaFlag
+  FaSearch,  
+  FaUser,  
+  FaFileAlt,  
+  FaLayerGroup,
+  FaForumbee,
 } from "react-icons/fa";
 import { AdminPostLayout } from "../layouts/AdminPostLayout";
+import { AdminGroupsLayout } from "../layouts/AdminGroupsLayout";
+import { AdminThreadsLayout } from "../layouts/AdminThreadsLayout";
 
 export function AdminCommunityView() {
+  const navigate = useNavigate();
   return (
     <div className="w-full max-w-4xl bg-white min-h-screen border rounded-md shadow-md p-0 mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-center justify-between px-2 sm:px-4 py-2 sm:py-3 border-b bg-gray-100 gap-2">
-        <span className="text-lg font-semibold">Administrador de comunidad</span>
-        <div className="flex items-center gap-3 text-gray-500">
-          <FaBell className="text-xl cursor-pointer" title="Notificaciones" />
-          <FaCog className="text-xl cursor-pointer" title="Configuración" />
-        </div>
+        <span className="text-lg font-semibold">
+          Administrador de comunidad
+        </span>
       </div>
 
       {/* Buscador */}
@@ -32,15 +38,49 @@ export function AdminCommunityView() {
 
       {/* Tabs */}
       <div className="flex flex-wrap items-center gap-2 sm:gap-4 justify-center py-1 border-b">
-        <span className="flex items-center gap-1 text-blue-700 font-medium cursor-pointer">
-          <FaFileAlt /> Publicaciones
-        </span>
-        <span className="flex items-center gap-1 text-red-700 font-medium cursor-pointer">
-          <FaFlag /> Reportes
-        </span>
-        <span className="flex items-center gap-1 text-gray-700 font-medium cursor-pointer">
-          <FaUser /> Usuarios
-        </span>
+        <div className="flex justify-end mt-4">
+          <button
+            onClick={() => navigate(`/comunity/posts`)}
+            className="text-secondary underline text-sm"
+          >
+            <span className="flex items-center gap-1 text-sky-900 font-medium cursor-pointer">
+              <FaFileAlt /> Publicaciones
+            </span>
+          </button>
+        </div>
+
+        <div className="flex justify-end mt-4">
+          <button
+            onClick={() => navigate(`/comunity/ThreadForum`)}
+            className="text-secondary underline text-sm"
+          >
+            <span className="flex items-center gap-1 text-amber-500 font-medium cursor-pointer">
+              <FaForumbee /> Foro
+            </span>
+          </button>
+        </div>
+
+        <div className="flex justify-end mt-4">
+          <button
+            onClick={() => navigate(`/comunity/groups`)}
+            className="text-secondary underline text-sm"
+          >
+            <span className="flex items-center gap-1 text-green font-medium cursor-pointer">
+              <FaLayerGroup /> Grupos
+            </span>
+          </button>
+        </div>
+
+        <div className="flex justify-end mt-4">
+          <button
+            onClick={() => navigate(`/profile/admin`)}
+            className="text-secondary underline text-sm"
+          >
+            <span className="flex items-center gap-1 text-gray-700 font-medium cursor-pointer">
+              <FaUser /> Usuarios
+            </span>
+          </button>
+        </div>
       </div>
 
       <div className="px-2 sm:px-5 py-2">
@@ -48,51 +88,16 @@ export function AdminCommunityView() {
         <AdminPostLayout />
         <hr />
 
-        {/* Usuarios en Moderación */}
-        <div className="my-5">
-          <div className="flex items-center gap-2 text-red-700 font-semibold mb-2">
-            <FaExclamationTriangle /> Usuarios en Moderación
-          </div>
-          <div className="flex items-center gap-2 mb-2 text-yellow-800 flex-wrap">
-            <FaExclamationTriangle className="text-lg" />
-            <span>GreenLover23 - Advertido</span>
-            <button className="bg-green-700 hover:bg-green-900 text-white text-xs rounded px-2 py-1 ml-auto">
-              Reintegrar
-            </button>
-          </div>
-          <div className="flex items-center gap-2 mb-2 text-red-800 flex-wrap">
-            <FaUserSlash className="text-lg" />
-            <span>HydroFan45 - Expulsado</span>
-            <button className="bg-yellow-600 hover:bg-yellow-800 text-white text-xs rounded px-2 py-1 ml-auto">
-              Suspender
-            </button>
-          </div>
-        </div>
+        <AdminGroupsLayout />
         <hr />
 
-        {/* Usuarios */}
-        <div className="mt-5">
-          <div className="flex items-center gap-2 text-gray-700 font-semibold mb-2">
-            <FaUser /> Usuarios
-          </div>
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <FaUserCircle className="text-2xl text-gray-400" />
-            <span>GreenLover23</span>
-          </div>
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <FaUserCircle className="text-2xl text-gray-400" />
-            <span>GreenLover23</span>
-          </div>
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <FaUserCircle className="text-2xl text-gray-400" />
-            <span>GreenLover23</span>
-          </div>
-        </div>
+        <AdminThreadsLayout />
+
+        <hr />
       </div>
     </div>
   );
 }
-
 
 // import React from "react";
 // import { FaSearch, FaCog, FaBell, FaUser, FaExclamationTriangle, FaUserSlash, FaUserCircle, FaFileAlt, FaFlag } from "react-icons/fa";
