@@ -7,11 +7,59 @@ import { CropAlertItem } from './CropAlertItem';
 export const CropDetailModal = ({ isOpen, crop, onClose }) => {
   if (!isOpen || !crop) return null;
 
+<<<<<<< HEAD
   const formatDate = (date) =>
     new Date(date).toLocaleDateString('es-ES', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
+=======
+  const formatDate = (date) => {
+    if (!date) return 'No especificada';
+
+    try {
+      return new Date(date).toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch (error) {
+      return 'Fecha inválida';
+    }
+  };
+
+  // Función para obtener datos de sensores con valores por defecto
+  const getSensorReadings = () => {
+    const defaultReadings = {
+      temperature: { value: 0, unit: '°C', status: 'sin-datos' },
+      humidity: { value: 0, unit: '%', status: 'sin-datos' },
+      tds: { value: 0, unit: 'mS/cm', status: 'sin-datos' }
+    };
+
+    cropSensors.forEach(sensor => {
+      const sensorType = sensor.type.toLowerCase();
+      const reading = sensor.lastReading || 0;
+
+      if (sensorType.includes('temperature')) {
+        defaultReadings.temperature = {
+          value: reading,
+          unit: '°C',
+          status: getReadingStatus(reading, 18, 26)
+        };
+      } else if (sensorType.includes('humidity')) {
+        defaultReadings.humidity = {
+          value: reading,
+          unit: '%',
+          status: getReadingStatus(reading, 60, 80)
+        };
+      } else if (sensorType.includes('tds') || sensorType.includes('conductivity')) {
+        defaultReadings.tds = {
+          value: reading,
+          unit: 'mS/cm',
+          status: getReadingStatus(reading, 1.0, 3.0)
+        };
+      }
+>>>>>>> 0a2550518ec84c66039853f89ca439e946330407
     });
 
   const getHumidityClass = (value) =>
@@ -50,9 +98,30 @@ export const CropDetailModal = ({ isOpen, crop, onClose }) => {
           <section className="mb-6">
             <h3 className="text-sm font-medium text-gray-500 uppercase mb-3">Lecturas de sensores</h3>
             <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+<<<<<<< HEAD
               <SensorItem label="Humedad" icon={<Droplets className="h-5 w-5 text-blue-500" />} value={`${crop.sensors.humidity}%`} className={getHumidityClass(crop.sensors.humidity)} />
               <SensorItem label="Conductividad" icon={<Zap className="h-5 w-5 text-purple-500" />} value={`${crop.sensors.conductivity} mS/cm`} className={getConductivityClass(crop.sensors.conductivity)} />
               <SensorItem label="Temperatura" icon={<Thermometer className="h-5 w-5 text-red-500" />} value={`${crop.sensors.temperature}°C`} className={getTemperatureClass(crop.sensors.temperature)} />
+=======
+              <SensorItem
+                label="Humedad"
+                icon={<Droplets className="h-5 w-5 text-blue-500" />}
+                value={`${sensorReadings.humidity.value}${sensorReadings.humidity.unit}`}
+                className={getReadingClass(sensorReadings.humidity.status)}
+              />
+              <SensorItem
+                label="Conductividad"
+                icon={<Zap className="h-5 w-5 text-purple-500" />}
+                value={`${sensorReadings.tds.value} ${sensorReadings.tds.unit}`}
+                className={getReadingClass(sensorReadings.tds.status)}
+              />
+              <SensorItem
+                label="Temperatura"
+                icon={<Thermometer className="h-5 w-5 text-red-500" />}
+                value={`${sensorReadings.temperature.value}${sensorReadings.temperature.unit}`}
+                className={getReadingClass(sensorReadings.temperature.status)}
+              />
+>>>>>>> 0a2550518ec84c66039853f89ca439e946330407
             </div>
           </section>
 

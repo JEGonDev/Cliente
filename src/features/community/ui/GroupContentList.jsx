@@ -6,11 +6,11 @@ import { RefreshCw } from 'lucide-react';
 import PropTypes from 'prop-types';
 
 /**
- * Componente que muestra una lista unificada de mensajes y posts de un hilo
+ * Componente que muestra una lista unificada de mensajes y posts de un grupo
  * ordenados cronológicamente (del más antiguo al más nuevo)
  */
-export const ThreadContentList = React.forwardRef(({
-  threadId,
+export const GroupContentList = React.forwardRef(({
+  groupId,
   messages = [],
   isLoading = false,
   error = null,
@@ -44,32 +44,32 @@ export const ThreadContentList = React.forwardRef(({
   };
 
   // Función para cargar posts
-  const fetchThreadPosts = async () => {
+  const fetchGroupPosts = async () => {
     setLoadingPosts(true);
     try {
-      const response = await communityService.getPostsByThreadId(threadId);
+      const response = await communityService.getPostsByGroup(groupId);
       setPosts(response?.data || []);
       setHasNewContent(false);
     } catch (err) {
-      console.error('Error al cargar posts del hilo:', err);
+      console.error('Error al cargar posts del grupo:', err);
       setPostsError(err?.message || 'Error al cargar publicaciones');
     } finally {
       setLoadingPosts(false);
     }
   };
 
-  // Cargar posts del hilo
+  // Cargar posts del grupo
   useEffect(() => {
-    if (threadId) {
-      fetchThreadPosts();
+    if (groupId) {
+      fetchGroupPosts();
     }
-  }, [threadId]);
+  }, [groupId]);
 
   // Verificar si hay nuevo contenido cada 30 segundos
   useEffect(() => {
     const checkNewContent = async () => {
       try {
-        const response = await communityService.getPostsByThreadId(threadId);
+        const response = await communityService.getPostsByGroup(groupId);
         const newPosts = response?.data || [];
         if (newPosts.length > posts.length) {
           setHasNewContent(true);
@@ -81,7 +81,7 @@ export const ThreadContentList = React.forwardRef(({
 
     const interval = setInterval(checkNewContent, 30000);
     return () => clearInterval(interval);
-  }, [threadId, posts.length]);
+  }, [groupId, posts.length]);
 
   // Efecto para hacer scroll al final cuando hay nuevo contenido
   useEffect(() => {
@@ -100,7 +100,7 @@ export const ThreadContentList = React.forwardRef(({
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await fetchThreadPosts();
+      await fetchGroupPosts();
       if (onRefresh) {
         await onRefresh();
       }
@@ -174,7 +174,7 @@ export const ThreadContentList = React.forwardRef(({
       <div className="flex items-center justify-center h-full min-h-[200px]">
         <div className="text-center max-w-md mx-auto">
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No hay contenido en este hilo
+            No hay contenido en este grupo
           </h3>
           <p className="text-gray-500 text-sm">
             ¡Sé el primero en compartir algo! Puedes enviar un mensaje o crear una publicación.
@@ -211,7 +211,7 @@ export const ThreadContentList = React.forwardRef(({
               <PostCard
                 post={item}
                 onDelete={onDeletePost}
-                showInThread={true}
+                showInGroup={true}
               />
             )}
           </div>
@@ -224,8 +224,8 @@ export const ThreadContentList = React.forwardRef(({
 });
 
 // Agregar PropTypes para validación
-ThreadContentList.propTypes = {
-  threadId: PropTypes.number.isRequired,
+GroupContentList.propTypes = {
+  groupId: PropTypes.number.isRequired,
   messages: PropTypes.array,
   isLoading: PropTypes.bool,
   error: PropTypes.string,
@@ -234,4 +234,4 @@ ThreadContentList.propTypes = {
   onRefresh: PropTypes.func
 };
 
-export default ThreadContentList;
+export default GroupContentList; 

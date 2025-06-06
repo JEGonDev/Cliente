@@ -83,7 +83,7 @@ export const EditSensorModal = ({ isOpen, onClose, sensor }) => {
               <option value="">Seleccionar tipo</option>
               <option value="temperature">Temperatura</option>
               <option value="humidity">Humedad</option>
-              <option value="ec">Conductividad (EC)</option>
+              <option value="tds">Conductividad (EC)</option>
             </select>
           </div>
 
@@ -100,7 +100,7 @@ export const EditSensorModal = ({ isOpen, onClose, sensor }) => {
               <option value="">Seleccionar unidad</option>
               {formData.sensorType === 'temperature' && <option value="°C">°C</option>}
               {formData.sensorType === 'humidity' && <option value="%">%</option>}
-              {formData.sensorType === 'ec' && <option value="mS/cm">mS/cm</option>}
+              {formData.sensorType === 'tds' && <option value="mS/cm">mS/cm</option>}
             </select>
           </div>
 
@@ -109,8 +109,8 @@ export const EditSensorModal = ({ isOpen, onClose, sensor }) => {
               type="button"
               onClick={handleDelete}
               className={`px-4 py-2 text-white rounded transition-colors ${isDeleting
-                  ? 'bg-red-600 hover:bg-red-700'
-                  : 'bg-gray-500 hover:bg-gray-600'
+                ? 'bg-red-600 hover:bg-red-700'
+                : 'bg-gray-500 hover:bg-gray-600'
                 }`}
             >
               {isDeleting ? '¿Confirmar eliminación?' : 'Eliminar'}

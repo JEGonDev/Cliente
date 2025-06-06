@@ -25,10 +25,18 @@ export const communityService = {
   getPostsByGroup: async (groupId) => {
     try {
       const response = await API.get(`/posts/by-group/${groupId}`);
-      return response.data;
+
+      // Manejar diferentes formatos de respuesta
+      if (response.data && response.data.data) {
+        return { data: response.data.data };
+      } else if (Array.isArray(response.data)) {
+        return { data: response.data };
+      }
+
+      return { data: [] };
     } catch (error) {
       handleError(error, `obtener publicaciones del grupo ${groupId}`);
-      throw error;
+      return { data: [] }; // Retornar array vacío en caso de error
     }
   },
 
@@ -91,24 +99,45 @@ export const communityService = {
   getAllPosts: async () => {
     try {
       const response = await API.get(ENDPOINTS.POSTS);
-      return response.data;
+
+      // Manejar diferentes formatos de respuesta
+      let posts = [];
+      if (response.data && response.data.data) {
+        posts = response.data.data;
+      } else if (Array.isArray(response.data)) {
+        posts = response.data;
+      }
+
+      // Filtrar solo los posts que no pertenecen a hilos ni grupos
+      return posts.filter(post => !post.threadId && !post.groupId);
     } catch (error) {
       handleError(error, "obtener todos los posts");
+      return []; // Retornar array vacío en caso de error
     }
   },
 
   updatePost: async (id, updateData) => {
     try {
-      // Detectar si estamos enviando FormData
-      const isFormData = updateData instanceof FormData;
+      // Siempre crear un FormData
+      const formData = updateData instanceof FormData ? updateData : new FormData();
 
-      // Configurar headers correctamente según el tipo de datos
-      const config = isFormData ? {
+      // Si updateData no es FormData, agregar sus campos al FormData
+      if (!(updateData instanceof FormData)) {
+        Object.keys(updateData).forEach(key => {
+          if (key === 'file' && updateData[key]) {
+            formData.append('file', updateData[key]);
+          } else {
+            formData.append(key, updateData[key]);
+          }
+        });
+      }
+
+      // Configurar headers para multipart/form-data
+      const config = {
         headers: { 'Content-Type': 'multipart/form-data' }
-      } : undefined;
+      };
 
-      // Realizar la petición con la configuración adecuada
-      const response = await API.put(`${ENDPOINTS.POST_BY_ID(id)}`, updateData, config);
+      const response = await API.put(ENDPOINTS.POST_BY_ID(id), formData, config);
       return response.data;
     } catch (error) {
       handleError(error, `actualizar post con ID ${id}`);
@@ -163,14 +192,8 @@ export const communityService = {
    * @param {number|string} threadId
    * @returns {Promise<Object>} Objeto { message, data: Array<Message> }
    */
-  getMessagesByThreadId: async (threadId) => {
-    try {
-      const response = await API.get(`/messages/by-thread/${threadId}`);
-      return response.data;
-    } catch (error) {
-      handleError(error, `obtener mensajes del hilo ${threadId}`);
-      throw error;
-    }
+  getMessagesByThreadId: async (threadId, limit = 50, offset = 0) => {
+    return await communityService.getMessageHistory('thread', threadId, limit, offset);
   },
 
   // ==================== Peticiones para grupos ====================
@@ -462,6 +485,93 @@ export const communityService = {
     } catch (error) {
       handleError(error, `obtener reacciones de la publicación ${postId}`);
       return [];
+    }
+  },
+
+  // ==================== MENSAJES - MÉTODOS ====================
+
+  /**
+   * Obtiene un mensaje por su ID
+   */
+  getMessageById: async (id) => {
+    try {
+      const response = await API.get(ENDPOINTS.MESSAGE_BY_ID(id));
+      return response.data;
+    } catch (error) {
+      handleError(error, `obtener mensaje con ID ${id}`);
+      throw error;
+    }
+  },
+
+  /**
+   * Elimina un mensaje
+   */
+  deleteMessage: async (id) => {
+    try {
+      const response = await API.delete(ENDPOINTS.MESSAGE_BY_ID(id));
+      return response.data;
+    } catch (error) {
+      handleError(error, `eliminar mensaje con ID ${id}`);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene historial de mensajes por contexto
+   */
+  getMessageHistory: async (contextType, contextId = null, limit = 50, offset = 0) => {
+    try {
+      const params = new URLSearchParams({
+        contextType,
+        limit: limit.toString(),
+        offset: offset.toString()
+      });
+
+      if (contextId !== null) {
+        params.append('contextId', contextId.toString());
+      }
+
+      const response = await API.get(`${ENDPOINTS.MESSAGES}/history?${params}`);
+      return response.data;
+    } catch (error) {
+      handleError(error, `obtener historial de mensajes`);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene mensajes de una publicación
+   */
+  getMessagesByPost: async (postId, limit = 50, offset = 0) => {
+    try {
+      return await communityService.getMessageHistory('post', postId, limit, offset);
+    } catch (error) {
+      handleError(error, `obtener mensajes de la publicación ${postId}`);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene mensajes de un grupo
+   */
+  getMessagesByGroup: async (groupId, limit = 50, offset = 0) => {
+    try {
+      return await communityService.getMessageHistory('group', groupId, limit, offset);
+    } catch (error) {
+      handleError(error, `obtener mensajes del grupo ${groupId}`);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene mensajes del foro general
+   */
+  getForumMessages: async (limit = 50, offset = 0) => {
+    try {
+      return await communityService.getMessageHistory('forum', null, limit, offset);
+    } catch (error) {
+      handleError(error, 'obtener mensajes del foro');
+      throw error;
     }
   },
 };

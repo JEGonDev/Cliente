@@ -5,6 +5,7 @@ import { useReadings } from '../hooks/useReadings';
 import { useAlerts } from '../hooks/useAlerts';
 import { useRealTimeMonitoring } from '../hooks/useRealTimeMonitoring';
 import { useMonitoringThresholds } from '../hooks/useMonitoringThresholds';
+import { cropService } from '../services/cropService';
 
 // Crear el contexto
 export const MonitoringContext = createContext({
@@ -32,6 +33,7 @@ export const MonitoringContext = createContext({
   selectCrop: () => {},
   
   // Métodos para sensores
+<<<<<<< HEAD
   fetchAllSensors: () => {},
   fetchUserSensors: () => {},
   fetchSensorById: () => {},
@@ -46,6 +48,23 @@ export const MonitoringContext = createContext({
   removeSensorFromCrop: () => {},
   createSensorAndAssociateToCrop: () => {},
   
+=======
+  fetchAllSensors: () => { },
+  fetchUserSensors: () => { },
+  fetchSensorById: () => { },
+  fetchSensorsByCropId: () => { },
+  createSensor: () => { },
+  updateSensor: () => { },
+  deleteSensor: () => { },
+  selectSensor: () => { },
+  addSensorToCrop: () => { },
+  addSensorToCropWithThresholds: () => { },
+  updateSensorThresholds: () => { },
+  removeSensorFromCrop: () => { },
+  removeSensorAndDelete: () => { },
+  createSensorAndAssociateToCrop: () => { },
+
+>>>>>>> 0a2550518ec84c66039853f89ca439e946330407
   // Métodos para lecturas
   fetchReadingsByCropId: () => {},
   fetchReadingById: () => {},
@@ -71,7 +90,14 @@ export const MonitoringContext = createContext({
   updateAllThresholds: () => {},
   
   // Navegación
+<<<<<<< HEAD
   setActiveSection: () => {}
+=======
+  setActiveSection: () => { },
+
+  // Nuevo método
+  getReadingsByCropId: () => { }
+>>>>>>> 0a2550518ec84c66039853f89ca439e946330407
 });
 
 // Proveedor del contexto
@@ -109,6 +135,7 @@ export const MonitoringProvider = ({ children }) => {
     addSensorToCropWithThresholds,
     updateSensorThresholds,
     removeSensorFromCrop,
+    removeSensorAndDelete,
     createSensorAndAssociateToCrop,
     setSelectedSensor: selectSensor
   } = useSensors();
@@ -195,8 +222,32 @@ export const MonitoringProvider = ({ children }) => {
       fetchAlertsByCropId(selectedCrop.id);
     }
   }, [selectedCrop, fetchSensorsByCropId, fetchAlertsByCropId]);
+<<<<<<< HEAD
   
   // Valor del contexto con todos los estados y métodos
+=======
+
+  // Efecto para actualizar alertas cuando hay nuevas lecturas
+  useEffect(() => {
+    if (realTimeData && Object.keys(realTimeData).length > 0) {
+      fetchUserAlerts();
+    }
+  }, [realTimeData, fetchUserAlerts]);
+
+  const getReadingsByCropId = useCallback(async (cropId) => {
+    if (!cropId) return { data: [] };
+
+    try {
+      const response = await cropService.getReadingsByCropId(cropId);
+      return response;
+    } catch (error) {
+      console.error('Error al obtener lecturas del cultivo:', error);
+      return { data: [] };
+    }
+  }, []);
+
+  // Valor del contexto
+>>>>>>> 0a2550518ec84c66039853f89ca439e946330407
   const contextValue = {
     // Estado
     crops,
@@ -234,6 +285,7 @@ export const MonitoringProvider = ({ children }) => {
     addSensorToCropWithThresholds,
     updateSensorThresholds,
     removeSensorFromCrop,
+    removeSensorAndDelete,
     createSensorAndAssociateToCrop,
     
     // Métodos para lecturas
@@ -261,7 +313,10 @@ export const MonitoringProvider = ({ children }) => {
     updateAllThresholds,
     
     // Navegación
-    setActiveSection
+    setActiveSection,
+
+    // Nuevo método
+    getReadingsByCropId
   };
   
   return (

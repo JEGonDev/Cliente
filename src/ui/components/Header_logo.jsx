@@ -3,10 +3,10 @@ import { Logo } from "./Logo";
 
 export const Header_logo = ({ filePath, alt }) => {
   return (
-    <a href="#" className="flex flex-col items-center -m-1.0 p-0.5">      
-      <Logo filePath={filePath} alt={alt} styleLogo="h-12 w-auto" />
+ <a href="#" className="flex flex-col items-center justify-center gap-0">
+      <Logo filePath={filePath} alt={alt} styleLogo="h-14 w-auto" />
       <span className="sr-only">Germogli</span>
-      <span className="text-white ml-2">Germogli</span>
+      <span className="text-white font-chonburi text-xl">Germogli</span>
     </a>
   );
 };

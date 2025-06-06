@@ -14,6 +14,7 @@ export const ManualReadingSection = () => {
     createReading,
     processBatchReadings,
     fetchSensorsByCropId,
+    getReadingsByCropId,
     loading: globalLoading
   } = useMonitoring();
 
@@ -37,12 +38,17 @@ export const ManualReadingSection = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Memoizar la función de filtrado de sensores
-  const cropSensors = useCallback(() => {
-    return sensors.filter(s => s.cropId === selectedCrop?.id);
-  }, [sensors, selectedCrop?.id]);
+  // Función para recargar las lecturas
+  const refreshReadings = useCallback(async () => {
+    if (!selectedCrop?.id) return;
+    try {
+      await getReadingsByCropId(selectedCrop.id);
+    } catch (error) {
+      console.error('Error al recargar lecturas:', error);
+    }
+  }, [selectedCrop?.id, getReadingsByCropId]);
 
-  // Cargar sensores solo cuando cambie el cultivo seleccionado
+  // Cargar sensores cuando cambie el cultivo seleccionado
   useEffect(() => {
     let isMounted = true;
 
@@ -70,6 +76,14 @@ export const ManualReadingSection = () => {
     };
   }, [selectedCrop?.id, fetchSensorsByCropId]);
 
+  // Memoizar la función de filtrado de sensores
+  const cropSensors = useCallback(() => {
+    console.log('cropSensors - Current sensors:', sensors);
+    console.log('cropSensors - Selected crop:', selectedCrop);
+    // Los sensores ya vienen filtrados por cultivo desde el backend
+    return sensors;
+  }, [sensors]);
+
   const handleSingleReadingSubmit = async (e) => {
     e.preventDefault();
 
@@ -79,15 +93,16 @@ export const ManualReadingSection = () => {
     }
 
     try {
+      setLoading(true);
       const readingData = {
         cropId: selectedCrop.id,
-        sensorId: parseInt(singleReading.sensorId),
-        readingValue: parseFloat(singleReading.readingValue),
-        readingDate: new Date(singleReading.readingDate).toISOString(),
-        notes: singleReading.notes || null
+        readings: [{
+          sensorId: parseInt(singleReading.sensorId),
+          value: parseFloat(singleReading.readingValue)
+        }]
       };
 
-      const result = await createReading(readingData);
+      const result = await processBatchReadings(readingData);
 
       if (result) {
         setSuccessMessage('Lectura creada exitosamente');
@@ -99,12 +114,17 @@ export const ManualReadingSection = () => {
           notes: ''
         });
 
+        // Recargar lecturas inmediatamente
+        await refreshReadings();
+
         // Limpiar mensaje después de 3 segundos
         setTimeout(() => setSuccessMessage(''), 3000);
       }
     } catch (error) {
       setErrorMessage(error.message || 'Error al crear la lectura');
       setTimeout(() => setErrorMessage(''), 5000);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -147,12 +167,12 @@ export const ManualReadingSection = () => {
     }
 
     try {
+      setLoading(true);
       const batchData = {
         cropId: selectedCrop.id,
         readings: batchReadings.map(reading => ({
           sensorId: parseInt(reading.sensorId),
-          readingValue: parseFloat(reading.readingValue),
-          readingDate: new Date(reading.readingDate).toISOString()
+          value: parseFloat(reading.readingValue)
         }))
       };
 
@@ -161,11 +181,17 @@ export const ManualReadingSection = () => {
       if (result) {
         setSuccessMessage(`Lote de ${batchReadings.length} lecturas procesado exitosamente`);
         setBatchReadings([]);
+
+        // Recargar lecturas inmediatamente
+        await refreshReadings();
+
         setTimeout(() => setSuccessMessage(''), 3000);
       }
     } catch (error) {
       setErrorMessage(error.message || 'Error al procesar el lote de lecturas');
       setTimeout(() => setErrorMessage(''), 5000);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -175,11 +201,11 @@ export const ManualReadingSection = () => {
       const headers = lines[0].split(',').map(h => h.trim());
 
       // Verificar headers esperados
-      const expectedHeaders = ['sensorId', 'readingValue', 'readingDate'];
+      const expectedHeaders = ['sensorId', 'readingValue'];
       const hasValidHeaders = expectedHeaders.every(h => headers.includes(h));
 
       if (!hasValidHeaders) {
-        setErrorMessage('El CSV debe tener las columnas: sensorId, readingValue, readingDate');
+        setErrorMessage('El CSV debe tener las columnas: sensorId, readingValue');
         return;
       }
 
@@ -195,7 +221,7 @@ export const ManualReadingSection = () => {
 
         // Validar datos
         const sensor = cropSensors().find(s => s.id === parseInt(reading.sensorId));
-        if (sensor && reading.readingValue && reading.readingDate) {
+        if (sensor && reading.readingValue) {
           parsedReadings.push({
             ...reading,
             id: Date.now() + i,
@@ -227,6 +253,32 @@ export const ManualReadingSection = () => {
           <p className="text-gray-600">
             Necesitas seleccionar un cultivo para crear lecturas manuales
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  const availableSensors = cropSensors();
+  console.log('ManualReadingSection - Available sensors:', availableSensors);
+
+  if (!loading && !globalLoading && availableSensors.length === 0) {
+    return (
+      <div className="bg-white rounded-lg p-6">
+        <div className="text-center py-8">
+          <div className="text-gray-400 text-4xl mb-4">🌱</div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No hay sensores configurados
+          </h3>
+          <p className="text-gray-600 mb-4">
+            Este cultivo aún no tiene sensores asociados. Necesitas configurar sensores para poder crear lecturas manuales.
+          </p>
+          <a
+            href={`/monitoring/crops/${selectedCrop.id}/sensors`}
+            className="inline-flex items-center px-4 py-2 bg-primary text-white rounded hover:bg-green-700 transition-colors"
+          >
+            <span className="mr-2">➕</span>
+            Configurar sensores
+          </a>
         </div>
       </div>
     );
@@ -264,252 +316,162 @@ export const ManualReadingSection = () => {
 
       {!loading && !globalLoading && (
         <>
-          {!selectedCrop ? (
-            <div className="text-center py-8">
-              <div className="text-gray-400 text-4xl mb-4">📊</div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Selecciona un cultivo
-              </h3>
-              <p className="text-gray-600">
-                Necesitas seleccionar un cultivo para crear lecturas manuales
-              </p>
-            </div>
-          ) : cropSensors().length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500">
-                No hay sensores asociados a este cultivo.
-                <br />
-                Asocia sensores primero para poder crear lecturas.
-              </p>
-            </div>
-          ) : (
-            <>
-              {/* Tabs para modo individual vs lote */}
-              <div className="flex border-b mb-6">
-                <button
-                  onClick={() => setActiveMode('single')}
-                  className={`px-4 py-2 font-medium ${activeMode === 'single'
-                      ? 'border-b-2 border-primary text-primary'
-                      : 'text-gray-600 hover:text-gray-800'
-                    }`}
-                >
-                  Lectura Individual
-                </button>
-                <button
-                  onClick={() => setActiveMode('batch')}
-                  className={`px-4 py-2 font-medium ${activeMode === 'batch'
-                      ? 'border-b-2 border-primary text-primary'
-                      : 'text-gray-600 hover:text-gray-800'
-                    }`}
-                >
-                  Lote de Lecturas ({batchReadings.length})
-                </button>
+          {/* Tabs para modo individual vs lote */}
+          <div className="flex border-b mb-6">
+            <button
+              onClick={() => setActiveMode('single')}
+              className={`px-4 py-2 font-medium ${activeMode === 'single'
+                ? 'border-b-2 border-primary text-primary'
+                : 'text-gray-600 hover:text-gray-800'
+                }`}
+            >
+              Lectura Individual
+            </button>
+            <button
+              onClick={() => setActiveMode('batch')}
+              className={`px-4 py-2 font-medium ${activeMode === 'batch'
+                ? 'border-b-2 border-primary text-primary'
+                : 'text-gray-600 hover:text-gray-800'
+                }`}
+            >
+              Lote de Lecturas ({batchReadings.length})
+            </button>
+          </div>
+
+          {/* Modo Individual */}
+          {activeMode === 'single' && (
+            <form onSubmit={handleSingleReadingSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Sensor *
+                  </label>
+                  <select
+                    value={singleReading.sensorId}
+                    onChange={(e) => setSingleReading(prev => ({
+                      ...prev,
+                      sensorId: e.target.value
+                    }))}
+                    className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
+                    required
+                  >
+                    <option value="">Seleccionar sensor</option>
+                    {availableSensors.map(sensor => (
+                      <option key={sensor.id} value={sensor.id}>
+                        {sensor.sensorType} ({sensor.unitOfMeasurement})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Valor de Lectura *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={singleReading.readingValue}
+                    onChange={(e) => setSingleReading(prev => ({
+                      ...prev,
+                      readingValue: e.target.value
+                    }))}
+                    className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
+                    required
+                  />
+                </div>
               </div>
 
-              {/* Modo Individual */}
-              {activeMode === 'single' && (
-                <form onSubmit={handleSingleReadingSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Sensor *
-                      </label>
-                      <select
-                        value={singleReading.sensorId}
-                        onChange={(e) => setSingleReading(prev => ({
-                          ...prev,
-                          sensorId: e.target.value
-                        }))}
-                        className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
-                        required
-                      >
-                        <option value="">Seleccionar sensor</option>
-                        {cropSensors().map(sensor => (
-                          <option key={sensor.id} value={sensor.id}>
-                            {sensor.sensorType} ({sensor.unitOfMeasurement})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50"
+              >
+                <Save size={16} />
+                {loading ? 'Guardando...' : 'Crear Lectura'}
+              </button>
+            </form>
+          )}
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Valor de Lectura *
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={singleReading.readingValue}
-                        onChange={(e) => setSingleReading(prev => ({
-                          ...prev,
-                          readingValue: e.target.value
-                        }))}
-                        className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
-                        required
-                      />
-                    </div>
+          {/* Modo Lote */}
+          {activeMode === 'batch' && (
+            <div className="space-y-6">
+              {/* Formulario para agregar al lote */}
+              <div className="border rounded-lg p-4">
+                <h3 className="font-medium mb-4">Agregar Lectura al Lote</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <select
+                    value={newBatchReading.sensorId}
+                    onChange={(e) => setNewBatchReading(prev => ({
+                      ...prev,
+                      sensorId: e.target.value
+                    }))}
+                    className="p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
+                  >
+                    <option value="">Seleccionar sensor</option>
+                    {availableSensors.map(sensor => (
+                      <option key={sensor.id} value={sensor.id}>
+                        {sensor.sensorType} ({sensor.unitOfMeasurement})
+                      </option>
+                    ))}
+                  </select>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Fecha y Hora *
-                      </label>
-                      <input
-                        type="datetime-local"
-                        value={singleReading.readingDate}
-                        onChange={(e) => setSingleReading(prev => ({
-                          ...prev,
-                          readingDate: e.target.value
-                        }))}
-                        className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
-                        required
-                      />
-                    </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newBatchReading.readingValue}
+                    onChange={(e) => setNewBatchReading(prev => ({
+                      ...prev,
+                      readingValue: e.target.value
+                    }))}
+                    placeholder="Valor de lectura"
+                    className="p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
+                  />
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Notas (opcional)
-                      </label>
-                      <input
-                        type="text"
-                        value={singleReading.notes}
-                        onChange={(e) => setSingleReading(prev => ({
-                          ...prev,
-                          notes: e.target.value
-                        }))}
-                        className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
-                        placeholder="Observaciones adicionales..."
-                      />
-                    </div>
+                  <button
+                    type="button"
+                    onClick={addToBatch}
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded hover:bg-green-700 transition-colors"
+                  >
+                    <Plus size={16} />
+                    Agregar al Lote
+                  </button>
+                </div>
+              </div>
+
+              {/* Lista de lecturas en el lote */}
+              {batchReadings.length > 0 && (
+                <div className="border rounded-lg p-4">
+                  <h3 className="font-medium mb-4">Lecturas en el Lote ({batchReadings.length})</h3>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {batchReadings.map(reading => (
+                      <div key={reading.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <div className="flex-1">
+                          <span className="font-medium">{reading.sensorName}</span>
+                          <span className="ml-2 text-gray-600">
+                            {reading.readingValue}{reading.sensorUnit}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => removeBatchReading(reading.id)}
+                          className="p-1 text-red-600 hover:bg-red-50 rounded"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ))}
                   </div>
 
                   <button
-                    type="submit"
+                    onClick={handleBatchSubmit}
                     disabled={loading}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50"
+                    className="mt-4 w-full py-2 bg-primary text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50"
                   >
-                    <Save size={16} />
-                    {loading ? 'Guardando...' : 'Crear Lectura'}
+                    {loading ? 'Procesando...' : `Procesar Lote (${batchReadings.length} lecturas)`}
                   </button>
-                </form>
-              )}
-
-              {/* Modo Lote */}
-              {activeMode === 'batch' && (
-                <div className="space-y-6">
-                  {/* Formulario para agregar al lote */}
-                  <div className="border rounded-lg p-4">
-                    <h3 className="font-medium mb-4">Agregar Lectura al Lote</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <select
-                        value={newBatchReading.sensorId}
-                        onChange={(e) => setNewBatchReading(prev => ({
-                          ...prev,
-                          sensorId: e.target.value
-                        }))}
-                        className="p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
-                      >
-                        <option value="">Seleccionar sensor</option>
-                        {cropSensors().map(sensor => (
-                          <option key={sensor.id} value={sensor.id}>
-                            {sensor.sensorType} ({sensor.unitOfMeasurement})
-                          </option>
-                        ))}
-                      </select>
-
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={newBatchReading.readingValue}
-                        onChange={(e) => setNewBatchReading(prev => ({
-                          ...prev,
-                          readingValue: e.target.value
-                        }))}
-                        placeholder="Valor de lectura"
-                        className="p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
-                      />
-
-                      <div className="flex gap-2">
-                        <input
-                          type="datetime-local"
-                          value={newBatchReading.readingDate}
-                          onChange={(e) => setNewBatchReading(prev => ({
-                            ...prev,
-                            readingDate: e.target.value
-                          }))}
-                          className="flex-1 p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
-                        />
-                        <button
-                          type="button"
-                          onClick={addToBatch}
-                          className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                        >
-                          <Plus size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Sección CSV */}
-                  <div className="border rounded-lg p-4">
-                    <h3 className="font-medium mb-4">Importar desde CSV</h3>
-                    <p className="text-sm text-gray-600 mb-2">
-                      Formato: sensorId, readingValue, readingDate (YYYY-MM-DDTHH:mm)
-                    </p>
-                    <div className="flex gap-2">
-                      <textarea
-                        value={csvData}
-                        onChange={(e) => setCsvData(e.target.value)}
-                        placeholder="sensorId,readingValue,readingDate&#10;1,25.5,2024-01-15T10:30&#10;2,75.2,2024-01-15T10:30"
-                        className="flex-1 p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary h-20"
-                      />
-                      <button
-                        type="button"
-                        onClick={parseCSV}
-                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-                      >
-                        <Upload size={16} />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Lista de lecturas en el lote */}
-                  {batchReadings.length > 0 && (
-                    <div className="border rounded-lg p-4">
-                      <h3 className="font-medium mb-4">Lecturas en el Lote ({batchReadings.length})</h3>
-                      <div className="space-y-2 max-h-60 overflow-y-auto">
-                        {batchReadings.map(reading => (
-                          <div key={reading.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                            <div className="flex-1">
-                              <span className="font-medium">{reading.sensorName}</span>
-                              <span className="ml-2 text-gray-600">
-                                {reading.readingValue}{reading.sensorUnit}
-                              </span>
-                              <span className="ml-2 text-sm text-gray-500">
-                                {new Date(reading.readingDate).toLocaleString()}
-                              </span>
-                            </div>
-                            <button
-                              onClick={() => removeBatchReading(reading.id)}
-                              className="p-1 text-red-600 hover:bg-red-50 rounded"
-                            >
-                              <X size={16} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-
-                      <button
-                        onClick={handleBatchSubmit}
-                        disabled={loading}
-                        className="mt-4 w-full py-2 bg-primary text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50"
-                      >
-                        {loading ? 'Procesando...' : `Procesar Lote (${batchReadings.length} lecturas)`}
-                      </button>
-                    </div>
-                  )}
                 </div>
               )}
-            </>
+            </div>
           )}
         </>
       )}

@@ -12,11 +12,60 @@ export const DataChart = ({ data = [], type = 'line' }) => {
     return <div>No hay datos para mostrar</div>;
   }
 
+<<<<<<< HEAD
   // Calcular los valores mínimo y máximo de temperatura y fechas
   const minTemp = Math.min(...data.map(item => item.temp));
   const maxTemp = Math.max(...data.map(item => item.temp));
   const minDate = new Date(Math.min(...data.map(item => new Date(item.date).getTime())));
   const maxDate = new Date(Math.max(...data.map(item => new Date(item.date).getTime())));
+=======
+  // Procesar y validar datos
+  const processedData = useMemo(() => {
+    if (!data || data.length === 0) return [];
+
+    return data.map(item => {
+      // Normalizar estructura de datos
+      const normalizedItem = {
+        date: item.date || item.readingDate || new Date().toISOString(),
+        value: item.temp || item.temperature || item.readingValue || 0,
+        // Agregar otros tipos de sensores si están disponibles
+        temp: item.temp || item.temperature || (item.readingValue && sensorType === 'temperature' ? item.readingValue : 0),
+        humidity: item.humidity || (item.readingValue && sensorType === 'humidity' ? item.readingValue : 0),
+        tds: item.tds || item.conductivity || (item.readingValue && sensorType === 'tds' ? item.readingValue : 0)
+      };
+
+      return normalizedItem;
+    }).filter(item => item.date && !isNaN(item.value));
+  }, [data, sensorType]);
+
+  // Función para obtener configuración según el tipo de sensor
+  const getSensorConfig = (type) => {
+    const configs = {
+      temperature: {
+        color: '#ef4444',
+        unit: '°C',
+        label: 'Temperatura',
+        yAxisDomain: 'auto'
+      },
+      humidity: {
+        color: '#3b82f6',
+        unit: '%',
+        label: 'Humedad',
+        yAxisDomain: [0, 100]
+      },
+      tds: {
+        color: '#10b981',
+        unit: 'mS/cm',
+        label: 'Conductividad',
+        yAxisDomain: 'auto'
+      }
+    };
+
+    return configs[type] || configs.temperature;
+  };
+
+  const config = getSensorConfig(sensorType);
+>>>>>>> 0a2550518ec84c66039853f89ca439e946330407
 
   // Función para convertir fecha a formato legible
   const formatDate = (date) => {
@@ -122,8 +171,24 @@ export const DataChart = ({ data = [], type = 'line' }) => {
 
 DataChart.propTypes = {
   data: PropTypes.arrayOf(PropTypes.shape({
+<<<<<<< HEAD
     date: PropTypes.string.isRequired,
     temp: PropTypes.number.isRequired,
   })),
   type: PropTypes.string,
+=======
+    date: PropTypes.string,
+    readingDate: PropTypes.string,
+    temp: PropTypes.number,
+    temperature: PropTypes.number,
+    readingValue: PropTypes.number,
+    humidity: PropTypes.number,
+    tds: PropTypes.number,
+    conductivity: PropTypes.number
+  })),
+  type: PropTypes.string,
+  sensorType: PropTypes.oneOf(['temperature', 'humidity', 'tds']),
+  showGrid: PropTypes.bool,
+  height: PropTypes.number
+>>>>>>> 0a2550518ec84c66039853f89ca439e946330407
 };

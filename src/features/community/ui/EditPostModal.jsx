@@ -107,60 +107,40 @@ export const EditPostModal = ({
     setIsSubmitting(true);
 
     try {
-      let payload;
+      // Siempre crear un FormData
+      const payload = new FormData();
 
-      // Si hay un nuevo archivo o si queremos quitar el contenido multimedia
-      if (file || !keepExistingMedia) {
-        // Usar FormData para poder enviar archivos
-        payload = new FormData();
+      // Agregar los campos básicos
+      payload.append('postType', formData.postType);
+      payload.append('content', formData.content);
 
-        // Añadir los datos básicos
-        payload.append('postType', formData.postType);
-        payload.append('content', formData.content);
-
-        // Añadir el archivo si existe uno nuevo
-        if (file) {
-          payload.append('file', file);
-        }
-
-        // Si queremos eliminar el contenido, enviar un campo especial
-        // (Esto depende de cómo esté implementado el backend)
-        if (!keepExistingMedia && !file) {
-          payload.append('removeMultimedia', 'true');
-        }
-      } else {
-        // Si solo cambiamos texto y mantenemos el contenido multimedia, enviamos un objeto normal
-        payload = {
-          postType: formData.postType,
-          content: formData.content
-        };
+      // Si hay un nuevo archivo, agregarlo
+      if (file) {
+        payload.append('file', file);
+      }
+      // Si queremos eliminar el contenido multimedia existente
+      else if (!keepExistingMedia) {
+        payload.append('removeMultimedia', 'true');
+      }
+      // Si mantenemos el contenido multimedia existente
+      else if (keepExistingMedia && post.multimediaContent) {
+        payload.append('keepExistingMedia', 'true');
       }
 
       // Actualizar la publicación a través del servicio
       const response = await communityService.updatePost(post.id || post.post_id, payload);
 
       // Preparamos el post actualizado para actualización optimista
-      const updatedPost = response?.data || response;
+      const updatedPost = {
+        ...post,
+        postType: formData.postType,
+        content: formData.content,
+        multimediaContent: file ? URL.createObjectURL(file) :
+          keepExistingMedia ? post.multimediaContent :
+            null
+      };
 
-      // Si no recibimos un objeto completo del backend, construimos uno con lo que tenemos
-      if (updatedPost && !updatedPost.id && !updatedPost.post_id) {
-        // Creamos un post actualizado a partir del original y los cambios
-        const completeUpdatedPost = {
-          ...post,
-          postType: formData.postType || post.postType || post.post_type,
-          post_type: formData.postType || post.postType || post.post_type, // Para compatibilidad
-          content: formData.content,
-          multimediaContent: file ? URL.createObjectURL(file) : (keepExistingMedia ? post.multimediaContent : null),
-          multimedia_content: file ? URL.createObjectURL(file) : (keepExistingMedia ? post.multimedia_content : null) // Para compatibilidad
-        };
-
-        // Pasamos el post actualizado al callback
-        onSuccess(completeUpdatedPost);
-      } else if (updatedPost) {
-        // Si el backend devuelve un objeto completo, lo pasamos directamente
-        onSuccess(updatedPost);
-      }
-
+      onSuccess(updatedPost);
       onClose();
     } catch (err) {
       console.error('Error al actualizar publicación:', err);

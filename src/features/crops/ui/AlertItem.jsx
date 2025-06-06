@@ -32,17 +32,20 @@ export const AlertItem = ({
     error: {
       icon: <AlertCircle size={20} />,
       colorClasses: 'bg-red-50 border-l-4 border-l-red-500 text-red-700',
-      iconClass: 'text-red-500'
+      iconClass: 'text-red-500',
+      severityLabel: 'Alta'
     },
     warning: {
       icon: <AlertTriangle size={20} />,
       colorClasses: 'bg-yellow-50 border-l-4 border-l-yellow-500 text-yellow-700',
-      iconClass: 'text-yellow-500'
+      iconClass: 'text-yellow-500',
+      severityLabel: 'Media'
     },
     info: {
       icon: <Info size={20} />,
       colorClasses: 'bg-blue-50 border-l-4 border-l-blue-500 text-blue-700',
-      iconClass: 'text-blue-500'
+      iconClass: 'text-blue-500',
+      severityLabel: 'Baja'
     }
   };
 
@@ -80,6 +83,7 @@ export const AlertItem = ({
               <div>
                 <span className="font-medium text-gray-700">Umbral:</span> {threshold}
               </div>
+<<<<<<< HEAD
               <div className="flex items-center gap-1 text-blue-600 hover:underline text-sm cursor-pointer"
      onClick={(e) => {
        e.stopPropagation();
@@ -88,11 +92,14 @@ export const AlertItem = ({
   <CheckCircle className="w-4 h-4" />
   <span>Resolver</span>
 </div>
+=======
+>>>>>>> 0a2550518ec84c66039853f89ca439e946330407
             </div>
           </div>
         </div>
       </div>
 
+<<<<<<< HEAD
 <Modal
   isOpen={isModalOpen}
   onClose={() => setIsModalOpen(false)}
@@ -145,6 +152,64 @@ export const AlertItem = ({
     </p>
   </div>
 </Modal>
+=======
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={`Alerta: ${parameter} - ${crop}`}
+        size="md"
+        footerActions={
+          <div className="flex gap-2">
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition"
+            >
+              Cerrar
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-4 text-gray-800">
+          <p>
+            <strong>Mensaje:</strong>{" "}
+            <span className="font-medium">{message}</span>
+          </p>
+          <p>
+            <strong>Valor actual:</strong>{" "}
+            <span className={`font-semibold ${type === 'error' ? 'text-red-600' : type === 'warning' ? 'text-yellow-600' : 'text-blue-600'}`}>
+              {value}
+            </span>
+          </p>
+          <p>
+            <strong>Umbral:</strong>{" "}
+            <span className="font-semibold text-gray-700">{threshold}</span>
+          </p>
+          <p>
+            <strong>Tiempo de alerta:</strong>{" "}
+            <span>{time}</span>
+          </p>
+          <p>
+            <strong>Severidad:</strong>{" "}
+            <span className={`px-2 py-1 rounded font-semibold text-sm ${type === 'error' ? 'bg-red-100 text-red-800' :
+              type === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-blue-100 text-blue-800'
+              }`}>
+              {config.severityLabel}
+            </span>
+          </p>
+          <p>
+            <strong>Cultivo:</strong>{" "}
+            <span>{crop}</span>
+          </p>
+          <p className="flex items-center space-x-2">
+            <strong>Estado:</strong>
+            <span className="px-3 py-1 rounded-full text-white text-xs font-bold bg-red-400">
+              Activa
+            </span>
+          </p>
+        </div>
+      </Modal>
+>>>>>>> 0a2550518ec84c66039853f89ca439e946330407
     </>
   );
 };
