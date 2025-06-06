@@ -8,9 +8,7 @@ import { AuthContext } from '../context/AuthContext';
  * 
  * @returns {Object} Propiedades y métodos para el formulario de registro
  */
-export const useRegisterForm = ({admin = false} = {}) => {
-
-  const { register, registerAdmin } = useContext(AuthContext);
+export const useRegisterForm = ({ admin = false } = {}) => {
   // Estado para almacenar todos los campos del formulario
   const [form, setForm] = useState({
     name: '',
@@ -24,8 +22,8 @@ export const useRegisterForm = ({admin = false} = {}) => {
   // Estado para manejar mensajes de error
   const [error, setError] = useState('');
   
-  
-  
+  // Obtenemos la función register del contexto de autenticación
+  const { register, registerAdmin } = useContext(AuthContext);
   
   // Hook para manejar la navegación
   const navigate = useNavigate();
@@ -109,11 +107,9 @@ export const useRegisterForm = ({admin = false} = {}) => {
       };
 
       if (admin) {
-        // Si es un registro de administrador, usamos la función específica
         await registerAdmin(userData);
-        navigate('/admin');
+        navigate('/profile/admin');
       } else {
-        // Si es un registro normal, usamos la función de registro
         await register(userData);
         navigate('/comunity');
       }
@@ -121,8 +117,8 @@ export const useRegisterForm = ({admin = false} = {}) => {
       // // Intentamos registrar al usuario
       // await register(userData);
       
-      // Si todo sale bien, redirigimos al usuario a la pestaña de comunidad
-      navigate('/comunity');
+      // // Si todo sale bien, redirigimos al usuario a la pestaña de comunidad
+      // navigate('/comunity');
     } catch (err) {
       console.error('Error en el registro:', err);
       

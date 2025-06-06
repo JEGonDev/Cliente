@@ -1,5 +1,5 @@
 import React from "react";
-import { Settings, List } from "lucide-react";
+import { Settings, List, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export const AdminPage = () => {
@@ -7,9 +7,9 @@ export const AdminPage = () => {
   return (
     <div className="bg-white p-4 border-b border-gray-200">
       {/* Título y configuración */}
-      <div className="flex justify-between gap-2 bg-gray-300 rounded px-2 py-2 min-h-[40px] flex-1">
+      <div className="flex justify-between items-center mb-4">
         <h1 className="text-lg font-semibold text-gray-800">
-          Administración del Sistema
+          Administrador de comunidad
         </h1>
         <div className="flex gap-2">
           <button
@@ -26,28 +26,29 @@ export const AdminPage = () => {
           </button>
         </div>
       </div>
-
       {/* Tabs de navegación */}
       <div className="flex gap-4 text-sm">
         <button
-          className={`flex items-center gap-1 "text-gray-800"`}
-          onClick={() => navigate("/admin/community")}
+          onClick={() => navigate("/profile/admin")}
+          className= "flex items-center gap-1 transition-colors "
         >
           <span className="w-2 h-2 bg-blue rounded-full"></span>
-          Gestión de Comunidad
+          Gestión de usuarios
         </button>
 
         <span className="text-gray-400">|</span>
 
         <button
-          className={`flex items-center gap-1 "text-gray-800"`}
-          onClick={() => navigate("/profile/admin")}
+          onClick={() => navigate("/comunity/admin_comunity")}
+          className= "flex items-center gap-1 transition-colors "
         >
-          <span className="w-2 h-2 bg-green rounded-full"></span>
-          Gestión de Usuarios
+          <span className="w-2 h-2 bg-blue rounded-full"></span>
+          Gestión de comunidad
         </button>
 
         <span className="text-gray-400">|</span>
+
+        
       </div>
     </div>
   );

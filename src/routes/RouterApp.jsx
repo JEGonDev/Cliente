@@ -28,6 +28,7 @@ import { ModuleFormPage } from "../features/education/pages/ModuleFormPage";
 // Importaciones del modulo de perfil
 import { ProfileAdminPage } from "../features/profile/pages/ProfileAdminPage";
 import { ProfileEditPage } from "../features/profile/pages/ProfileEditPage";
+import { ProfileView } from "../features/profile/ui/ProfileView";
 // Importaciones del modulo de Monitoreo
 import { MonitoringPage } from "../pages/MonitoringPage";
 import { AlertsPage } from "../features/crops/pages/AlertsPage";
@@ -36,7 +37,11 @@ import { CropsPage } from "../features/crops/pages/CropsPage";
 import { RealTimeMonitoringPage } from "../features/crops/pages/RealTimeMonitoringPage";
 import { CreateCultivationPage } from "../features/crops/pages/CreateCultivationPage";
 
-export const RouterApp = () => {
+// Importaciones de administracion
+import { AdminPage } from "../pages/AdminPage";
+import { AdminRegisterPage } from "../features/authentication/pages/AdminRegisterPage";
+
+export const RouterApp = () => { 
   return (
     // Rutas existentes de la aplicacion:
     <Routes>
@@ -84,8 +89,8 @@ export const RouterApp = () => {
           <Route path="groups" element={<GroupListView />} />
           <Route path="groups/:groupId" element={<GroupDetailsView />} />
           <Route path="ThreadForum" element={<ThreadForumView />} />
-          <Route path="admin" element={<AdminCommunityView />} />
-
+          <Route path="admin_comunity" element={<AdminCommunityView />} />
+          
           <Route path="thread/:threadId" element={<ThreadDetailView />} />
         </Route>
 
