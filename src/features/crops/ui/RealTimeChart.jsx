@@ -1,59 +1,20 @@
-<<<<<<< HEAD
-=======
 import { useMonitoring } from '../hooks/useMonitoring';
 import { useMemo, useEffect, useState, useCallback } from 'react';
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine
 } from 'recharts';
+import { Droplets as HumidityIcon, Thermometer as TemperatureIcon, Activity as ConductivityIcon } from 'lucide-react';
+import PropTypes from 'prop-types';
 
-const sampleData = [
-  { time: '00:00', temp: 22, hum: 80, cond: 1.2 },
-  { time: '02:00', temp: 21, hum: 75, cond: 1.3 },
-  { time: '04:00', temp: 20, hum: 70, cond: 1.4 },
-  { time: '06:00', temp: 22, hum: 68, cond: 1.2 },
-  { time: '08:00', temp: 25, hum: 65, cond: 1.1 },
-  { time: '10:00', temp: 28, hum: 60, cond: 1.0 },
-  { time: '12:00', temp: 30, hum: 55, cond: 0.9 },
-  { time: '14:00', temp: 29, hum: 58, cond: 1.1 },
-  { time: '16:00', temp: 27, hum: 62, cond: 1.2 },
-  { time: '18:00', temp: 24, hum: 66, cond: 1.3 },
-  { time: '20:00', temp: 23, hum: 70, cond: 1.4 },
-  { time: '22:00', temp: 22, hum: 75, cond: 1.5 }
-];
+// Funciones de formato para los ejes
+const formatTemperature = (value) => `${value}°C`;
+const formatHumidity = (value) => `${value}%`;
+const formatConductivity = (value) => `${value} mS/cm`;
 
-// Funciones para formatear valores
-const formatTemperature = (value) => `${value} °C`;
-const formatHumidity = (value) => `${value} %`;
-const formatConductivity = (value) => `${value} dS/m`;
-
-// Componentes de iconos (sin cambios, solo para referencia visual)
-const HumidityIcon = () => (
-  <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-  </svg>
-);
-
-const TemperatureIcon = () => (
-  <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-    <path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v4a6 6 0 1012 0V6a4 4 0 00-4-4zM8 6a2 2 0 114 0v7.5a3.5 3.5 0 11-4-3.45V6z" clipRule="evenodd" />
-  </svg>
-);
-
-const ConductivityIcon = () => (
-  <svg className="w-5 h-5 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
-    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
-  </svg>
-);
-
-// Componente de Tooltip Personalizado
+// Componente personalizado para el tooltip
 const CustomTooltip = ({ active, payload, label }) => {
-  if (active && payload && payload.length) {
-    // El 'payload' contiene los datos de todas las líneas en el punto actual
-    const dataPoint = payload[0].payload; // Accede al objeto de datos completo (ej. { time: '00:00', temp: 22, hum: 80, cond: 1.2 })
+  if (!active || !payload || !payload.length) return null;
 
-<<<<<<< HEAD
-=======
   return (
     <div className="bg-white p-2 border rounded shadow-lg">
       <p className="text-sm font-medium">{label}</p>
@@ -69,6 +30,18 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
+CustomTooltip.propTypes = {
+  active: PropTypes.bool,
+  payload: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string,
+      value: PropTypes.number,
+      color: PropTypes.string
+    })
+  ),
+  label: PropTypes.string
+};
+
 export const RealTimeChart = () => {
   const {
     realTimeData,
@@ -76,8 +49,7 @@ export const RealTimeChart = () => {
     selectedCrop,
     thresholds,
     loading,
-    getReadingsByCropId,
-    isMonitoring
+    getReadingsByCropId
   } = useMonitoring();
 
   const [chartReadings, setChartReadings] = useState([]);
@@ -217,24 +189,16 @@ export const RealTimeChart = () => {
 
   // Estado de carga
   if (loading) {
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
     return (
-      <div className="bg-white p-3 border border-gray-300 rounded shadow-md text-sm">
-        <p className="font-semibold text-gray-800 mb-1">{`Tiempo: ${label}`}</p>
-        <p className="text-blue-600">{`Humedad: ${formatHumidity(dataPoint.hum)}`}</p>
-        <p className="text-red-600">{`Temperatura: ${formatTemperature(dataPoint.temp)}`}</p>
-        <p className="text-purple-600">{`Conductividad: ${formatConductivity(dataPoint.cond)}`}</p>
+      <div className="w-full space-y-6">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+          <span className="ml-2 text-gray-600">Cargando datos del gráfico...</span>
+        </div>
       </div>
     );
   }
 
-<<<<<<< HEAD
-  return null;
-};
-
-
-export const RealTimeChart = () => {
-=======
   // Si no hay datos, mostrar mensaje
   if (chartData.length === 0) {
     return (
@@ -267,12 +231,10 @@ export const RealTimeChart = () => {
     connectNulls: true // Cambiar a true para conectar puntos no nulos
   };
 
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
   return (
     <div className="w-full space-y-6">
       {/* Grid para humedad y temperatura */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
         {/* Gráfica de Humedad */}
         <div className="bg-white rounded-lg p-4 shadow">
           <div className="flex items-center gap-2 mb-4">
@@ -281,11 +243,7 @@ export const RealTimeChart = () => {
           </div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-<<<<<<< HEAD
-              <LineChart data={sampleData}>
-=======
               <LineChart data={chartData}>
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
                   dataKey="time"
@@ -295,14 +253,13 @@ export const RealTimeChart = () => {
                 />
                 <YAxis
                   domain={[
-                    dataMin => Math.max(0, Math.floor(dataMin - 5)),
-                    dataMax => Math.min(100, Math.ceil(dataMax + 5))
+                    () => currentThresholds.humidity?.min || 0,
+                    () => currentThresholds.humidity?.max || 100
                   ]}
                   tickFormatter={formatHumidity}
                   stroke="#4b5563"
                   tick={{ fontSize: 12 }}
                 />
-                {/* Usar el CustomTooltip */}
                 <Tooltip content={<CustomTooltip />} />
                 <Legend verticalAlign="bottom" height={36} />
 
@@ -330,30 +287,6 @@ export const RealTimeChart = () => {
                   dataKey="hum"
                   name="humedad"
                   stroke="#3b82f6"
-<<<<<<< HEAD
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 5 }}
-                />
-
-                {/* Líneas para la leyenda de umbrales */}
-                <Line
-                  type="monotone"
-                  dataKey={() => null}
-                  name="Umbral máximo"
-                  stroke="#f97316"
-                  strokeDasharray="4 4"
-                  dot={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey={() => null}
-                  name="Umbral mínimo"
-                  stroke="#f97316"
-                  strokeDasharray="4 4"
-                  dot={false}
-=======
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -368,11 +301,7 @@ export const RealTimeChart = () => {
           </div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-<<<<<<< HEAD
-              <LineChart data={sampleData}>
-=======
               <LineChart data={chartData}>
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
                   dataKey="time"
@@ -381,19 +310,14 @@ export const RealTimeChart = () => {
                   interval="preserveStartEnd"
                 />
                 <YAxis
-<<<<<<< HEAD
-                  domain={[15, 30]}
-=======
                   domain={[
-                    dataMin => Math.max(0, Math.floor(dataMin - 2)),
-                    dataMax => Math.ceil(dataMax + 2)
+                    () => currentThresholds.temperature?.min || 0,
+                    () => currentThresholds.temperature?.max || 50
                   ]}
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
                   tickFormatter={formatTemperature}
                   stroke="#4b5563"
                   tick={{ fontSize: 12 }}
                 />
-                {/* Usar el CustomTooltip */}
                 <Tooltip content={<CustomTooltip />} />
                 <Legend verticalAlign="bottom" height={36} />
 
@@ -421,30 +345,6 @@ export const RealTimeChart = () => {
                   dataKey="temp"
                   name="temperatura"
                   stroke="#ef4444"
-<<<<<<< HEAD
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 5 }}
-                />
-
-                {/* Líneas para la leyenda de umbrales */}
-                <Line
-                  type="monotone"
-                  dataKey={() => null}
-                  name="Umbral máximo"
-                  stroke="#f97316"
-                  strokeDasharray="4 4"
-                  dot={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey={() => null}
-                  name="Umbral mínimo"
-                  stroke="#f97316"
-                  strokeDasharray="4 4"
-                  dot={false}
-=======
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -460,11 +360,7 @@ export const RealTimeChart = () => {
         </div>
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
-<<<<<<< HEAD
-            <LineChart data={sampleData}>
-=======
             <LineChart data={chartData}>
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="time"
@@ -474,14 +370,13 @@ export const RealTimeChart = () => {
               />
               <YAxis
                 domain={[
-                  dataMin => Math.max(0, Math.floor(dataMin - 0.2)),
-                  dataMax => Math.ceil(dataMax + 0.2)
+                  () => currentThresholds.ec?.min || 0,
+                  () => currentThresholds.ec?.max || 5
                 ]}
                 tickFormatter={formatConductivity}
                 stroke="#4b5563"
                 tick={{ fontSize: 12 }}
               />
-              {/* Usar el CustomTooltip */}
               <Tooltip content={<CustomTooltip />} />
               <Legend verticalAlign="bottom" height={36} />
 
@@ -509,37 +404,11 @@ export const RealTimeChart = () => {
                 dataKey="cond"
                 name="conductividad"
                 stroke="#10b981"
-<<<<<<< HEAD
-                strokeWidth={2}
-                dot={{ r: 3 }}
-                activeDot={{ r: 5 }}
-              />
-
-              {/* Líneas para la leyenda de umbrales */}
-              <Line
-                type="monotone"
-                dataKey={() => null}
-                name="Umbral máximo"
-                stroke="#f97316"
-                strokeDasharray="4 4"
-                dot={false}
-              />
-              <Line
-                type="monotone"
-                dataKey={() => null}
-                name="Umbral mínimo"
-                stroke="#f97316"
-                strokeDasharray="4 4"
-                dot={false}
-=======
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
               />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
-<<<<<<< HEAD
-=======
 
       {/* Información adicional */}
       <div className="text-center text-sm text-gray-600">
@@ -547,7 +416,6 @@ export const RealTimeChart = () => {
           Última actualización: <strong>{new Date().toLocaleTimeString('es-ES')}</strong>
         </p>
       </div>
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
     </div>
   );
 };

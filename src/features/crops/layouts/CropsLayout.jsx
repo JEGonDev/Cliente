@@ -1,134 +1,124 @@
-import { CropCard } from '../ui/CropCard';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
-
-// Simulación de cultivos
-const mockCrops = [
-  {
-    id: 1,
-    name: 'Tomates Cherry',
-    location: 'Invernadero 1',
-    startDate: '2024-04-01',
-    plantType: 'Tomate',
-    status: 'active',
-    sensors: {
-      humidity: 70,
-      conductivity: 2.5,
-      temperature: 24
-    },
-    alerts: [
-      { id: 'a1', type: 'warning', message: 'Alta temperatura detectada', timestamp: Date.now() - 1000000 }
-    ]
-  },  
-  {
-    id: 2,
-    name: 'Lechuga Romana',
-    location: 'Zona Norte',
-    startDate: '2024-03-15',
-    plantType: 'Lechuga',
-    status: 'paused',
-    sensors: {
-      humidity: 60,
-      conductivity: 1.8,
-      temperature: 20
-    },
-    alerts: []
-  },
-  {
-    id: 3,
-    name: 'Espinaca Verde',
-    location: 'Invernadero 2',
-    startDate: '2024-04-10',
-    plantType: 'Espinaca',
-    status: 'alert',
-    sensors: {
-      humidity: 45,
-      conductivity: 1.2,
-      temperature: 29
-    },
-    alerts: [
-      { id: 'a2', type: 'error', message: 'Humedad baja', timestamp: Date.now() - 500000 }
-    ]
-  },
-  {
-    id: 4,
-    name: 'Pimientos Rojos',
-    location: 'Zona Sur',
-    startDate: '2024-02-20',
-    plantType: 'Pimiento',
-    status: 'completed',
-    sensors: {
-      humidity: 55,
-      conductivity: 2.0,
-      temperature: 22
-    },
-    alerts: []
-  },
-  {
-    id: 5,
-    name: 'Zanahorias',
-    location: 'Campo Abierto',
-    startDate: '2024-01-10',
-    plantType: 'Zanahoria',
-    status: 'active',
-    sensors: {
-      humidity: 68,
-      conductivity: 1.9,
-      temperature: 23
-    },
-    alerts: [
-      { id: 'a3', type: 'warning', message: 'Conductividad alta', timestamp: Date.now() - 700000 }
-    ]
-  },
-  {
-    id: 6,
-    name: 'Albahaca',
-    location: 'Huerto Urbano',
-    startDate: '2024-05-01',
-    plantType: 'Albahaca',
-    status: 'paused',
-    sensors: {
-      humidity: 75,
-      conductivity: 1.5,
-      temperature: 21
-    },
-    alerts: []
-  }
-]; 
+import { CropCard } from '../ui/CropCard';
+import { useMonitoring } from '../hooks/useMonitoring';
 
 export const CropsLayout = () => {
   const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Usar el contexto de monitoreo en lugar de datos mock
+  const {
+    crops,
+    loading,
+    error,
+    fetchUserCrops,
+    selectCrop
+  } = useMonitoring();
+
+  // Cargar cultivos al montar el componente y configurar actualización periódica
+  useEffect(() => {
+    let intervalId = null;
+
+    // Carga inicial
+    fetchUserCrops();
+
+    // Solo configurar el intervalo si no hay modales abiertos
+    if (!isModalOpen) {
+      intervalId = setInterval(() => {
+        // Solo actualizar si el documento está visible
+        if (!document.hidden) {
+          fetchUserCrops();
+        }
+      }, 5000);
+    }
+
+    // Limpiar intervalo al desmontar el componente
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [fetchUserCrops, isModalOpen]);
 
   const handleCardClick = (crop) => {
+    selectCrop(crop);
     navigate(`/monitoring/crops/${crop.id}/real-time`);
   };
 
   const handleAddCrop = () => {
-    // Navegar a la página de crear cultivo
     navigate('/monitoring/crops/create');
   };
 
+  // Estado de carga
+  if (loading && crops.length === 0) { // Solo mostrar loading en la carga inicial
+    return (
+      <div className="p-6">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          <span className="ml-4 text-gray-600">Cargando cultivos...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
-      {/* Header con título y botón de agregar */}
+      {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Cultivos</h1>
-        
-       <button
-  onClick={handleAddCrop}
-  className="inline-flex items-center bg-primary px-4 py-2 bg-green-800 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
->
-  <Plus className="h-5 w-5 mr-2" />
-  Nuevo cultivo
-</button>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Cultivos</h1>
+          <p className="text-gray-600">Gestiona tus cultivos y su monitoreo</p>
+        </div>
+        <button
+          onClick={handleAddCrop}
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-green-700 transition-colors"
+        >
+          <Plus size={20} />
+          Nuevo cultivo
+        </button>
       </div>
 
-      {/* Lista de cultivos */}
-      <div className="flex flex-col gap-4 w-full">
-        {mockCrops.map((crop) => (
-          <CropCard key={crop.id} crop={crop} onClick={handleCardClick} />
+      {/* Lista vertical de cultivos */}
+      <div className="flex flex-col gap-4">
+        {crops.map(crop => (
+          <CropCard
+            key={crop.id}
+            crop={crop}
+            onClick={handleCardClick}
+            onModalOpen={() => setIsModalOpen(true)}
+            onModalClose={() => setIsModalOpen(false)}
+          />
         ))}
       </div>
+
+      {/* Mensaje cuando no hay cultivos */}
+      {crops.length === 0 && !loading && (
+        <div className="text-center py-12">
+          <div className="text-gray-400 text-6xl mb-4">🌱</div>
+          <h3 className="text-xl font-medium text-gray-900 mb-2">
+            No hay cultivos activos
+          </h3>
+          <p className="text-gray-600 mb-6">
+            Comienza creando tu primer cultivo para empezar a monitorearlo
+          </p>
+          <button
+            onClick={handleAddCrop}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <Plus size={20} />
+            Crear primer cultivo
+          </button>
+        </div>
+      )}
+
+      {/* Mensaje de error */}
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg mt-6">
+          <p className="text-red-800">{error}</p>
+        </div>
+      )}
     </div>
   );
 };

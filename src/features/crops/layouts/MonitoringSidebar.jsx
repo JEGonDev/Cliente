@@ -1,10 +1,11 @@
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
-import { 
-  BarChart2, 
-  Bell, 
-  Thermometer, 
-  Clock 
+import { useState, useEffect } from 'react';
+import { useMonitoring } from '../hooks/useMonitoring';
+import {
+  BarChart2,
+  Bell,
+  Clock
 } from 'lucide-react';
 
 /**
@@ -14,21 +15,6 @@ import {
  * @param {string} props.activeSection - Sección activa en la barra lateral
  */
 export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
-<<<<<<< HEAD
-  // Definición de las secciones de navegación
-  const navItems = [
-    {
-      id: 'historial',
-      label: 'Historial de datos',
-      icon: <BarChart2 size={18} />,
-      path: '/monitoring/history'
-    },
-       {
-      id: 'cultivos',
-      label: 'Cultivos',
-      icon: <Clock size={18} />,
-      path: '/monitoring/crops'
-=======
   const [notifications, setNotifications] = useState({});
 
   const {
@@ -89,20 +75,11 @@ export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
       badge: notifications.historial?.badge,
       hasAlert: notifications.historial?.hasAlert,
       description: `${notifications.historial?.count || 0} sensores activos`,
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
     },
     {
       id: 'alertas',
       label: 'Alertas',
       icon: <Bell size={18} />,
-<<<<<<< HEAD
-      path: '/monitoring/alerts'
-    },
- 
-   
-  ];
-
-=======
       path: '/monitoring/alerts',
       badge: notifications.alertas?.badge,
       hasAlert: notifications.alertas?.hasAlert,
@@ -156,29 +133,45 @@ export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
     return null;
   };
 
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
   return (
-    <aside className="w-64 bg-gray-50 border-r border-gray-200 overflow-auto">
-      <nav className="py-4">
-        <ul className="space-y-1">
+    <aside className="w-64 bg-gray-50 border-r border-gray-200 overflow-auto flex flex-col">
+      {/* Header del sidebar */}
+      <div className="p-4 bg-white border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold text-gray-900">Monitoreo</h2>
+          {loading && (
+            <div className="w-4 h-4 border-2 border-gray-300 border-t-primary rounded-full animate-spin"></div>
+          )}
+        </div>
+
+        {selectedCrop && (
+          <div className="mt-2 text-xs text-gray-600">
+            <span className="font-medium">Cultivo activo:</span>
+            <div className="truncate text-primary">{selectedCrop.name}</div>
+          </div>
+        )}
+      </div>
+
+      {/* Navegación principal */}
+      <nav className="flex-1 py-4">
+        <ul className="space-y-1 px-2">
           {navItems.map((item) => (
             <li key={item.id}>
               <Link
                 to={item.path}
-                className={`flex items-center px-4 py-3 text-sm 
-                  ${activeSection === item.id 
-                    ? 'bg-green-50 text-green-900 font-medium border-l-4 border-green-700' 
-                    : 'text-gray-700 hover:bg-gray-100'}`}
+                className={getNavItemClasses(item)}
+                title={item.description}
               >
-                <span className="mr-3 text-gray-500">{item.icon}</span>
-                {item.label}
+                <span className={`mr-3 ${item.hasAlert ? 'text-red-500' : 'text-gray-500'}`}>
+                  {item.icon}
+                </span>
+                <span className="flex-1">{item.label}</span>
+                {renderBadge(item)}
               </Link>
             </li>
           ))}
         </ul>
       </nav>
-<<<<<<< HEAD
-=======
 
       {/* Información adicional en la parte inferior */}
       <div className="p-4 bg-white border-t border-gray-200">
@@ -194,7 +187,6 @@ export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
           </span>
         </div>
       </div>
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
     </aside>
   );
 };

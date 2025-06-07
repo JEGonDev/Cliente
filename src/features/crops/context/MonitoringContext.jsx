@@ -18,37 +18,21 @@ export const MonitoringContext = createContext({
   alerts: [],
   realTimeData: {},
   thresholds: {},
-  
+
   // Estado de la aplicación
   loading: false,
   error: null,
   activeSection: 'monitoreo',
-  
+
   // Métodos para cultivos
-  fetchUserCrops: () => {},
-  fetchCropById: () => {},
-  createCrop: () => {},
-  updateCrop: () => {},
-  deleteCrop: () => {},
-  selectCrop: () => {},
-  
+  fetchUserCrops: () => { },
+  fetchCropById: () => { },
+  createCrop: () => { },
+  updateCrop: () => { },
+  deleteCrop: () => { },
+  selectCrop: () => { },
+
   // Métodos para sensores
-<<<<<<< HEAD
-  fetchAllSensors: () => {},
-  fetchUserSensors: () => {},
-  fetchSensorById: () => {},
-  fetchSensorsByCropId: () => {},
-  createSensor: () => {},
-  updateSensor: () => {},
-  deleteSensor: () => {},
-  selectSensor: () => {},
-  addSensorToCrop: () => {},
-  addSensorToCropWithThresholds: () => {},
-  updateSensorThresholds: () => {},
-  removeSensorFromCrop: () => {},
-  createSensorAndAssociateToCrop: () => {},
-  
-=======
   fetchAllSensors: () => { },
   fetchUserSensors: () => { },
   fetchSensorById: () => { },
@@ -64,52 +48,47 @@ export const MonitoringContext = createContext({
   removeSensorAndDelete: () => { },
   createSensorAndAssociateToCrop: () => { },
 
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
   // Métodos para lecturas
-  fetchReadingsByCropId: () => {},
-  fetchReadingById: () => {},
-  fetchReadingHistory: () => {},
-  createReading: () => {},
-  processBatchReadings: () => {},
-  
+  fetchReadingsByCropId: () => { },
+  fetchReadingById: () => { },
+  fetchReadingHistory: () => { },
+  createReading: () => { },
+  processBatchReadings: () => { },
+
   // Métodos para alertas
-  fetchUserAlerts: () => {},
-  fetchAlertsByCropId: () => {},
-  fetchAlertById: () => {},
-  deleteAlert: () => {},
-  
+  fetchUserAlerts: () => { },
+  fetchAlertsByCropId: () => { },
+  fetchAlertById: () => { },
+  deleteAlert: () => { },
+
   // Métodos para monitoreo en tiempo real
-  startMonitoring: () => {},
-  stopMonitoring: () => {},
-  changeTimeRange: () => {},
+  startMonitoring: () => { },
+  stopMonitoring: () => { },
+  changeTimeRange: () => { },
   isMonitoring: false,
   timeRange: '6H',
-  
+
   // Métodos para umbrales
-  updateThreshold: () => {},
-  updateAllThresholds: () => {},
-  
+  updateThreshold: () => { },
+  updateAllThresholds: () => { },
+
   // Navegación
-<<<<<<< HEAD
-  setActiveSection: () => {}
-=======
   setActiveSection: () => { },
 
   // Nuevo método
   getReadingsByCropId: () => { }
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
 });
 
 // Proveedor del contexto
 export const MonitoringProvider = ({ children }) => {
   // Estado para la sección activa
   const [activeSection, setActiveSection] = useState('monitoreo');
-  
+
   // Usando los hooks personalizados
   const {
-    crops, 
-    selectedCrop, 
-    loading: cropsLoading, 
+    crops,
+    selectedCrop,
+    loading: cropsLoading,
     error: cropsError,
     fetchUserCrops,
     fetchCropById,
@@ -118,7 +97,7 @@ export const MonitoringProvider = ({ children }) => {
     deleteCrop,
     setSelectedCrop: selectCrop
   } = useCrops();
-  
+
   const {
     sensors,
     selectedSensor,
@@ -139,7 +118,7 @@ export const MonitoringProvider = ({ children }) => {
     createSensorAndAssociateToCrop,
     setSelectedSensor: selectSensor
   } = useSensors();
-  
+
   const {
     readings,
     loading: readingsLoading,
@@ -150,7 +129,7 @@ export const MonitoringProvider = ({ children }) => {
     createReading,
     processBatchReadings
   } = useReadings();
-  
+
   const {
     alerts,
     loading: alertsLoading,
@@ -160,14 +139,14 @@ export const MonitoringProvider = ({ children }) => {
     fetchAlertById,
     deleteAlert
   } = useAlerts();
-  
+
   // Real-time monitoring 
   // Nota: Solo activamos esto cuando hay un cultivo seleccionado y sensores disponibles
-  const sensorIds = useMemo(() => 
+  const sensorIds = useMemo(() =>
     selectedCrop && sensors.filter(s => s.cropId === selectedCrop.id).map(s => s.id) || [],
     [selectedCrop, sensors]
   );
-  
+
   const {
     realTimeData,
     loading: realTimeLoading,
@@ -178,11 +157,11 @@ export const MonitoringProvider = ({ children }) => {
     stopMonitoring,
     changeTimeRange
   } = useRealTimeMonitoring(
-    selectedCrop?.id, 
-    sensorIds, 
+    selectedCrop?.id,
+    sensorIds,
     60000 // Actualizar cada minuto
   );
-  
+
   const {
     thresholds,
     loading: thresholdsLoading,
@@ -190,31 +169,31 @@ export const MonitoringProvider = ({ children }) => {
     updateThreshold,
     updateAllThresholds
   } = useMonitoringThresholds();
-  
+
   // Combinar estados de carga y error
-  const loading = 
-    cropsLoading || 
-    sensorsLoading || 
-    readingsLoading || 
-    alertsLoading || 
+  const loading =
+    cropsLoading ||
+    sensorsLoading ||
+    readingsLoading ||
+    alertsLoading ||
     realTimeLoading ||
     thresholdsLoading;
-  
-  const error = 
-    cropsError || 
-    sensorsError || 
-    readingsError || 
-    alertsError || 
+
+  const error =
+    cropsError ||
+    sensorsError ||
+    readingsError ||
+    alertsError ||
     realTimeError ||
     thresholdsError;
-  
+
   // Cargar datos iniciales cuando se renderiza el componente
   useEffect(() => {
     fetchUserCrops();
     fetchAllSensors();
     fetchUserAlerts();
   }, [fetchUserCrops, fetchAllSensors, fetchUserAlerts]);
-  
+
   // Cuando se selecciona un cultivo, cargar sus sensores y alertas
   useEffect(() => {
     if (selectedCrop) {
@@ -222,10 +201,6 @@ export const MonitoringProvider = ({ children }) => {
       fetchAlertsByCropId(selectedCrop.id);
     }
   }, [selectedCrop, fetchSensorsByCropId, fetchAlertsByCropId]);
-<<<<<<< HEAD
-  
-  // Valor del contexto con todos los estados y métodos
-=======
 
   // Efecto para actualizar alertas cuando hay nuevas lecturas
   useEffect(() => {
@@ -247,7 +222,6 @@ export const MonitoringProvider = ({ children }) => {
   }, []);
 
   // Valor del contexto
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
   const contextValue = {
     // Estado
     crops,
@@ -258,12 +232,12 @@ export const MonitoringProvider = ({ children }) => {
     alerts,
     realTimeData,
     thresholds,
-    
+
     // Estado de la aplicación
     loading,
     error,
     activeSection,
-    
+
     // Métodos para cultivos
     fetchUserCrops,
     fetchCropById,
@@ -271,7 +245,7 @@ export const MonitoringProvider = ({ children }) => {
     updateCrop,
     deleteCrop,
     selectCrop,
-    
+
     // Métodos para sensores
     fetchAllSensors,
     fetchUserSensors,
@@ -287,38 +261,39 @@ export const MonitoringProvider = ({ children }) => {
     removeSensorFromCrop,
     removeSensorAndDelete,
     createSensorAndAssociateToCrop,
-    
+
     // Métodos para lecturas
     fetchReadingsByCropId,
     fetchReadingById,
     fetchReadingHistory,
     createReading,
     processBatchReadings,
-    
+
     // Métodos para alertas
+    alerts,
     fetchUserAlerts,
     fetchAlertsByCropId,
     fetchAlertById,
     deleteAlert,
-    
+
     // Métodos para monitoreo en tiempo real
     startMonitoring,
     stopMonitoring,
     changeTimeRange,
     isMonitoring,
     timeRange,
-    
+
     // Métodos para umbrales
     updateThreshold,
     updateAllThresholds,
-    
+
     // Navegación
     setActiveSection,
 
     // Nuevo método
     getReadingsByCropId
   };
-  
+
   return (
     <MonitoringContext.Provider value={contextValue}>
       {children}

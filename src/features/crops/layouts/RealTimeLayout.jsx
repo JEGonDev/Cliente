@@ -1,75 +1,13 @@
-import { useState, useEffect } from "react";
-import PropTypes from "prop-types";
+import { useState, useEffect, useCallback } from "react";
+import { Link } from 'react-router-dom';
+import { useMonitoring } from '../hooks/useMonitoring';
 import { RealTimeIndicator } from "../ui/RealTimeIndicator";
 import { RealTimeChart } from "../ui/RealTimeChart";
-<<<<<<< HEAD
-import { TimeSelector } from "../ui/TimeSelector";
-import { ThresholdEditModal } from "../ui/ThresholdEditModal"; 
-import { Link } from 'react-router-dom';
-=======
 import { ThresholdEditModal } from "../ui/ThresholdEditModal";
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
 import { ThresholdSlider } from "../ui/ThresholdSlider";
+import { ManualReadingSection } from "../ui/ManualReadingSection";
+import { Database, Activity, Eye, EyeOff } from 'lucide-react';
 
-<<<<<<< HEAD
-// Valores por defecto para umbrales
-const defaultThresholds = {
-  temperature: { min: 18.0, max: 26.0 },
-  humidity: { min: 60, max: 80 },
-  ec: { min: 1.0, max: 1.6 },
-};
-
-// Datos de ejemplo 
-const demoData = {
-  temperature: {
-    current: 22.4,
-    unit: "°C",
-    trend: "+0.3",
-    trendDirection: "up",
-    trendTime: "última hora",
-  },
-  humidity: {
-    current: 68,
-    unit: "%",
-    trend: "-2",
-    trendDirection: "down",
-    trendTime: "última hora",
-  },
-  ec: {
-    current: 1.3,
-    unit: "mS/cm",
-    trend: "Estable",
-    trendTime: "hace 2h",
-  },
-};
-
-/**
- * Layout para la sección de monitoreo en tiempo real
- * Ahora incluye sliders visuales para umbrales y modal de edición
- *
- * @param {Object} props - Propiedades del componente
- * @param {Object} props.data - Datos para mostrar en tiempo real
- */
-export const RealTimeLayout = ({ data = {} }) => {
-  const isValidData =
-    data?.temperature?.current !== undefined &&
-    data?.humidity?.current !== undefined &&
-    data?.ec?.current !== undefined;
-
-  const displayData = isValidData ? data : demoData;
-
-  const [thresholds, setThresholds] = useState(defaultThresholds);
-  const [status, setStatus] = useState(null); // null | "loading" | "success" | "error"
-  const [isThresholdModalOpen, setIsThresholdModalOpen] = useState(false);
-
-  // Actualiza thresholds si vienen desde props.data
-  useEffect(() => {
-    if (data?.thresholds) {
-      setThresholds((prevThresholds) => ({
-        ...prevThresholds,
-        ...data.thresholds,
-      }));
-=======
 export const RealTimeLayout = () => {
   console.log('RealTimeLayout: Componente renderizado');
 
@@ -108,15 +46,9 @@ export const RealTimeLayout = () => {
     if (Object.keys(thresholds).length > 0) {
       console.log('Actualizando umbrales locales:', thresholds);
       setLocalThresholds(thresholds);
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
     }
-  }, [data]);
+  }, [thresholds]);
 
-<<<<<<< HEAD
-  // Maneja apertura del modal de edición
-  const handleEditThresholds = () => {
-    setIsThresholdModalOpen(true);
-=======
   // Efecto para cargar las lecturas cuando cambia el cultivo o cuando se crean nuevas lecturas
   useEffect(() => {
     const loadReadings = async () => {
@@ -305,38 +237,10 @@ export const RealTimeLayout = () => {
 
     console.log('Datos procesados:', result);
     return result;
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
   };
 
-  //  Maneja guardado desde el modal
-  const handleSaveThresholdsFromModal = async (newThresholds) => {
-    try {
-      // Simular llamada a API (reemplaza con tu endpoint real)
-      const response = await fetch("/api/thresholds", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newThresholds),
-      });
+  const displayData = getCurrentSensorData();
 
-<<<<<<< HEAD
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-
-      // Actualizar los umbrales locales inmediatamente
-      setThresholds(newThresholds);
-      setStatus("success");
-      setTimeout(() => setStatus(null), 3000);
-      
-      return Promise.resolve();
-    } catch (error) {
-      console.error('Error saving thresholds:', error);
-      throw error; // Re-lanzar para que el modal lo maneje
-    }
-  };
-=======
   // Estado de carga
   if (globalLoading && !sensors.length) {
     return (
@@ -364,16 +268,27 @@ export const RealTimeLayout = () => {
       </div>
     );
   }
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
 
-  const handleSaveThresholds = async () => {
-    setStatus("loading");
-    try {
-      await handleSaveThresholdsFromModal(thresholds);
-    } catch (error) {
-      setStatus("error");
-    }
-  };
+  if (!selectedCrop) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No hay cultivo seleccionado
+          </h3>
+          <p className="text-gray-600">
+            Selecciona un cultivo para ver el monitoreo en tiempo real
+          </p>
+          <Link
+            to="/monitoring/crops"
+            className="mt-4 inline-block bg-primary text-white px-4 py-2 rounded hover:bg-green-700"
+          >
+            Ver cultivos
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   // Mensaje cuando no hay sensores configurados
   if (!hasSensorsConfigured) {
@@ -400,51 +315,6 @@ export const RealTimeLayout = () => {
   }
 
   return (
-<<<<<<< HEAD
-    <div className="p-6">
-      {/* Botón de navegación */}
-      <div className="mb-4">
-        <Link
-          to="/monitoring/crops"
-          className="inline-block bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 transition"
-        >
-          ← Volver a cultivos
-        </Link>
-      </div>
-
-      <h1 className="text-2xl font-bold mb-6">Monitoreo en tiempo real</h1>
-
-      {/* Indicadores en tiempo real (existentes) */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-        <RealTimeIndicator
-          label="Temperatura"
-          value={displayData.temperature.current}
-          unit={displayData.temperature.unit}
-          trend={displayData.temperature.trend}
-          trendDirection={displayData.temperature.trendDirection}
-          trendTime={displayData.temperature.trendTime}
-          icon="temperature"
-        />
-
-        <RealTimeIndicator
-          label="Humedad"
-          value={displayData.humidity.current}
-          unit={displayData.humidity.unit}
-          trend={displayData.humidity.trend}
-          trendDirection={displayData.humidity.trendDirection}
-          trendTime={displayData.humidity.trendTime}
-          icon="humidity"
-        />
-
-        <RealTimeIndicator
-          label="EC"
-          value={displayData.ec.current}
-          unit={displayData.ec.unit}
-          trend={displayData.ec.trend}
-          trendTime={displayData.ec.trendTime}
-          icon="conductivity"
-        />
-=======
     <div className="space-y-6 p-6">
       {/* Header con controles */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -506,27 +376,33 @@ export const RealTimeLayout = () => {
             </p>
           </div>
         </div>
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
       </div>
 
-      {/* Gráfico de monitoreo en tiempo real (existente) */}
-      <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-medium">Monitoreo en tiempo real</h2>
-          <TimeSelector />
-        </div>
-        <RealTimeChart />
-      </div>
+      {/* Contenido según la sección activa */}
+      {activeSection === 'monitoring' ? (
+        <>
+          {/* Indicadores en tiempo real */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <RealTimeIndicator
+              label="Temperatura"
+              value={displayData.temperature.current}
+              unit={displayData.temperature.unit}
+              trend={displayData.temperature.trend}
+              trendDirection={displayData.temperature.trendDirection}
+              trendTime={displayData.temperature.trendTime}
+              icon="temperature"
+            />
 
-      {/* Sliders de umbrales en lugar del formulario */}
-      <ThresholdSlider
-        thresholds={thresholds}
-        onEditClick={handleEditThresholds}
-      />
+            <RealTimeIndicator
+              label="Humedad"
+              value={displayData.humidity.current}
+              unit={displayData.humidity.unit}
+              trend={displayData.humidity.trend}
+              trendDirection={displayData.humidity.trendDirection}
+              trendTime={displayData.humidity.trendTime}
+              icon="humidity"
+            />
 
-<<<<<<< HEAD
-      {/*  Modal para editar umbrales */}
-=======
             <RealTimeIndicator
               label="EC"
               value={displayData.tds.current}
@@ -558,15 +434,14 @@ export const RealTimeLayout = () => {
       )}
 
       {/* Modal para editar umbrales */}
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
       <ThresholdEditModal
         isOpen={isThresholdModalOpen}
         onClose={() => setIsThresholdModalOpen(false)}
-        initialThresholds={thresholds}
-        onSave={handleSaveThresholdsFromModal}
+        initialThresholds={localThresholds}
+        onSave={handleSaveThresholds}
       />
 
-      {/* NOTIFICACIÓN GLOBAL DE ÉXITO */}
+      {/* Notificaciones de estado */}
       {status === "success" && (
         <div className="fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg z-50">
           <div className="flex items-center gap-2">
@@ -575,45 +450,24 @@ export const RealTimeLayout = () => {
           </div>
         </div>
       )}
+
+      {status === "error" && (
+        <div className="fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg z-50">
+          <div className="flex items-center gap-2">
+            <span>❌</span>
+            <span>Error al actualizar los umbrales</span>
+          </div>
+        </div>
+      )}
+
+      {status === "loading" && (
+        <div className="fixed bottom-4 right-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded shadow-lg z-50">
+          <div className="flex items-center gap-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-blue-600"></div>
+            <span>Actualizando umbrales...</span>
+          </div>
+        </div>
+      )}
     </div>
   );
-};
-
-RealTimeLayout.propTypes = {
-  data: PropTypes.shape({
-    temperature: PropTypes.shape({
-      current: PropTypes.number,
-      unit: PropTypes.string,
-      trend: PropTypes.string,
-      trendDirection: PropTypes.string,
-      trendTime: PropTypes.string,
-    }),
-    humidity: PropTypes.shape({
-      current: PropTypes.number,
-      unit: PropTypes.string,
-      trend: PropTypes.string,
-      trendDirection: PropTypes.string,
-      trendTime: PropTypes.string,
-    }),
-    ec: PropTypes.shape({
-      current: PropTypes.number,
-      unit: PropTypes.string,
-      trend: PropTypes.string,
-      trendTime: PropTypes.string,
-    }),
-    thresholds: PropTypes.shape({
-      temperature: PropTypes.shape({
-        min: PropTypes.number,
-        max: PropTypes.number,
-      }),
-      humidity: PropTypes.shape({
-        min: PropTypes.number,
-        max: PropTypes.number,
-      }),
-      ec: PropTypes.shape({
-        min: PropTypes.number,
-        max: PropTypes.number,
-      }),
-    }),
-  }),
 };

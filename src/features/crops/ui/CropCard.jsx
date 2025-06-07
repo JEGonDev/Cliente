@@ -1,29 +1,3 @@
-<<<<<<< HEAD
-import { ChevronRight, Droplets, Thermometer } from 'lucide-react';
-import PropTypes from 'prop-types';
-import { CropStatusBadge } from './CropStatusBadge';
-
-export const  CropCard = ({ crop, onClick }) => (
- <div
-  className="w-full bg-white rounded-lg shadow-md p-6 cursor-pointer transform transition-transform duration-200 hover:scale-[1.02]"
-  onClick={() => onClick(crop)}
->
-
-    <div className="flex justify-between items-start mb-2">
-      <h3 className="text-lg font-semibold text-gray-800">{crop.name}</h3>
-      <CropStatusBadge status={crop.status} />
-    </div>
-    <p className="text-sm text-gray-600 mb-3">{crop.location}</p>
-    <div className="flex items-center justify-between">
-      <div className="flex space-x-3">
-        <div className="flex items-center text-sm">
-          <Droplets className="h-4 w-4 text-blue-500 mr-1" />
-          <span>{crop.sensors.humidity}%</span>
-        </div>
-        <div className="flex items-center text-sm">
-          <Thermometer className="h-4 w-4 text-red-500 mr-1" />
-          <span>{crop.sensors.temperature}°C</span>
-=======
 import { useState, useEffect, useMemo } from 'react';
 import { ChevronRight, Droplets, Thermometer, Pencil, Cpu } from 'lucide-react';
 import PropTypes from 'prop-types';
@@ -431,7 +405,6 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
         {/* Indicador de actividad reciente */}
         <div className="absolute bottom-3 left-3">
           <div className={`w-2 h-2 rounded-full ${normalizedStatus === 'active' ? 'bg-green-400 animate-pulse' : 'bg-gray-300'}`}></div>
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
         </div>
 
         {error && (
@@ -440,15 +413,6 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
           </div>
         )}
       </div>
-<<<<<<< HEAD
-      <div className="flex items-center text-gray-600">
-        <span className="text-xs">{crop.alerts.length > 0 ? `${crop.alerts.length} alertas` : 'Sin alertas'}</span>
-        <ChevronRight className="h-4 w-4 ml-1" />
-      </div>
-    </div>
-  </div>
-);
-=======
 
       {/* Modal de edición */}
       <EditCropModal
@@ -470,26 +434,26 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
     </>
   );
 };
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
 
 CropCard.propTypes = {
   crop: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    location: PropTypes.string.isRequired,
-    status: PropTypes.oneOf(['active', 'paused', 'alert', 'completed']).isRequired,
-    sensors: PropTypes.shape({
-      humidity: PropTypes.number.isRequired,
-      temperature: PropTypes.number.isRequired
-    }).isRequired,
-    alerts: PropTypes.arrayOf(
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    name: PropTypes.string,
+    cropName: PropTypes.string,
+    location: PropTypes.string,
+    description: PropTypes.string,
+    status: PropTypes.oneOf(['ACTIVE', 'INACTIVE', 'PAUSED', 'COMPLETED', 'active', 'paused', 'alert', 'completed']),
+    startDate: PropTypes.string,
+    endDate: PropTypes.string,
+    cropType: PropTypes.oneOfType([
+      PropTypes.string,
       PropTypes.shape({
-        id: PropTypes.string
+        id: PropTypes.number,
+        name: PropTypes.string
       })
-<<<<<<< HEAD
-    ).isRequired
-=======
     ])
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
   }).isRequired,
-  onClick: PropTypes.func.isRequired
+  onClick: PropTypes.func.isRequired,
+  onModalOpen: PropTypes.func,
+  onModalClose: PropTypes.func
 };

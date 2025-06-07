@@ -9,8 +9,8 @@ import { ForgotPasswordPage } from "../features/authentication/pages/ForgotPassw
 import { ResetPasswordPage } from "../features/authentication/pages/ResetPasswordPage";
 
 // Importaciones del modulo de administracion
-import { AdminPage } from "../pages/AdminPage";
-import { AdminCommunityPage } from "../features/community/pages/AdminCommunityPage";
+
+
 import { AdminRegisterForm } from "../features/authentication/layouts/AdminRegisterForm";
 // Importaciones del modulo de comunidad
 import { CommunityLayout } from "../features/community/layouts/CommunityLayout";
@@ -97,10 +97,11 @@ export const RouterApp = () => {
         {/* Rutas del modulo de profile */}
         <Route path="/profile/edit" element={<ProfileEditPage />} />
         <Route path="/profile/admin" element={<ProfileAdminPage />} />
+        <Route path="/profile/view/:userId" element={<ProfileView />} />
 
         {/* Rutas del modulo de administracion */}
         <Route path="/admin" element={<AdminPage />} />
-        <Route path="/admin/community" element={<AdminCommunityPage />} />
+        
         <Route path="/admin/register" element={<AdminRegisterForm />} />
       </Route>
     </Routes>

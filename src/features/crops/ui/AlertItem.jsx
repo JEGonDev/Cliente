@@ -1,14 +1,14 @@
 import PropTypes from 'prop-types';
-import { AlertTriangle, AlertCircle, Info } from 'lucide-react';
+import { AlertTriangle, AlertCircle, Info, CheckCircle } from 'lucide-react';
 import { Modal } from '../../../ui/components/Modal';
 import { useState } from 'react';
-import { CheckCircle } from 'lucide-react';
-
+import { useMonitoring } from '../hooks/useMonitoring';
 
 /**
  * Componente para mostrar una alerta individual
  * 
  * @param {Object} props - Propiedades del componente
+ * @param {string} props.id - Identificador de la alerta
  * @param {string} props.type - Tipo de alerta (error, warning, info)
  * @param {string} props.parameter - Parámetro al que se refiere la alerta
  * @param {string} props.crop - Cultivo relacionado con la alerta
@@ -16,17 +16,23 @@ import { CheckCircle } from 'lucide-react';
  * @param {string} props.value - Valor actual
  * @param {string} props.threshold - Valor del umbral
  * @param {string} props.time - Tiempo transcurrido
+ * @param {function} props.onDelete - Función para eliminar la alerta
  */
 export const AlertItem = ({
+  id,
   type = 'info',
   parameter = '',
   crop = '',
   message = '',
   value = '',
   threshold = '',
-  time = ''
+  time = '',
+  onDelete
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const { deleteAlert } = useMonitoring();
 
   const alertConfig = {
     error: {
@@ -50,6 +56,36 @@ export const AlertItem = ({
   };
 
   const config = alertConfig[type] || alertConfig.info;
+
+  const handleResolve = async (e) => {
+    e.stopPropagation();
+
+    if (!id) {
+      console.warn('No se puede resolver la alerta: ID no proporcionado');
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      const success = await deleteAlert(id);
+
+      if (success) {
+        // Llamar callback si se proporciona
+        if (onDelete) {
+          onDelete(id);
+        }
+        console.log('Alerta resuelta exitosamente');
+      } else {
+        alert('Error al resolver la alerta');
+      }
+    } catch (error) {
+      console.error('Error al resolver alerta:', error);
+      alert('Error al resolver la alerta. Inténtalo de nuevo.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <>
@@ -83,76 +119,11 @@ export const AlertItem = ({
               <div>
                 <span className="font-medium text-gray-700">Umbral:</span> {threshold}
               </div>
-<<<<<<< HEAD
-              <div className="flex items-center gap-1 text-blue-600 hover:underline text-sm cursor-pointer"
-     onClick={(e) => {
-       e.stopPropagation();
-       // Lógica para "Resolver"
-     }}>
-  <CheckCircle className="w-4 h-4" />
-  <span>Resolver</span>
-</div>
-=======
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
             </div>
           </div>
         </div>
       </div>
 
-<<<<<<< HEAD
-<Modal
-  isOpen={isModalOpen}
-  onClose={() => setIsModalOpen(false)}
-  title={`Alerta: Temperatura - Tomate`}
-  size="md"
-  footerActions={
-    <button
-      onClick={() => setIsModalOpen(false)}
-      className="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-    >
-      Resuelta
-    </button>
-  }
->
-  <div className="space-y-4 text-gray-800">
-    <p>
-      <strong>Mensaje:</strong>{" "}
-      <span className="font-medium">Temperatura demasiado alta en el cultivo.</span>
-    </p>
-    <p>
-      <strong>Valor actual:</strong>{" "}
-      <span className="font-semibold text-red-600">35°C</span>
-    </p>
-    <p>
-      <strong>Umbral:</strong>{" "}
-      <span className="font-semibold text-gray-700">30°C</span>
-    </p>
-    <p>
-      <strong>Tiempo de alerta:</strong>{" "}
-      <span>{new Date().toLocaleString()}</span>
-    </p>
-    <p>
-      <strong>Severidad:</strong>{" "}
-      <span className="px-2 py-1 rounded bg-yellow-300 text-yellow-800 font-semibold text-sm">
-        Alta
-      </span>
-    </p>
-    <p>
-      <strong>Ubicación:</strong>{" "}
-      <span>Invernadero 1</span>
-    </p>
-    <p className="flex items-center space-x-2">
-      <strong>Estado:</strong>
-      <button
-        className="px-3 py-1 rounded-full text-white text-xs font-bold
-         bg-red-400 hover:bg-red-500 transition"
-      >
-        Activa
-      </button>
-    </p>
-  </div>
-</Modal>
-=======
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -209,17 +180,18 @@ export const AlertItem = ({
           </p>
         </div>
       </Modal>
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
     </>
   );
 };
 
 AlertItem.propTypes = {
+  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   type: PropTypes.oneOf(['error', 'warning', 'info']),
   parameter: PropTypes.string,
   crop: PropTypes.string,
   message: PropTypes.string,
   value: PropTypes.string,
   threshold: PropTypes.string,
-  time: PropTypes.string
+  time: PropTypes.string,
+  onDelete: PropTypes.func
 };

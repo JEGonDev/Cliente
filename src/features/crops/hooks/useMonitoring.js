@@ -9,16 +9,12 @@ import { useMonitoringThresholds } from './useMonitoringThresholds';
  */
 export const useMonitoring = () => {
   const context = useContext(MonitoringContext);
-  
+
   if (!context) {
     throw new Error(
       'useMonitoring debe ser utilizado dentro de un MonitoringProvider'
     );
   }
-<<<<<<< HEAD
-  
-  return context;
-=======
 
   const {
     thresholds,
@@ -40,5 +36,4 @@ export const useMonitoring = () => {
     updateAllThresholds,
     loadThresholds
   };
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
 };

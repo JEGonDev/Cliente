@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-import React from "react"
-import Footer from "./ui/layouts/Footer"
-=======
->>>>>>> 0a2550518ec84c66039853f89ca439e946330407
 import { RouterApp } from "./routes/RouterApp"
 import { Header } from "./ui/layouts/Header"
 
