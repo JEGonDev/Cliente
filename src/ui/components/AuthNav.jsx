@@ -18,7 +18,7 @@ export const AuthNav = () => {
   // Log para depuración
   useEffect(() => {
     console.log("Datos de perfil:", { profile, profileLoading });
-    console.log("Datos de autenticación:", {
+    console.log("Datos de autenticación en authnav:", {
       user,
       isAuthenticated,
       isAdmin,
