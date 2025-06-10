@@ -365,7 +365,7 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                         case 'humidity':
                           return 'Porcentaje (%)';
                         case 'tds':
-                          return 'Conductividad eléctrica (mS/cm)';
+                          return 'Conductividad eléctrica (PPM)';
                         default:
                           return '';
                       }
@@ -409,7 +409,7 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                             case 'humidity':
                               return '%';
                             case 'tds':
-                              return 'mS/cm';
+                              return 'PPM';
                             default:
                               return '';
                           }
@@ -451,7 +451,7 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                             case 'humidity':
                               return '%';
                             case 'tds':
-                              return 'mS/cm';
+                              return 'PPM';
                             default:
                               return '';
                           }
