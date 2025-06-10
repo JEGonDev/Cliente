@@ -109,9 +109,9 @@ export const DataHistoryLayout = () => {
       'sensor temperatura': '°C',
       'humidity': '%',
       'humedad': '%',
-      'ec': 'mS/cm',
-      'conductividad': 'mS/cm',
-      'conductividad electrica': 'mS/cm'
+      'ec': 'PPM',
+      'conductividad': 'PPM',
+      'conductividad electrica': 'PPM'
     };
     return typeMap[type.toLowerCase()] || '';
   };

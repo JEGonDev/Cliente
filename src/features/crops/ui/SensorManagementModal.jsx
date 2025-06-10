@@ -176,7 +176,7 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
             case 'humidity':
               return '%';
             case 'tds':
-              return 'mS/cm';
+              return 'PPM';
             default:
               return '';
           }
@@ -327,7 +327,7 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                           defaultThresholds = { minThreshold: '60', maxThreshold: '80' };
                           break;
                         case 'tds':
-                          defaultThresholds = { minThreshold: '1', maxThreshold: '1.6' };
+                          defaultThresholds = { minThreshold: '500', maxThreshold: '1500' };
                           break;
                       }
 
@@ -365,7 +365,7 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                         case 'humidity':
                           return 'Porcentaje (%)';
                         case 'tds':
-                          return 'Conductividad eléctrica (mS/cm)';
+                          return 'Conductividad eléctrica (PPM)';
                         default:
                           return '';
                       }
@@ -409,7 +409,7 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                             case 'humidity':
                               return '%';
                             case 'tds':
-                              return 'mS/cm';
+                              return 'PPM';
                             default:
                               return '';
                           }
@@ -420,7 +420,7 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                       <p className="text-xs text-gray-500 mt-1">
                         {newSensorData.sensorType === 'temperature' && 'Rango válido: -10°C - 50°C | Recomendado: 18°C - 26°C'}
                         {newSensorData.sensorType === 'humidity' && 'Rango válido: 0% - 100% | Recomendado: 60% - 80%'}
-                        {newSensorData.sensorType === 'tds' && 'Rango válido: 0mS/cm - 5mS/cm | Recomendado: 1mS/cm - 1.6mS/cm'}
+                        {newSensorData.sensorType === 'tds' && 'Rango válido: 0 - 2000 PPM | Recomendado: 500 - 1500 PPM'}
                       </p>
                     )}
                   </div>
@@ -451,7 +451,7 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                             case 'humidity':
                               return '%';
                             case 'tds':
-                              return 'mS/cm';
+                              return 'PPM';
                             default:
                               return '';
                           }

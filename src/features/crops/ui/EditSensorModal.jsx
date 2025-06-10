@@ -100,7 +100,7 @@ export const EditSensorModal = ({ isOpen, onClose, sensor }) => {
               <option value="">Seleccionar unidad</option>
               {formData.sensorType === 'temperature' && <option value="°C">°C</option>}
               {formData.sensorType === 'humidity' && <option value="%">%</option>}
-              {formData.sensorType === 'tds' && <option value="mS/cm">mS/cm</option>}
+              {formData.sensorType === 'tds' && <option value="PPM">PPM</option>}
             </select>
           </div>
 
