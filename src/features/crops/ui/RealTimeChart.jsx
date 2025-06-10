@@ -4,7 +4,6 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine
 } from 'recharts';
 import { Droplets as HumidityIcon, Thermometer as TemperatureIcon, Activity as ConductivityIcon } from 'lucide-react';
-import PropTypes from 'prop-types';
 
 // Funciones de formato para los ejes
 const formatTemperature = (value) => `${value}°C`;
@@ -30,18 +29,6 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-CustomTooltip.propTypes = {
-  active: PropTypes.bool,
-  payload: PropTypes.arrayOf(
-    PropTypes.shape({
-      name: PropTypes.string,
-      value: PropTypes.number,
-      color: PropTypes.string
-    })
-  ),
-  label: PropTypes.string
-};
-
 export const RealTimeChart = () => {
   const {
     realTimeData,
@@ -49,7 +36,8 @@ export const RealTimeChart = () => {
     selectedCrop,
     thresholds,
     loading,
-    getReadingsByCropId
+    getReadingsByCropId,
+    isMonitoring
   } = useMonitoring();
 
   const [chartReadings, setChartReadings] = useState([]);
@@ -253,8 +241,8 @@ export const RealTimeChart = () => {
                 />
                 <YAxis
                   domain={[
-                    () => currentThresholds.humidity?.min || 0,
-                    () => currentThresholds.humidity?.max || 100
+                    dataMin => Math.max(0, Math.floor(dataMin - 5)),
+                    dataMax => Math.min(100, Math.ceil(dataMax + 5))
                   ]}
                   tickFormatter={formatHumidity}
                   stroke="#4b5563"
@@ -311,8 +299,8 @@ export const RealTimeChart = () => {
                 />
                 <YAxis
                   domain={[
-                    () => currentThresholds.temperature?.min || 0,
-                    () => currentThresholds.temperature?.max || 50
+                    dataMin => Math.max(0, Math.floor(dataMin - 2)),
+                    dataMax => Math.ceil(dataMax + 2)
                   ]}
                   tickFormatter={formatTemperature}
                   stroke="#4b5563"
@@ -370,8 +358,8 @@ export const RealTimeChart = () => {
               />
               <YAxis
                 domain={[
-                  () => currentThresholds.ec?.min || 0,
-                  () => currentThresholds.ec?.max || 5
+                  dataMin => Math.max(0, Math.floor(dataMin - 0.2)),
+                  dataMax => Math.ceil(dataMax + 0.2)
                 ]}
                 tickFormatter={formatConductivity}
                 stroke="#4b5563"
