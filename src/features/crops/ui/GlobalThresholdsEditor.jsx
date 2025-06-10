@@ -33,9 +33,9 @@ export const GlobalThresholdsEditor = ({ thresholds, setThresholds }) => {
       label: 'Conductividad Eléctrica (EC)',
       unit: 'PPM',
       icon: '⚡',
-      limits: { min: 0, max: 5 },
-      defaultRange: { min: 1.0, max: 1.6 },
-      step: 0.1,
+      limits: { min: 0, max: 2000 },
+      defaultRange: { min: 500, max: 1500 },
+      step: 100,
       description: 'Concentración de nutrientes en la solución'
     }
   };

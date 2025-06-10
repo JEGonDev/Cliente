@@ -11,7 +11,7 @@ export const useMonitoringThresholds = () => {
   const [thresholds, setThresholds] = useState({
     temperature: { min: 18.0, max: 26.0 },
     humidity: { min: 60, max: 80 },
-    ec: { min: 1.0, max: 1.6 },
+    ec: { min: 500, max: 1500 },
     ph: { min: 5.5, max: 6.5 }
   });
 

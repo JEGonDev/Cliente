@@ -327,7 +327,7 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
                           defaultThresholds = { minThreshold: '60', maxThreshold: '80' };
                           break;
                         case 'tds':
-                          defaultThresholds = { minThreshold: '1', maxThreshold: '1.6' };
+                          defaultThresholds = { minThreshold: '500', maxThreshold: '1500' };
                           break;
                       }
 
