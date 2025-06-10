@@ -36,24 +36,30 @@ export const useMonitoringThresholds = () => {
 
   /**
    * Carga los umbrales configurados para un cultivo específico
-   * 
-   * @param {number} cropId - ID del cultivo
    */
   const loadThresholds = useCallback(async (cropId) => {
     if (!cropId) return;
+
+    // Evitar cargar si ya estamos cargando
+    if (loading) {
+      console.log('[Thresholds] Ya hay una carga en progreso, saltando...');
+      return;
+    }
 
     setLoading(true);
     setError(null);
 
     try {
+      console.log('[Thresholds] Cargando umbrales para cultivo:', cropId);
       const response = await cropService.getThresholdsByCropId(cropId);
-      console.log('Umbrales cargados:', response);
+      console.log('[Thresholds] Respuesta recibida:', response);
 
       const newThresholds = { ...thresholds }; // Mantener valores por defecto
 
       // Verificar que tenemos datos válidos
       if (response?.data) {
         const sensorData = Array.isArray(response.data) ? response.data : [response.data];
+        let hasChanges = false;
 
         // Procesar cada sensor
         sensorData.forEach(sensor => {
@@ -67,23 +73,34 @@ export const useMonitoringThresholds = () => {
           const maxValue = parseFloat(sensor.maxThreshold);
 
           if (!isNaN(minValue) && !isNaN(maxValue)) {
-            newThresholds[type] = {
-              min: minValue,
-              max: maxValue
-            };
+            // Solo actualizar si los valores son diferentes
+            if (!newThresholds[type] ||
+              newThresholds[type].min !== minValue ||
+              newThresholds[type].max !== maxValue) {
+              newThresholds[type] = {
+                min: minValue,
+                max: maxValue
+              };
+              hasChanges = true;
+            }
           }
         });
-      }
 
-      console.log('Actualizando umbrales con:', newThresholds);
-      setThresholds(newThresholds);
+        // Solo actualizar el estado si hay cambios reales
+        if (hasChanges) {
+          console.log('[Thresholds] Actualizando umbrales con:', newThresholds);
+          setThresholds(newThresholds);
+        } else {
+          console.log('[Thresholds] No hay cambios en los umbrales');
+        }
+      }
     } catch (err) {
-      console.error('Error al cargar umbrales:', err);
+      console.error('[Thresholds] Error al cargar umbrales:', err);
       setError(err.message || 'Error al cargar los umbrales.');
     } finally {
       setLoading(false);
     }
-  }, [thresholds]);
+  }, [loading, thresholds]);
 
   /**
    * Actualiza los umbrales de un sensor para un cultivo específico

@@ -36,57 +36,67 @@ export const RealTimeLayout = () => {
 
   // Cargar umbrales cuando cambia el cultivo seleccionado
   useEffect(() => {
-    if (selectedCrop?.id) {
-      loadThresholds(selectedCrop.id);
-    }
-  }, [selectedCrop?.id, loadThresholds]);
+    let isMounted = true;
+
+    const loadCropThresholds = async () => {
+      if (!selectedCrop?.id || !isMounted) return;
+
+      console.log('[RealTimeLayout] Cargando umbrales para cultivo:', selectedCrop.id);
+      await loadThresholds(selectedCrop.id);
+    };
+
+    loadCropThresholds();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedCrop?.id]);
 
   // Actualizar umbrales locales cuando cambian los del contexto
   useEffect(() => {
-    if (Object.keys(thresholds).length > 0) {
-      console.log('Actualizando umbrales locales:', thresholds);
+    if (Object.keys(thresholds).length > 0 &&
+      JSON.stringify(localThresholds) !== JSON.stringify(thresholds)) {
+      console.log('[RealTimeLayout] Actualizando umbrales locales:', thresholds);
       setLocalThresholds(thresholds);
     }
   }, [thresholds]);
 
-  // Efecto para cargar las lecturas cuando cambia el cultivo o cuando se crean nuevas lecturas
+  // Efecto unificado para cargar lecturas
   useEffect(() => {
+    let isMounted = true;
+    let intervalId = null;
+
     const loadReadings = async () => {
-      if (selectedCrop?.id) {
-        try {
-          const response = await getReadingsByCropId(selectedCrop.id);
+      if (!selectedCrop?.id || !isMounted) return;
+
+      try {
+        console.log('[RealTimeLayout] Cargando lecturas para cultivo:', selectedCrop.id);
+        const response = await getReadingsByCropId(selectedCrop.id);
+        if (isMounted) {
           setReadings(response.data || []);
-        } catch (error) {
-          console.error('Error al cargar lecturas:', error);
         }
+      } catch (error) {
+        console.error('[RealTimeLayout] Error al cargar lecturas:', error);
       }
     };
 
+    // Cargar lecturas inicialmente
     loadReadings();
 
-    // Configurar un intervalo para actualizar las lecturas cada 5 segundos cuando no hay monitoreo en tiempo real
+    // Configurar intervalo solo si no hay monitoreo en tiempo real
     if (!isMonitoring) {
-      const interval = setInterval(loadReadings, 5000);
-      return () => clearInterval(interval);
+      console.log('[RealTimeLayout] Configurando intervalo de actualización de lecturas');
+      intervalId = setInterval(loadReadings, 5000);
     }
-  }, [selectedCrop?.id, getReadingsByCropId, isMonitoring]);
 
-  // Efecto para actualizar las lecturas cuando hay nuevos datos en tiempo real
-  useEffect(() => {
-    if (realTimeData && Object.keys(realTimeData).length > 0) {
-      const loadReadings = async () => {
-        if (selectedCrop?.id) {
-          try {
-            const response = await getReadingsByCropId(selectedCrop.id);
-            setReadings(response.data || []);
-          } catch (error) {
-            console.error('Error al cargar lecturas:', error);
-          }
-        }
-      };
-      loadReadings();
-    }
-  }, [realTimeData, selectedCrop?.id, getReadingsByCropId]);
+    return () => {
+      isMounted = false;
+      if (intervalId) {
+        console.log('[RealTimeLayout] Limpiando intervalo de actualización');
+        clearInterval(intervalId);
+      }
+    };
+  }, [selectedCrop?.id, isMonitoring]);
 
   // Verificar si hay sensores configurados
   const hasSensorsConfigured = sensors && sensors.length > 0;
