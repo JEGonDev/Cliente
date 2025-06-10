@@ -57,7 +57,7 @@ export const DataChart = ({
       },
       tds: {
         color: '#10b981',
-        unit: 'mS/cm',
+        unit: 'PPM',
         label: 'Conductividad',
         yAxisDomain: 'auto'
       }

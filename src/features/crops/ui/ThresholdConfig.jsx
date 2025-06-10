@@ -61,7 +61,7 @@ export const ThresholdConfig = () => {
           ['temperature', 'humidity', 'ec'].map(param => (
             <div key={param} className="mb-4">
               <div className="text-sm font-medium text-gray-700 mb-2 capitalize">
-                {param === 'ec' ? 'EC (mS/cm)' :
+                {param === 'ec' ? 'EC (PPM)' :
                   param === 'ph' ? 'pH' :
                     param.charAt(0).toUpperCase() + param.slice(1) +
                     (param === 'humidity' ? ' (%)' : param === 'temperature' ? ' (°C)' : '')}

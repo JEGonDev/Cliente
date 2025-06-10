@@ -370,7 +370,7 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
           <div className={`flex flex-col items-center p-3 rounded-lg ${sensorData.conductivity > 0 ? 'bg-purple-50' : 'bg-gray-50'}`}>
             <span className={`${sensorData.conductivity > 0 ? 'text-purple-500' : 'text-gray-400'} mb-1 text-lg`}>⚡</span>
             <span className={`text-sm font-medium ${sensorData.conductivity > 0 ? 'text-purple-700' : 'text-gray-500'}`}>
-              {sensorData.conductivity.toFixed(2)} mS/cm
+              {sensorData.conductivity.toFixed(2)} PPM
             </span>
             <span className="text-xs text-gray-600">TDS</span>
           </div>

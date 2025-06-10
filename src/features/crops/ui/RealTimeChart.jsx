@@ -8,7 +8,7 @@ import { Droplets as HumidityIcon, Thermometer as TemperatureIcon, Activity as C
 // Funciones de formato para los ejes
 const formatTemperature = (value) => `${value}°C`;
 const formatHumidity = (value) => `${value}%`;
-const formatConductivity = (value) => `${value} mS/cm`;
+const formatConductivity = (value) => `${value} PPM`;
 
 // Componente personalizado para el tooltip
 const CustomTooltip = ({ active, payload, label }) => {
@@ -22,7 +22,7 @@ const CustomTooltip = ({ active, payload, label }) => {
           {item.name}: {item.value}
           {item.name === 'temperatura' && '°C'}
           {item.name === 'humedad' && '%'}
-          {item.name === 'conductividad' && ' mS/cm'}
+          {item.name === 'conductividad' && ' PPM'}
         </p>
       ))}
     </div>

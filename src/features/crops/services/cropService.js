@@ -255,7 +255,7 @@ export const cropService = {
             normalizedUnit = '%';
             break;
           case 'ec':
-            normalizedUnit = 'mS/cm';
+            normalizedUnit = 'PPM';
             break;
           default:
             normalizedUnit = sensor.unitOfMeasurement || sensor.unit || '';

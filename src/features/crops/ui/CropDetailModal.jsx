@@ -60,7 +60,7 @@ export const CropDetailModal = ({ isOpen, crop, onClose }) => {
     const defaultReadings = {
       temperature: { value: 0, unit: '°C', status: 'sin-datos' },
       humidity: { value: 0, unit: '%', status: 'sin-datos' },
-      tds: { value: 0, unit: 'mS/cm', status: 'sin-datos' }
+      tds: { value: 0, unit: 'PPM', status: 'sin-datos' }
     };
 
     cropSensors.forEach(sensor => {

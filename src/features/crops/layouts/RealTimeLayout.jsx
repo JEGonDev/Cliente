@@ -216,7 +216,7 @@ export const RealTimeLayout = () => {
       },
       tds: {
         current: 0,
-        unit: "mS/cm",
+        unit: "PPM",
         trend: "Sin datos",
         trendTime: ""
       }

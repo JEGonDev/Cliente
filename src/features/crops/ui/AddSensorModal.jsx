@@ -28,7 +28,7 @@ export const AddSensorModal = ({ isOpen, onClose, onAddSensor }) => {
   // Unidades de medida disponibles
   const measurementUnits = [
     { value: '°C', label: 'Temperatura (°C)' },
-    { value: 'mS/cm', label: 'Conductividad Eléctrica (mS/cm)' },
+    { value: 'PPM', label: 'Conductividad Eléctrica (PPM)' },
     { value: '%', label: 'Humedad (%)' }
   ];
 

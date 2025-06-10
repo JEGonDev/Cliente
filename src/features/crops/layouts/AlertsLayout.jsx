@@ -98,8 +98,8 @@ export const AlertsLayout = ({ alerts = [] }) => {
       // Formato específico para humedad: "Valor de humedad: X% (umbral: Y%)"
       /.*?humedad:\s*([\d.,]+)\s*([%])\s*\((?:umbral|máximo|mínimo):\s*([\d.,]+)(?:\s*([%]))?\)/i,
 
-      // Formato para conductividad: "Valor de conductividad: X mS/cm (umbral: Y mS/cm)"
-      /.*?conductividad:\s*([\d.,]+)\s*(mS\/cm)\s*\((?:umbral|máximo|mínimo):\s*([\d.,]+)(?:\s*(mS\/cm))?\)/i,
+      // Formato para conductividad: "Valor de conductividad: X PPM (umbral: Y PPM)"
+      /.*?conductividad:\s*([\d.,]+)\s*(PPM)\s*\((?:umbral|máximo|mínimo):\s*([\d.,]+)(?:\s*(PPM))?\)/i,
 
       // Formatos anteriores
       /Valor:\s*([\d.,]+)\s*([°%\w/]+)\s*\(Umbral:\s*([\d.,]+)\s*([°%\w/]+)\)/i,
