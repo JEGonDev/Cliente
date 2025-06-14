@@ -1,124 +1,166 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { educationService } from '../services/educationService';
+import { VideoIcon, BookOpenIcon, FileTextIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
+import clsx from 'clsx';
 
 /**
- * Tarjeta que muestra información resumida de un módulo educativo
- * 
- * Este componente implementa dos modos de funcionamiento:
- * 1. Modo enlace: Actúa como un link navegable al detalle del módulo
- * 2. Modo seleccionable: Permite seleccionar el módulo para edición/eliminación
- * 
- * 
- * @param {Object} props - Propiedades del componente
- * @param {number|string} props.id - ID único del módulo
- * @param {string} props.title - Título del módulo
- * @param {Array} props.tags - Etiquetas del módulo
- * @param {boolean} props.isAdmin - Si el usuario es administrador
- * @param {boolean} props.isSelectable - Si el módulo puede seleccionarse (modo edición/eliminación)
- * @param {boolean} props.isSelected - Si el módulo está actualmente seleccionado
- * @param {Function} props.onSelect - Función a ejecutar al seleccionar el módulo
+ * @param {Object} props
+ * @param {number|string} props.id
+ * @param {string} props.title
+ * @param {Array} props.tags
+ * @param {boolean} props.isAdmin
+ * @param {boolean} props.isSelectable
+ * @param {boolean} props.isSelected
+ * @param {Function} props.onSelect
+ * @param {string} [props.className]
  */
-export const ModuleCard = ({ 
+export const ModuleCard = ({
   id,
-  title, 
+  title,
   tags = [],
   isAdmin = false,
-  isSelectable = false, // Nuevo prop para indicar si estamos en modo selección
-  isSelected = false,   // Nuevo prop para indicar si está seleccionado
-  onSelect = () => {}   // Nuevo prop para manejar la selección
+  isSelectable = false,
+  isSelected = false,
+  onSelect = () => {},
+  className = '',
 }) => {
-  const [counters, setCounters] = useState({
-    videos: 0,
-    articles: 0,
-    guides: 0
-  });
+  const [counters, setCounters] = useState({ videos: 0, articles: 0, guides: 0 });
   const [isLoading, setIsLoading] = useState(true);
 
-  // NOTA TÉCNICA: Cargamos los contadores de forma asíncrona para mejorar el rendimiento
-  // esto evita bloquear la renderización inicial de la tarjeta mientras esperamos datos secundarios
   useEffect(() => {
     const fetchCounters = async () => {
       try {
-        // Obtener datos en paralelo para mejorar rendimiento
-        // IMPORTANTE: Usamos Promise.all para realizar las peticiones simultáneamente
-        // en lugar de secuencialmente, reduciendo el tiempo de carga
         const [articles, guides, videos] = await Promise.all([
           educationService.getArticlesByModuleId(id).catch(() => ({ data: [] })),
           educationService.getGuidesByModuleId(id).catch(() => ({ data: [] })),
-          educationService.getVideosByModuleId(id).catch(() => ({ data: [] }))
+          educationService.getVideosByModuleId(id).catch(() => ({ data: [] })),
         ]);
-        
-        // NOTA: Añadimos manejo de errores individualizado por tipo de contenido
-        // permitiendo mostrar parcialmente los contadores aunque falle alguna petición
         setCounters({
           videos: Array.isArray(videos.data) ? videos.data.length : 0,
           articles: Array.isArray(articles.data) ? articles.data.length : 0,
-          guides: Array.isArray(guides.data) ? guides.data.length : 0
+          guides: Array.isArray(guides.data) ? guides.data.length : 0,
         });
       } catch (error) {
-        console.error(`Error obteniendo contadores para módulo ${id}:`, error);
+        console.error(`Error obteniendo contadores módulo ${id}:`, error);
       } finally {
         setIsLoading(false);
       }
     };
-
     if (id) {
       fetchCounters();
     }
   }, [id]);
 
+  // Clases base de la tarjeta
+  const baseClasses = clsx(
+    'flex flex-col rounded-xl shadow-lg bg-white overflow-hidden',
+    'hover:shadow-2xl transition-all duration-300',
+    'border border-gray-100',
+    {
+      'bg-green-50 border-green-100': isAdmin,
+      'ring-2 ring-[#23582a] ring-offset-2': isSelected,
+    },
+    className, // aquí recibimos "h-full" desde el padre
+  );
+
   // Contenido de la tarjeta
-  const cardContent = (
-    <div className={`p-4 rounded-sm shadow-md hover:shadow-lg transition-shadow 
-      ${isAdmin ? 'bg-green-50 border border-green-100' : 'bg-white'}
-      ${isSelected ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
-      {/* Título del módulo */}
-      <h3 className="font-medium mb-2 text-base">{title}</h3>
-      
-      {/* Etiquetas */}
-      <div className="flex flex-wrap gap-1 mb-2">
-        {tags.map((tag, index) => (
-          <span key={tag.id || index} className="text-xs bg-gray-100 text-gray-800 px-2 py-0.5 rounded">
-            #{typeof tag === 'object' ? tag.name : tag}
-          </span>
-        ))}
+  const content = (
+    <div className="flex flex-col h-full">
+      {/* Título con degradado y altura fija */}
+      {/* Ajustamos el contenedor a una altura constante, p.ej. h-20, para que siempre ocupe el mismo espacio */}
+      <div className="relative h-20 overflow-hidden">
+        {/* Capa de degradado cubriendo todo el contenedor fijo */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#23582a]/90 to-[#23582a]/70" />
+        {/* Título, limitado a 2 líneas (requiere plugin line-clamp o truncado manual) */}
+        <h3 className="relative font-Poppins font-bold px-4 pt-3 text-white text-lg line-clamp-2">
+          {title}
+        </h3>
+        {/* Si usas line-clamp, confirma que tailwind.config.js tiene @tailwindcss/line-clamp activo.
+            Si no, puedes usar: 
+            <h3 className="relative font-semibold px-4 pt-3 text-white text-lg overflow-hidden text-ellipsis"
+                style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+              {title}
+            </h3>
+        */}
       </div>
-      
-      {/* Contadores de contenido */}
-      <div className="text-xs text-gray-600 flex gap-1">
-        {isLoading ? (
-          <span>Cargando contadores...</span>
-        ) : (
-          <>
-            <span>{counters.videos} Videos</span>
-            <span>-</span>
-            <span>{counters.articles} Artículos</span>
-            <span>-</span>
-            <span>{counters.guides} Guías</span>
-          </>
-        )}
+
+      {/* Contenido principal: p-4, flex-col, con spacer */}
+      <div className="p-4 flex flex-col flex-grow">
+        {/* Etiquetas con diseño mejorado */}
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {tags.map((tag, idx) => (
+            <span
+              key={tag.id ?? idx}
+              className="text-xs bg-gray-50 text-gray-700 px-2.5 py-1 rounded-full
+                         border border-gray-100 hover:bg-gray-100 transition-colors"
+            >
+              #{typeof tag === 'object' ? tag.name : tag}
+            </span>
+          ))}
+        </div>
+
+        {/* Spacer para empujar los contadores al final */}
+        <div className="flex-grow" />
+
+        {/* Contadores con diseño mejorado */}
+<div className="text-sm text-gray-600 flex justify-start mt-4 pt-3 border-t border-gray-100">
+  {isLoading ? (
+    <span className="text-gray-400">Cargando...</span>
+  ) : (
+    <div className="flex items-center gap-x-2">
+      <div className="flex items-center gap-x-1 group">
+        <VideoIcon className="w-4 h-4 text-[#23582a] group-hover:scale-110 transition-transform" />
+        <span className="font-medium">{counters.videos}</span>
+      </div>
+      <div className="flex items-center gap-x-1 group">
+        <BookOpenIcon className="w-4 h-4 text-[#23582a] group-hover:scale-110 transition-transform" />
+        <span className="font-medium">{counters.articles}</span>
+      </div>
+      <div className="flex items-center gap-x-1 group">
+        <FileTextIcon className="w-4 h-4 text-[#23582a] group-hover:scale-110 transition-transform" />
+        <span className="font-medium">{counters.guides}</span>
+      </div>
+    </div>
+  )}
+</div>
+
       </div>
     </div>
   );
 
-  // Si estamos en modo seleccionable, renderizamos un div clickable
+  // Animaciones con Framer Motion
+  const MotionWrapper = motion.div;
+  const motionProps = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    whileHover: { y: -5 },
+    transition: { 
+      duration: 0.4,
+      ease: "easeOut"
+    },
+  };
+
   if (isSelectable) {
     return (
-      <div 
-        onClick={() => onSelect(id)} 
-        className="cursor-pointer"
+      <MotionWrapper
+        {...motionProps}
+        onClick={() => onSelect(id)}
+        className={baseClasses + ' cursor-pointer'}
         aria-label={`Seleccionar módulo ${title}`}
       >
-        {cardContent}
-      </div>
+        {content}
+      </MotionWrapper>
     );
   }
 
-  // En modo normal, renderizamos un enlace
   return (
-    <Link to={`/education/module/${id}`} className="block">
-      {cardContent}
+    // El Link ocupa toda la altura de la celda (debe venir className="h-full" desde ModulesList)
+    <Link to={`/education/module/${id}`} className="block h-full">
+      <MotionWrapper {...motionProps} className={baseClasses}>
+        {content}
+      </MotionWrapper>
     </Link>
   );
 };

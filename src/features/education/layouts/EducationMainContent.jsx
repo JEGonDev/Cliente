@@ -34,12 +34,12 @@ export const EducationMainContent = ({
       
       {Array.isArray(tags) && tags.length === 0 && isAdmin && (
         <div className="bg-gray-50 border border-gray-200 rounded-md p-4 mb-6">
-          <p className="text-gray-600 mb-3">No hay etiquetas disponibles. Como administrador, puedes crear etiquetas para categorizar los módulos.</p>
+          <p className="text-gray-600 mb-3 font-inter">No hay etiquetas disponibles. Como administrador, puedes crear etiquetas para categorizar los módulos.</p>
         </div>
       )}
       
       {filteredModules.length === 0 && searchValue && (
-        <div className="bg-gray-50 text-gray-600 p-4 rounded-md text-center my-4">
+        <div className="bg-gray-50 text-gray-600 p-4 rounded-md text-center my-4 font-inter">
           No se encontraron módulos que coincidan con "{searchValue}"
         </div>
       )}

@@ -45,39 +45,47 @@ export const ModulesList = ({
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 auto-rows-auto gap-6">
+    // Grid con auto-rows-fr para que cada fila reparta igual altura a sus celdas
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 auto-rows-fr">
       {modules.length === 0 ? (
-        <div className="col-span-3 text-center py-8">
+        <div className="col-span-full text-center py-8">
           <p className="text-gray-500">No hay módulos disponibles</p>
         </div>
       ) : (
-        modules.map((module) => (
-          <div key={module.moduleId || module.id} className="relative">
-            {/* Interfaz de selección para modo de eliminación */}
-            {isSelectable && (
-              <div className="absolute top-2 right-2 z-10">
-                <input 
-                  type="checkbox" 
-                  checked={selectedModules.includes(module.moduleId || module.id)}
-                  onChange={() => handleSelect(module.moduleId || module.id)}
-                  className="h-5 w-5 text-green-600 focus:ring-green-500"
-                />
-              </div>
-            )}
-            <ModuleCard
-              id={module.moduleId || module.id}
-              title={module.title}
-              tags={module.tags || []}
-              videosCount={module.videosCount || 0}
-              articlesCount={module.articlesCount || 0}
-              guidesCount={module.guidesCount || 0}
-              isAdmin={isAdmin}
-              isSelectable={isSelectable}
-              isSelected={selectedModules.includes(module.moduleId || module.id)}
-              onSelect={handleSelect}
-            />
-          </div>
-        ))
+        modules.map((module) => {
+          const mid = module.moduleId || module.id;
+          const selected = selectedModules.includes(mid);
+          return (
+            // Cada celda con h-full para ocupar toda la altura asignada por el grid
+            <div key={mid} className="relative h-full">
+              {/* Interfaz de selección para modo de eliminación */}
+              {isSelectable && (
+                <div className="absolute top-2 right-2 z-10">
+                  <input 
+                    type="checkbox" 
+                    checked={selected}
+                    onChange={() => handleSelect(mid)}
+                    className="h-5 w-5 text-green-600 focus:ring-green-500"
+                  />
+                </div>
+              )}
+              <ModuleCard
+                id={mid}
+                title={module.title}
+                tags={module.tags || []}
+                videosCount={module.videosCount || 0}
+                articlesCount={module.articlesCount || 0}
+                guidesCount={module.guidesCount || 0}
+                isAdmin={isAdmin}
+                isSelectable={isSelectable}
+                isSelected={selected}
+                onSelect={handleSelect}
+                // Agregamos h-full para que la tarjeta ocupe toda la altura de la celda
+                className="h-full"
+              />
+            </div>
+          );
+        })
       )}
     </div>
   );

@@ -34,15 +34,20 @@ export default {
           dark: "#273444",
           DEFAULT: "#8492a6",
           light: "#d3dce6",
-      },
+        },
       },
       fontFamily: {
-        inter: ['Inter', 'sans-serif '],
-         chonburi: ['Chonburi'],
+        inter: ['Inter', 'sans-serif'],
+        chonburi: ['Chonburi'],
+      },
+      // Aquí extendemos gridAutoRows para auto-rows-fr
+      gridAutoRows: {
+        'fr': 'minmax(0, 1fr)',
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // Si necesitas truncar títulos con line-clamp, descomenta:
+    // require('@tailwindcss/line-clamp'),
+  ],
 }
-
-

@@ -20,7 +20,10 @@ export const EducationLayout = ({
     <div className="flex flex-col min-h-screen">
       <div className="flex flex-1">
         {/* Barra lateral izquierda */}
-        <BarIcons activeSection={activeIcon} onIconClick={onIconClick} />
+        <BarIcons 
+          activeSection={activeIcon} 
+          setActiveSection={onIconClick}
+        />
 
         {/* Contenido principal */}
         <main className="flex-1 px-6 py-8">
