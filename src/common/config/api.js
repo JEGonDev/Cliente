@@ -33,13 +33,7 @@ export const setAuthRedirectCallback = (callback) => {
 API.interceptors.request.use(
   config => {
     // Las cookies se envían automáticamente con withCredentials: true
-    
-    // Si hay un token almacenado, incluirlo en los headers
-    const authToken = Storage.get('authToken');
-    if (authToken) {
-      config.headers['Authorization'] = `Bearer ${authToken}`;
-    }
-    
+    // No agregar Authorization manualmente, solo cookies
     return config;
   },
   error => {

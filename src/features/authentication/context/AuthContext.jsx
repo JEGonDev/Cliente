@@ -1,6 +1,5 @@
 import { createContext, useState, useEffect } from 'react';
 import { authService } from '../services/authService';
-import { Storage } from '../../../storage/Storage'
 
 // Creamos el contexto para la autenticación
 export const AuthContext = createContext({
@@ -21,33 +20,14 @@ export const AuthContext = createContext({
 // Proveedor de contexto que encapsula la lógica de autenticación
 export const AuthProvider = ({ children }) => {
 
-  // Intentamos cargar el usuario desde Storage al iniciar
-  const savedUser = Storage.get('authUser');
-
-  // Estado del usuario autenticado (inicializado con datos guardados si existen)
-  const [user, setUser] = useState(savedUser);
-  
-  // Estado de autenticación (inicializado como true si hay usuario guardado)
-  const [isAuthenticated, setIsAuthenticated] = useState(!!savedUser);
-  
+  // Estado del usuario autenticado (inicializado como null)
+  const [user, setUser] = useState(null);
+  // Estado de autenticación (inicializado como false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   // Estado de carga
   const [loading, setLoading] = useState(true);
-  
   // Estado de error
   const [error, setError] = useState(null);
-
-  // Función para guardar el usuario en localStorage (como respaldo local)
-  const saveUser = (userData) => {
-    if (userData) {
-      try {
-        Storage.set('authUser', userData);
-      } catch (e) {
-        console.error("Error saving to Storage:", e);
-      }
-    } else {
-      Storage.remove('authUser');
-    }
-  };
 
   // Efecto para verificar la autenticación al iniciar la aplicación
   useEffect(() => {
@@ -55,10 +35,8 @@ export const AuthProvider = ({ children }) => {
       try {
         const isSessionValid = await refreshAuth();
         if (!isSessionValid && !isAuthenticated) {
-          // Limpiar el estado y localStorage si no hay sesión válida
           setUser(null);
           setIsAuthenticated(false);
-          saveUser(null);
         }
       } catch (err) {
         console.error("Error checking authentication status:", err);
@@ -70,7 +48,7 @@ export const AuthProvider = ({ children }) => {
     checkAuthStatus();
   }, []);
 
-    // Verifica la sesión con una solicitud al backend
+  // Verifica la sesión con una solicitud al backend
   const refreshAuth = async () => {
     try {
       // Verificar con el backend
@@ -80,7 +58,6 @@ export const AuthProvider = ({ children }) => {
       if (response && response.data) {
         setUser(response.data);
         setIsAuthenticated(true);
-        saveUser(response.data);
         return true;
       }
       
@@ -94,7 +71,6 @@ export const AuthProvider = ({ children }) => {
       // Si no hay respuesta positiva ni usuario existente
       if (!user) {
         setIsAuthenticated(false);
-        saveUser(null);
         return false;
       }
       
@@ -104,10 +80,9 @@ export const AuthProvider = ({ children }) => {
       console.error('Error verificando autenticación:', err);
       
       // Si hay error 401 (no autenticado), limpia el estado
-      if (err.response && err.response.status === 401 || err.response.status === 403) {
+      if (err.response && (err.response.status === 401 || err.response.status === 403)) {
         setUser(null);
         setIsAuthenticated(false);
-        saveUser(null);
         return false;
       }
       
@@ -150,7 +125,6 @@ export const AuthProvider = ({ children }) => {
       
       setUser(userData);
       setIsAuthenticated(true);
-      saveUser(userData);
       
       return userData;
     } catch (err) {
@@ -173,7 +147,6 @@ export const AuthProvider = ({ children }) => {
       
       setUser(newUser);
       setIsAuthenticated(true);
-      saveUser(newUser);
       
       return newUser;
     } catch (err) {
@@ -210,7 +183,6 @@ export const AuthProvider = ({ children }) => {
       // Limpiamos el estado local
       setUser(null);
       setIsAuthenticated(false);
-      saveUser(null);
     } catch (err) {
       console.error('Error en logout:', err);
       setError(err);
@@ -218,7 +190,6 @@ export const AuthProvider = ({ children }) => {
       // Incluso con error, limpiamos el estado local
       setUser(null);
       setIsAuthenticated(false);
-      saveUser(null);
     } finally {
       setLoading(false);
     }

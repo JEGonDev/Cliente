@@ -52,9 +52,7 @@ class WebSocketService {
         }
 
         // Obtener token de autenticación
-        const token = localStorage.getItem('token');
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
+        const headers = {};
         // Conectar con headers de autenticación
         this.stompClient.connect(
           headers,
@@ -144,8 +142,7 @@ class WebSocketService {
     }
 
     // Obtener token de autenticación
-    const token = localStorage.getItem('token');
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const headers = {};
 
     // Enviar el mensaje tal cual, sin modificar
     console.log('📤 Enviando mensaje:', {
