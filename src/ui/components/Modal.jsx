@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'; 
+import { useEffect, useRef } from 'react';
 import { Button } from './Button';
 
 export const Modal = ({
@@ -51,7 +51,7 @@ export const Modal = ({
           </h3>
           <Button
             onClick={onClose}
-className="text-white text-3xl font-extrabold rounded-full hover:bg-[#2f6b35] hover:text-white transition-colors duration-200 w-9 h-9 flex items-center justify-center"
+            className="text-white text-3xl font-extrabold rounded-full hover:bg-[#2f6b35] hover:text-white transition-colors duration-200 w-9 h-9 flex items-center justify-center"
           >
             ✕
           </Button>

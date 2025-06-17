@@ -23,7 +23,7 @@ export const ModuleCard = ({
   isAdmin = false,
   isSelectable = false,
   isSelected = false,
-  onSelect = () => {},
+  onSelect = () => { },
   className = '',
 }) => {
   const [counters, setCounters] = useState({ videos: 0, articles: 0, guides: 0 });
@@ -69,21 +69,14 @@ export const ModuleCard = ({
   const content = (
     <div className="flex flex-col h-full">
       {/* Título con degradado y altura fija */}
-      {/* Ajustamos el contenedor a una altura constante, p.ej. h-20, para que siempre ocupe el mismo espacio */}
-      <div className="relative h-20 overflow-hidden">
-        {/* Capa de degradado cubriendo todo el contenedor fijo */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#23582a]/90 to-[#23582a]/70" />
-        {/* Título, limitado a 2 líneas (requiere plugin line-clamp o truncado manual) */}
+      <div className="relative h-20 overflow-hidden rounded-t-xl">
+        {/* Capa de degradado que cubre todo el encabezado */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#23582a] to-[#3a8741]" />
+
+        {/* Título del módulo con texto blanco, fuente personalizada y límite de 2 líneas */}
         <h3 className="relative font-Poppins font-bold px-4 pt-3 text-white text-lg line-clamp-2">
           {title}
         </h3>
-        {/* Si usas line-clamp, confirma que tailwind.config.js tiene @tailwindcss/line-clamp activo.
-            Si no, puedes usar: 
-            <h3 className="relative font-semibold px-4 pt-3 text-white text-lg overflow-hidden text-ellipsis"
-                style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-              {title}
-            </h3>
-        */}
       </div>
 
       {/* Contenido principal: p-4, flex-col, con spacer */}
@@ -105,26 +98,26 @@ export const ModuleCard = ({
         <div className="flex-grow" />
 
         {/* Contadores con diseño mejorado */}
-<div className="text-sm text-gray-600 flex justify-start mt-4 pt-3 border-t border-gray-100">
-  {isLoading ? (
-    <span className="text-gray-400">Cargando...</span>
-  ) : (
-    <div className="flex items-center gap-x-2">
-      <div className="flex items-center gap-x-1 group">
-        <VideoIcon className="w-4 h-4 text-[#23582a] group-hover:scale-110 transition-transform" />
-        <span className="font-medium">{counters.videos}</span>
-      </div>
-      <div className="flex items-center gap-x-1 group">
-        <BookOpenIcon className="w-4 h-4 text-[#23582a] group-hover:scale-110 transition-transform" />
-        <span className="font-medium">{counters.articles}</span>
-      </div>
-      <div className="flex items-center gap-x-1 group">
-        <FileTextIcon className="w-4 h-4 text-[#23582a] group-hover:scale-110 transition-transform" />
-        <span className="font-medium">{counters.guides}</span>
-      </div>
-    </div>
-  )}
-</div>
+        <div className="text-sm text-gray-600 flex justify-start mt-4 pt-3 border-t border-gray-100">
+          {isLoading ? (
+            <span className="text-gray-400">Cargando...</span>
+          ) : (
+            <div className="flex items-center gap-x-2">
+              <div className="flex items-center gap-x-1 group">
+                <VideoIcon className="w-4 h-4 text-[#23582a] group-hover:scale-110 transition-transform" />
+                <span className="font-medium">{counters.videos}</span>
+              </div>
+              <div className="flex items-center gap-x-1 group">
+                <BookOpenIcon className="w-4 h-4 text-[#23582a] group-hover:scale-110 transition-transform" />
+                <span className="font-medium">{counters.articles}</span>
+              </div>
+              <div className="flex items-center gap-x-1 group">
+                <FileTextIcon className="w-4 h-4 text-[#23582a] group-hover:scale-110 transition-transform" />
+                <span className="font-medium">{counters.guides}</span>
+              </div>
+            </div>
+          )}
+        </div>
 
       </div>
     </div>
@@ -136,7 +129,7 @@ export const ModuleCard = ({
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
     whileHover: { y: -5 },
-    transition: { 
+    transition: {
       duration: 0.4,
       ease: "easeOut"
     },

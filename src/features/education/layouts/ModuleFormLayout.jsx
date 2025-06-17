@@ -26,17 +26,17 @@ export const ModuleFormLayout = ({
       </Link>
 
       {/* Contenedor principal */}
-      <div className="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100">
+      <div className="bg-white/70 backdrop-blur-md shadow-2xl rounded-3xl overflow-hidden border border-gray-200 transition-all duration-500 ease-in-out animate-fade-in">
 
         {/* Header */}
-        <div className="px-6 py-4 bg-gradient-to-r from-[#eaf3ec] to-white border-b border-gray-200">
-          <h1 className="text-2xl font-semibold text-[#23582a] font-poppins">
+        <div className="flex justify-between items-center border-b border-gray-200 px-6 py-4 bg-gradient-to-r from-[#23582a] to-[#3a8741]">
+          <h1 className="text-xl font-semibold text-white font-Poppins tracking-wide">
             {title}
           </h1>
         </div>
 
         {/* Formulario */}
-        <form onSubmit={onSubmit} className="px-6 py-4">
+        <form onSubmit={onSubmit} className="px-6 py-6 sm:px-8 sm:py-6 transition-all duration-300">
           <div className="space-y-5 text-gray-700 font-inter">{children}</div>
 
           {/* Acciones */}
@@ -45,18 +45,17 @@ export const ModuleFormLayout = ({
               variant="white"
               onClick={onCancel}
               type="button"
-              className="transform transition-transform duration-200 hover:-translate-y-0.5"
+              className="transform transition duration-300 hover:-translate-y-0.5 hover:shadow-md"
             >
               Cancelar
             </Button>
             <Button
               variant="primary"
               type="submit"
-              className="transform transition-transform duration-200 hover:-translate-y-0.5"
+              className="transform transition duration-300 hover:-translate-y-0.5 hover:shadow-md"
             >
               {submitText}
             </Button>
-
           </div>
         </form>
       </div>
