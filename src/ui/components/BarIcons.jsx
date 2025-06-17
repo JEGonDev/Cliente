@@ -8,9 +8,9 @@ import PropTypes from "prop-types";
 import { motion } from "framer-motion";
 
 /**
- * Barra lateral animada con íconos, glassmorphism y feedback visual.
+ * Barra lateral vertical con íconos animados
  */
-export const BarIcons = ({ activeSection, setActiveSection }) => {
+export const BarIcons = ({title, activeSection, setActiveSection }) => {
   const navigate = useNavigate();
 
   const items = [
@@ -35,55 +35,53 @@ export const BarIcons = ({ activeSection, setActiveSection }) => {
   ];
 
   return (
-    <nav
-      className="w-full md:w-40 bg-white/70 backdrop-blur-xl border-b md:border-b-0 md:border-r border-gray-200
-                 flex md:flex-col items-center justify-around md:justify-start p-6 gap-8 md:gap-12 shadow-sm transition-all duration-300"
-    >
-      {items.map(({ key, label, icon: Icon, route }) => {
-        const active = activeSection === key;
-        return (
-          <motion.button
-            key={key}
-            onClick={() => {
-              setActiveSection(key);
-              navigate(route);
-            }}
-            className="relative flex flex-col items-center gap-2 focus:outline-none"
-            whileHover={{ scale: 1.12 }}
-            whileTap={{ scale: 0.96 }}
-          >
-            <motion.span
-              className={`p-2 rounded-full group transition-colors duration-200 border
-                ${active ? "bg-green-100 border-green-500 shadow-md" : "bg-gray-200 border-transparent"}
-              `}
-              animate={active ? { scale: 1.12 } : { scale: 1 }}
-              transition={{ type: "spring", stiffness: 300 }}
+    <aside className="w-64 border-r border-gray-200 bg-white min-h-screen py-4 flex flex-col">
+      {/* Título */}
+      <div className="px-4 mb-2">
+          <h2 className="text-lg font-semibold text-gray-800">{title}</h2>
+        <hr className="mt-2 border-gray-300" />
+      </div>
+
+      {/* Ítems de navegación */}
+      <nav className="flex-1 px-3 space-y-1 mt-2">
+        {items.map(({ key, label, icon: Icon, route }) => {
+          const active = activeSection === key;
+
+          return (
+            <motion.button
+              key={key}
+              onClick={() => {
+                setActiveSection(key);
+                navigate(route);
+              }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className={`w-full flex items-center px-2 py-2 rounded-md text-sm transition-all duration-200
+                ${active
+                  ? "bg-green-100 text-green-700 font-medium"
+                  : "text-gray-700 hover:bg-gray-100"}`}
             >
-              <Icon
-                className={`w-6 h-6 md:w-8 md:h-8 transition-colors duration-200
-                  ${active ? "text-green-600" : "text-gray-700 group-hover:text-green-500"}
-                `}
-              />
-            </motion.span>
-            <span className={`text-sm mt-1 ${active ? "text-green-700" : "text-gray-700"}`}>
-              {label}
-            </span>
-            {/* Glow o indicador animado debajo del activo */}
-            {active && (
-              <motion.span
-                layoutId="active-pill"
-                className="absolute left-1/2 -bottom-2 -translate-x-1/2 w-4 h-1 rounded-full bg-green-500/80 shadow-sm"
-                transition={{ type: "spring", stiffness: 500, damping: 25 }}
-              />
-            )}
-          </motion.button>
-        );
-      })}
-    </nav>
+              <Icon className={`w-4 h-4 mr-2 ${active ? "text-green-600" : "text-gray-500"}`} />
+              <span>{label}</span>
+
+              {/* Indicador animado */}
+              {active && (
+                <motion.span
+                  layoutId="active-indicator"
+                  className="ml-auto w-2 h-2 bg-green-500 rounded-full"
+                  transition={{ type: "spring", stiffness: 500, damping: 20 }}
+                />
+              )}
+            </motion.button>
+          );
+        })}
+      </nav>
+    </aside>
   );
 };
 
 BarIcons.propTypes = {
+  title: PropTypes.string.isRequired, 
   activeSection: PropTypes.oneOf(["forum", "groups", "home"]).isRequired,
   setActiveSection: PropTypes.func.isRequired,
 };

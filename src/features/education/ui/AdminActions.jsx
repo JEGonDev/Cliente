@@ -19,15 +19,34 @@ export const AdminActions = ({
   onEditClick,
   resourceType = 'recurso'
 }) => {
+  const dynamicButtonClass = "transition-transform duration-200 ease-in-out hover:-translate-y-0.5 active:scale-95";
+
   return (
-    <div className="flex justify-between items-center mb-4">
-      <Button variant="primary" size="sm" onClick={onAddClick}>
+    <div className="flex justify-between items-center gap-2 mb-4">
+      <Button 
+        variant="primary" 
+        size="sm" 
+        onClick={onAddClick}
+        className={dynamicButtonClass}
+      >
         Agregar {resourceType}
       </Button>
-      <Button variant="danger" size="sm" onClick={onDeleteClick}>
+      
+      <Button 
+        variant="danger" 
+        size="sm" 
+        onClick={onDeleteClick}
+        className={dynamicButtonClass}
+      >
         Eliminar {resourceType}
       </Button>
-      <Button variant="outline" size="sm" onClick={onEditClick}>
+      
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={onEditClick}
+        className={dynamicButtonClass}
+      >
         Editar {resourceType}
       </Button>
     </div>

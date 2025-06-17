@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react'; 
 import { Button } from './Button';
 
 export const Modal = ({
@@ -7,7 +7,7 @@ export const Modal = ({
   title,
   children,
   footerActions,
-  size = 'md' // 'sm', 'md', 'lg'
+  size = 'md'
 }) => {
   const modalRef = useRef(null);
 
@@ -44,27 +44,27 @@ export const Modal = ({
         ref={modalRef}
         className={`w-full ${sizeClasses[size]} bg-white rounded-2xl shadow-2xl transition-all duration-300 transform scale-100 overflow-hidden`}
       >
-        {/* Header */}
-        <div className="flex justify-between items-center border-b border-gray-200 px-6 py-4 bg-gradient-to-r from-indigo-100 to-white">
-          <h3 className="text-lg font-semibold text-indigo-800 flex items-center gap-2">
-            📘 {title}
+        {/* Header con degradado personalizado y Poppins */}
+        <div className="flex justify-between items-center border-b border-gray-200 px-6 py-4 bg-gradient-to-r from-[#23582a] to-[#3a8741]">
+          <h3 className="text-xl font-semibold text-white font-Poppins tracking-wide">
+            {title}
           </h3>
           <Button
             onClick={onClose}
-            className="text-gray-500 hover:text-red-500 text-xl font-bold"
+className="text-white text-3xl font-extrabold rounded-full hover:bg-[#2f6b35] hover:text-white transition-colors duration-200 w-9 h-9 flex items-center justify-center"
           >
             ✕
           </Button>
         </div>
 
         {/* Body */}
-        <div className="px-6 py-5 text-sm sm:text-base text-gray-700 bg-white">
+        <div className="px-6 py-5 text-sm sm:text-base font-inter text-gray-700 bg-white">
           {children}
         </div>
 
         {/* Footer */}
         {footerActions && (
-          <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <div className="flex justify-end gap-2 px-6 py-4 border-t font-inter font-extrabold border-gray-200 bg-gray-50">
             {footerActions}
           </div>
         )}
