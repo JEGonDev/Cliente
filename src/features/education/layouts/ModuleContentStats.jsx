@@ -41,7 +41,7 @@ export const ModuleContentStats = ({
       )}
 
       {description && (
-        <p className="text-gray-700 mb-6 text-sm leading-relaxed transition-opacity duration-300 opacity-90">
+<p className="text-gray-700 mb-6 text-base leading-relaxed transition-opacity duration-300 opacity-90">
           {description}
         </p>
       )}

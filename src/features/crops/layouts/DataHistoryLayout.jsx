@@ -167,7 +167,16 @@ export const DataHistoryLayout = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Historial y análisis de datos</h1>
+      
+                  <h1
+                    className="text-4xl font-extrabold tracking-tight font-poppins mb-4"
+                    style={{
+                      background: 'linear-gradient(135deg, #23582a 0%, #059669 50%, #10b981 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text'
+                    }}
+                  >Historial y análisis de datos</h1>
 
       {/* Filtros mejorados */}
       <div className="bg-white p-6 rounded-lg shadow-sm mb-6">

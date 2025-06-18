@@ -94,7 +94,7 @@ export const OpenModulePage = () => {
     <>
       {/* <Header /> */}
       
-      <ModuleDetailLayout>
+<ModuleDetailLayout className="bg-[#eef7f3] min-h-screen px-4 md:px-8 lg:px-12 py-8">
 
       <Link to="/education" className="flex items-center text-primary hover:underline mb-4">
         <ArrowLeft className="w-4 h-4 mr-1" />
@@ -130,7 +130,7 @@ export const OpenModulePage = () => {
             </div>
 
             {/* Sección de artículos */}
-            <section className="mb-12">
+<section className="mb-12 bg-white shadow-lg hover:shadow-xl transition-shadow rounded-2xl p-6">
               <SectionHeader 
                 title="Artículos" 
                 isAdmin={isAdmin}
@@ -146,7 +146,7 @@ export const OpenModulePage = () => {
                   <p className="text-sm">No se pudieron cargar los artículos. Intente más tarde.</p>
                 </div>
               ) : articles?.length === 0 ? (
-                <div className="bg-gray-50 text-gray-600 p-6 rounded-md text-center mb-6">
+<div className="bg-gray-100 text-gray-600 p-6 rounded-xl border border-gray-200 text-center mb-6">
                   <p>No hay artículos disponibles para este módulo.</p>
                   {isAdmin && (
                     <button 
@@ -168,7 +168,7 @@ export const OpenModulePage = () => {
             </section>
 
             {/* Sección de guías */}
-            <section className="mb-12">
+<section className="mb-12 bg-white shadow-lg hover:shadow-xl transition-shadow rounded-2xl p-6">
               <SectionHeader 
                 title="Guías descargables" 
                 isAdmin={isAdmin}
@@ -184,7 +184,7 @@ export const OpenModulePage = () => {
                   <p className="text-sm">No se pudieron cargar las guías. Intente más tarde.</p>
                 </div>
               ) : guides?.length === 0 ? (
-                <div className="bg-gray-50 text-gray-600 p-6 rounded-md text-center mb-6">
+<div className="bg-gray-100 text-gray-600 p-6 rounded-xl border border-gray-200 text-center mb-6">
                   <p>No hay guías disponibles para este módulo.</p>
                   {isAdmin && (
                     <button 
@@ -206,7 +206,7 @@ export const OpenModulePage = () => {
             </section>
 
             {/* Sección de videos */}
-            <section className="mb-12">
+<section className="mb-12 bg-white shadow-lg hover:shadow-xl transition-shadow rounded-2xl p-6">
               <SectionHeader 
                 title="Videos" 
                 isAdmin={isAdmin}
@@ -218,7 +218,7 @@ export const OpenModulePage = () => {
                   <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
                 </div>
               ) : videoError ? (
-                <div className="bg-orange-50 text-orange-800 p-3 rounded-md mb-6">
+<div className="bg-gray-100 text-gray-600 p-6 rounded-xl border border-gray-200 text-center mb-6">
                   <p className="text-sm">No se pudieron cargar los videos. Intente más tarde.</p>
                 </div>
               ) : videos?.length === 0 ? (
