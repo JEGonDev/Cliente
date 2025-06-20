@@ -168,7 +168,7 @@ export const DataHistoryLayout = () => {
   return (
     <div className="p-6">
 
-      <div className="max-w-7xl mx-auto mb-6">
+      <div className="mx-auto mb-6">
         <h1
           className="text-4xl font-extrabold tracking-tight font-poppins mb-4 bg-gradient-to-r from-[#23582a] via-[#059669] to-[#10b981] bg-clip-text text-transparent">
           Historial y análisis de datos

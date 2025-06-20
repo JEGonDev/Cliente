@@ -66,6 +66,7 @@ export const CropsLayout = () => {
   return (
     <div className="p-6">
       {/* Header */}
+      
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-4xl font-extrabold tracking-tight font-poppins mb-4 bg-gradient-to-r from-[#23582a] via-[#059669] to-[#10b981] bg-clip-text text-transparent">
