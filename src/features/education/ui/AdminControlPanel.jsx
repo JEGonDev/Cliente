@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import { Button } from '../../../ui/components/Button';
+import { motion } from 'framer-motion';
 
 /**
  * Panel de control administrativo para módulos educativos
@@ -16,31 +17,45 @@ export const AdminControlPanel = ({
   onEditClick,
   onDeleteClick
 }) => {
+  const motionProps = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    whileHover: { y: -4, boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.2)' },
+    whileTap: { scale: 0.95 },
+    transition: { type: 'spring', stiffness: 200, damping: 15 }
+  };
+
   return (
     <div className="flex flex-wrap gap-4 mt-8 justify-center">
-      <Button 
-        variant="primary"
-        size="lg"
-        onClick={onCreateClick}
-      >
-        Crear módulo
-      </Button>
-      
-      <Button 
-        variant="primary"
-        size="lg"
-        onClick={onEditClick}
-      >
-        Modificar módulo
-      </Button>
-      
-      <Button 
-        variant="primary"
-        size="lg"
-        onClick={onDeleteClick}
-      >
-        Eliminar módulo
-      </Button>
+      <motion.div {...motionProps}>
+        <Button 
+          variant="primary"
+          size="lg"
+          onClick={onCreateClick}
+        >
+          Crear módulo
+        </Button>
+      </motion.div>
+
+      <motion.div {...motionProps}>
+        <Button 
+          variant="primary"
+          size="lg"
+          onClick={onEditClick}
+        >
+          Modificar módulo
+        </Button>
+      </motion.div>
+
+      <motion.div {...motionProps}>
+        <Button 
+          variant="primary"
+          size="lg"
+          onClick={onDeleteClick}
+        >
+          Eliminar módulo
+        </Button>
+      </motion.div>
     </div>
   );
 };

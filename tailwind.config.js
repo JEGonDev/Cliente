@@ -6,12 +6,12 @@ export default {
   ],
   theme: {
     screens: {
-      xs: "375px",  // Nuevo breakpoint para pantallas pequeñas
-      sm: "640px",  // @media (min-width: 640px)
-      md: "768px",  // @media (min-width: 768px)
-      lg: "1024px", // @media (min-width: 1024px)
-      xl: "1280px", // @media (min-width: 1280px)
-      "2xl": "1536px" // @media (min-width: 1536px)
+      xs: "375px",
+      sm: "640px",
+      md: "768px",
+      lg: "1024px",
+      xl: "1280px",
+      "2xl": "1536px"
     },
     extend: {
       colors: {
@@ -34,15 +34,28 @@ export default {
           dark: "#273444",
           DEFAULT: "#8492a6",
           light: "#d3dce6",
-      },
+        },
       },
       fontFamily: {
-        inter: ['Inter', 'sans-serif '],
-         chonburi: ['Chonburi'],
+        inter: ['Inter', 'sans-serif'],
+        chonburi: ['Chonburi'],
+      },
+      gridAutoRows: {
+        'fr': 'minmax(0, 1fr)',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0', transform: 'translateY(10px) scale(0.98)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.4s ease-out forwards',
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // Si necesitas truncar títulos con line-clamp, descomenta:
+    // require('@tailwindcss/line-clamp'),
+  ],
 }
-
-

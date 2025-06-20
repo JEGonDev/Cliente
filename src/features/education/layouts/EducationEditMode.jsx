@@ -14,7 +14,8 @@ export const EducationEditMode = ({
   onConfirm
 }) => {
   return (
-    <>
+    <div className="space-y-6 font-inter">
+      {/* Lista de módulos */}
       <ModulesList
         modules={filteredModules || []}
         isAdmin={isAdmin}
@@ -22,24 +23,26 @@ export const EducationEditMode = ({
         selectedModules={selectedModuleToEdit ? [selectedModuleToEdit] : []}
         onSelectModule={onSelectModule}
       />
-      
+
+      {/* Aviso informativo */}
       <div
         role="status"
-        className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4"
+        className="bg-yellow-50 border-l-4 border-yellow-400 p-5 rounded-md shadow-sm"
       >
-        <p className="text-yellow-700 font-semibold mb-2">
+        <p className="text-yellow-800 font-bold text-base flex items-center gap-2 mb-2">
           ⚙️ Editar módulo educativo
         </p>
-        <p className="text-yellow-700 mb-2">
+        <p className="text-yellow-700 text-sm mb-2">
           Selecciona el módulo que quieres <strong>modificar</strong> y luego pulsa <strong>"Editar seleccionado"</strong>.
         </p>
-        <ul className="list-decimal list-inside text-yellow-700">
+        <ul className="list-decimal list-inside text-yellow-700 text-sm space-y-1">
           <li>Escoge el módulo en la lista.</li>
           <li>Haz clic en <strong>"Editar seleccionado"</strong>.</li>
         </ul>
       </div>
-      
-      <div className="flex flex-wrap gap-4 mt-8 justify-center">
+
+      {/* Botones de acción */}
+      <div className="flex flex-wrap justify-center gap-4 pt-2">
         <Button variant="white" onClick={onCancel}>
           Cancelar
         </Button>
@@ -51,7 +54,7 @@ export const EducationEditMode = ({
           Editar seleccionado
         </Button>
       </div>
-    </>
+    </div>
   );
 };
 

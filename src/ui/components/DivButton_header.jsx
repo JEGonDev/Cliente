@@ -15,7 +15,7 @@ export const DivButton_header = () => {
         onClick={() => navigate('/login')}
         className="m-2 hover:bg-gray-100">
 
-        <span className="text-gray-700">Iniciar</span>
+        <span className="text-gray-700">Iniciar sección</span>
       </Button>
 
       <Button

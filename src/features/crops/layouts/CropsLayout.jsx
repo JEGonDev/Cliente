@@ -68,8 +68,12 @@ export const CropsLayout = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Cultivos</h1>
-          <p className="text-gray-600">Gestiona tus cultivos y su monitoreo</p>
+          <h1 className="text-4xl font-extrabold tracking-tight font-poppins mb-4 bg-gradient-to-r from-[#23582a] via-[#059669] to-[#10b981] bg-clip-text text-transparent">
+            Cultivos
+            </h1>
+          <p className="text-gray-600 text-lg font-inter mb-4">
+            Analiza el rendimiento de tus cultivos y toma decisiones más precisas.
+            </p>
         </div>
         <button
           onClick={handleAddCrop}

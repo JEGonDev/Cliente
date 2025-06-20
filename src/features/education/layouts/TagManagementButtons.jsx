@@ -85,7 +85,7 @@ export const TagManagementButtons = ({ onTagsUpdated }) => {
     <div className="mb-6 flex flex-wrap gap-2">
       {/* Título de la sección */}
       <div className="w-full mb-2">
-        <h3 className="text-lg font-medium">Gestión de Etiquetas</h3>
+        <h3 className="text-lg font-medium font-popins">Gestión de Etiquetas</h3>
       </div>
 
       {/* Botones CRUD */}
