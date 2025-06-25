@@ -36,15 +36,18 @@ export function AdminCommunityView() {
       {/* Main container */}
       <div className="w-full max-w-4xl bg-white min-h-screen border rounded-md shadow-md p-0 mx-auto pb-20 md:pb-0">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-2 md:gap-0 items-center">
-          <h1 className="text-xl md:text-2xl font-bold mb-2 md:mb-6 text-center md:text-left w-full flex justify-center md:justify-start">
-            Administración de la comunidad
-          </h1>
+        
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-6 gap-2 md:gap-0">
+          <div className="w-full md:w-auto flex justify-center md:justify-start">
+            <h1 className="text-xl md:text-2xl font-bold mb-2 md:mb-0 text-center md:text-left">
+              Administración de la comunidad
+            </h1>
+          </div>
           <div className="flex justify-center md:justify-end gap-2 flex-wrap w-full md:w-auto">
-            <PlantGrow className="w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-4" />
-            <PlantGrow className="w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-4" />
-            <PlantGrow className="w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-4" />
-            <PlantGrow className="w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-4" />
+            <PlantGrow className="w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-0" />
+            <PlantGrow className="w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-0" />
+            <PlantGrow className="w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-0" />
+            <PlantGrow className="w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-0" />
           </div>
         </div>
 
@@ -133,8 +136,6 @@ export function AdminCommunityView() {
     </div>
   );
 }
-
-
 
 // import React, { useState } from "react";
 // import { useNavigate } from "react-router-dom";
@@ -274,7 +275,6 @@ export function AdminCommunityView() {
 //   );
 // }
 
-
 // import React, { useState } from "react";
 // import { useNavigate } from "react-router-dom";
 // import { BarIcons } from "../../../ui/components/BarIcons";
@@ -401,4 +401,3 @@ export function AdminCommunityView() {
 //     </div>
 //   );
 // }
-

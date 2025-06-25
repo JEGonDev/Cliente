@@ -96,15 +96,15 @@ export const GroupListView = () => {
   return (
     <div className="p-2 md:p-4 w-full max-w-full">
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-2 md:gap-0">
-        <h1 className="text-xl md:text-2xl font-bold mb-2 md:mb-6">
-          Grupos de la comunidad
+      <div className="flex flex-col items-center justify-center lg:flex-row lg:items-start lg:justify-between mb-6 gap-2 lg:gap-0">
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight font-poppins mb-2 lg:mb-0 text-center lg:text-left bg-gradient-to-r from-[#23582a] via-[#059669] to-[#10b981] bg-clip-text text-transparent">
+          Grupos de Comunidad
         </h1>
-        <div className="flex justify-center gap-2 flex-wrap">
-          <PlantGrow className="w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-4" />
-          <PlantGrow className="w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-4" />
-          <PlantGrow className="w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-4" />
-          <PlantGrow className="w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-4" />
+        <div className="flex justify-center gap-2 flex-wrap mt-2 lg:mt-0">
+          <PlantGrow className="w-12 h-12 lg:w-16 lg:h-16" />
+          <PlantGrow className="w-12 h-12 lg:w-16 lg:h-16" />
+          <PlantGrow className="w-12 h-12 lg:w-16 lg:h-16" />
+          <PlantGrow className="w-12 h-12 lg:w-16 lg:h-16" />
         </div>
       </div>
 
@@ -121,9 +121,10 @@ export const GroupListView = () => {
           <button
             onClick={toggleUserGroupsFilter}
             className={`flex items-center px-2 py-2 md:px-3 rounded-md border text-sm md:text-base
-              ${showOnlyUserGroups
-                ? "bg-primary text-white border-primary"
-                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+              ${
+                showOnlyUserGroups
+                  ? "bg-primary text-white border-primary"
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
               }`}
             title={
               showOnlyUserGroups
@@ -133,9 +134,7 @@ export const GroupListView = () => {
           >
             <UserIcon className="h-5 w-5 mr-1" />
             <span className="hidden xxs:inline md:inline">
-              {showOnlyUserGroups
-                ? "Mis grupos"
-                : "Filtrar por mis grupos"}
+              {showOnlyUserGroups ? "Mis grupos" : "Filtrar por mis grupos"}
             </span>
           </button>
           <button
@@ -221,8 +220,8 @@ export const GroupListView = () => {
                 {searchQuery
                   ? `No se encontraron grupos para "${searchQuery}"`
                   : showOnlyUserGroups
-                    ? "Aún no has creado o te has unido a grupos."
-                    : "No hay grupos disponibles."}
+                  ? "Aún no has creado o te has unido a grupos."
+                  : "No hay grupos disponibles."}
               </p>
               {canManageSystem() && (
                 <button
@@ -246,7 +245,6 @@ export const GroupListView = () => {
     </div>
   );
 };
-
 
 // import React, { useState, useMemo, useEffect } from "react";
 // import { GroupCard } from "../ui/GroupCard";
@@ -460,7 +458,6 @@ export const GroupListView = () => {
 //   );
 // };
 
-
 // import React, { useMemo, useState, useEffect } from "react";
 // import { GroupCard } from "../ui/GroupCard";
 // import { GroupFormModal } from "../ui/GroupFormModal";
@@ -595,7 +592,6 @@ export const GroupListView = () => {
 //   );
 // };
 
-
 // import React, { useMemo, useState } from "react";
 // import { GroupCard } from "../ui/GroupCard";
 // import { GroupFormModal } from "../ui/GroupFormModal";
@@ -655,5 +651,3 @@ export const GroupListView = () => {
 //     </div>
 //   );
 // };
-
-

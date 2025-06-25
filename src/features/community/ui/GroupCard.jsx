@@ -12,7 +12,18 @@ export const GroupCard = ({ group }) => {
       "
     >
       <div>
-        <h3 className="text-lg font-semibold break-words">{group.name}</h3>
+        <div className="relative h-20 overflow-hidden rounded-t-xl">
+          {/* Capa de degradado que cubre todo el encabezado */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#23582a] to-[#3a8741]" />
+
+          {/* Título del módulo con texto blanco y fuente personalizada */}
+          <h3 className="relative font-Poppins font-bold px-4 pt-3 text-white text-lg line-clamp-2">
+            {group.name}
+              
+          </h3>
+        </div>
+
+        
         {/* 
           line-clamp-3: muestra solo 3 líneas antes de truncar con "..." 
           break-words: evita desbordes por palabras largas
@@ -34,7 +45,6 @@ export const GroupCard = ({ group }) => {
   );
 };
 
-
 // import React from "react";
 // import { useNavigate } from "react-router-dom";
 
@@ -45,10 +55,10 @@ export const GroupCard = ({ group }) => {
 //     <div className="border rounded-md shadow-md p-4 flex flex-col justify-between h-full">
 //       <div>
 //         <h3 className="text-lg font-semibold break-words">{group.name}</h3>
-//         {/* 
-//           line-clamp-3: muestra solo 3 líneas antes de truncar con "..." 
+//         {/*
+//           line-clamp-3: muestra solo 3 líneas antes de truncar con "..."
 //           break-words: evita desbordes por palabras largas
-//           overflow-hidden: oculta cualquier desborde 
+//           overflow-hidden: oculta cualquier desborde
 //         */}
 //         <p className="text-sm text-gray-600 mt-2 line-clamp-3 break-words overflow-hidden">
 //           {group.description}
@@ -65,7 +75,6 @@ export const GroupCard = ({ group }) => {
 //     </div>
 //   );
 // };
-
 
 // import React from "react";
 // import { useNavigate } from "react-router-dom";

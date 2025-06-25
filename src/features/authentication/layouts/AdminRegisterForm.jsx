@@ -15,7 +15,7 @@ export const AdminRegisterForm = () => {
   const { form, error, handleChange, handleSubmit } = useRegisterForm({ admin: true });
 
   return (
-    <div>
+    <div className="max-w-md w-full mx-auto bg-white p-6 rounded-lg shadow-md">
       {/* Mostrar alerta de error si existe */}
       <AlertError message={error} show={!!error} />
 

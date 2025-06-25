@@ -1,4 +1,10 @@
-import React, { useState, useContext, useCallback, useRef, useEffect } from "react";
+import React, {
+  useState,
+  useContext,
+  useCallback,
+  useRef,
+  useEffect,
+} from "react";
 import { FaPlus, FaSearch } from "react-icons/fa";
 import { MessageSquare, Hash, Wifi, WifiOff, User } from "lucide-react";
 import { ThreadFormModal } from "../ui/ThreadFormModal";
@@ -39,7 +45,7 @@ export const ThreadForumView = () => {
     sendForumMessage,
     deleteForumMessage,
     refreshMessages,
-    clearError
+    clearError,
   } = useForumMessages();
 
   useEffect(() => {
@@ -60,15 +66,15 @@ export const ThreadForumView = () => {
     let filtered = threads;
 
     if (showOnlyUserThreads && user) {
-      filtered = filtered.filter(thread =>
-        (thread.userId || thread.user_id) === user.id
+      filtered = filtered.filter(
+        (thread) => (thread.userId || thread.user_id) === user.id
       );
     }
 
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       filtered = filtered.filter(
-        thread =>
+        (thread) =>
           (thread.title && thread.title.toLowerCase().includes(q)) ||
           (thread.content && thread.content.toLowerCase().includes(q))
       );
@@ -110,26 +116,39 @@ export const ThreadForumView = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSendMessage = useCallback(async (content) => {
-    const result = await sendForumMessage(content);
-    if (result) {
-      // Mensaje enviado exitosamente
-      // ...
-    }
-  }, [sendForumMessage]);
+  const handleSendMessage = useCallback(
+    async (content) => {
+      const result = await sendForumMessage(content);
+      if (result) {
+        // Mensaje enviado exitosamente
+        // ...
+      }
+    },
+    [sendForumMessage]
+  );
 
-  const handleDeleteMessage = useCallback(async (messageId) => {
-    return await deleteForumMessage(messageId);
-  }, [deleteForumMessage]);
+  const handleDeleteMessage = useCallback(
+    async (messageId) => {
+      return await deleteForumMessage(messageId);
+    },
+    [deleteForumMessage]
+  );
 
   return (
     <div className="w-full px-0 sm:px-4 my-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-2 mb-6 gap-2">
         <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold">Foro de Comunidad</h1>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight font-poppins mb-4 bg-gradient-to-r from-[#23582a] via-[#059669] to-[#10b981] bg-clip-text text-transparent">
+            Foro de Comunidad
+          </h1>
+
           {/* Indicador de conexión WebSocket */}
-          <div className={`flex items-center gap-1 text-sm ${wsConnected ? 'text-green-600' : 'text-red-600'}`}>
+          <div
+            className={`flex items-center gap-1 text-sm ${
+              wsConnected ? "text-green-600" : "text-red-600"
+            }`}
+          >
             {wsConnected ? (
               <>
                 <Wifi className="w-4 h-4" />
@@ -156,10 +175,11 @@ export const ThreadForumView = () => {
         <nav className="flex space-x-8 border-b border-gray-200">
           <button
             onClick={() => handleTabChange("messages")}
-            className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === "messages"
+            className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+              activeTab === "messages"
                 ? "border-primary text-primary"
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
+            }`}
           >
             <div className="flex items-center space-x-2">
               <MessageSquare className="w-4 h-4" />
@@ -172,10 +192,11 @@ export const ThreadForumView = () => {
 
           <button
             onClick={() => handleTabChange("threads")}
-            className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === "threads"
+            className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+              activeTab === "threads"
                 ? "border-primary text-primary"
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
+            }`}
           >
             <div className="flex items-center space-x-2">
               <Hash className="w-4 h-4" />
@@ -196,7 +217,12 @@ export const ThreadForumView = () => {
               onChange={handleSearch}
               autoFocus
             />
-            <button className="text-gray-600" tabIndex={-1} type="button" disabled>
+            <button
+              className="text-gray-600"
+              tabIndex={-1}
+              type="button"
+              disabled
+            >
               <FaSearch />
             </button>
           </div>
@@ -204,9 +230,11 @@ export const ThreadForumView = () => {
             <button
               onClick={handleToggleUserThreads}
               className={`flex items-center gap-2 px-3 py-2 rounded-full border font-medium text-sm transition-colors
-                ${showOnlyUserThreads
-                  ? "bg-primary text-white border-primary"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"}`}
+                ${
+                  showOnlyUserThreads
+                    ? "bg-primary text-white border-primary"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                }`}
               title={
                 showOnlyUserThreads
                   ? "Mostrar todos los hilos"
@@ -254,8 +282,9 @@ export const ThreadForumView = () => {
                     Hilos de Discusión
                   </h3>
                   <p className="text-sm text-blue-700 mt-1">
-                    Los hilos son conversaciones organizadas sobre temas específicos.
-                    Crea un hilo para iniciar una discusión profunda sobre un tema particular.
+                    Los hilos son conversaciones organizadas sobre temas
+                    específicos. Crea un hilo para iniciar una discusión
+                    profunda sobre un tema particular.
                   </p>
                 </div>
               </div>
@@ -284,7 +313,6 @@ export const ThreadForumView = () => {
   );
 };
 
-
 // import React, { useState, useContext, useCallback, useRef, useEffect } from "react";
 // import { FaPlus, FaSearch } from "react-icons/fa";
 // import { MessageSquare, Hash, Wifi, WifiOff, User } from "lucide-react";
@@ -581,9 +609,6 @@ export const ThreadForumView = () => {
 //   );
 // };
 
-
-
-
 // import React, { useState, useContext, useCallback, useRef, useEffect } from "react";
 // import { FaPlus, FaSearch } from "react-icons/fa";
 // import { MessageSquare, Hash, Wifi, WifiOff, User } from "lucide-react";
@@ -879,4 +904,3 @@ export const ThreadForumView = () => {
 //     </div>
 //   );
 // };
-

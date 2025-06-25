@@ -5,29 +5,28 @@ import { communityService } from '../services/communityService';
 
 /**
  * Hook personalizado para manejar la lógica de grupos en Germogli.
+ * Combina lógica de formularios, edición, mensajes y acciones con integración de contexto.
  */
 export const useGroup = (groupId = null) => {
+  // Estado global desde el contexto
   const { groups, loading, error, fetchGroups, fetchGroupsByUser, fetchGroupById } = useContext(GroupContext);
   const navigate = useNavigate();
 
-  // Estados para manejar grupo individual (por ejemplo, vista de detalle/edición)
+  // Formulario y mensajes
+  const [formData, setFormData] = useState({ name: '', description: '' });
+  const [formErrors, setFormErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState('');
+
+  // Grupo individual (detalle/edición)
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [groupLoading, setGroupLoading] = useState(false);
   const [groupError, setGroupError] = useState(null);
 
-  // ...otros estados y lógica...
+  // Estados de edición
+  const [isEditing, setIsEditing] = useState(false);
+  const [updateLoading, setUpdateLoading] = useState(false);
 
-  // Función para unirse a un grupo (debe ser retornada)
-  const handleJoinGroup = useCallback(async (targetGroupId) => {
-    try {
-      await communityService.joinGroup(targetGroupId);
-      // Puedes agregar feedback aquí si lo deseas
-    } catch (error) {
-      // Maneja el error como prefieras (retornar, lanzar, etc.)
-      throw error;
-    }
-  }, []);
-
+  // Carga un grupo individual por ID si es necesario
   useEffect(() => {
     if (!groupId) {
       setSelectedGroup(null);
@@ -40,8 +39,11 @@ export const useGroup = (groupId = null) => {
       setGroupLoading(true);
       setGroupError(null);
       try {
-        const response = await fetchGroupById(groupId);
-        setSelectedGroup(response || null);
+        // Usa el método del contexto si existe, si no el del servicio
+        const response = fetchGroupById
+          ? await fetchGroupById(groupId)
+          : await communityService.getGroupById(groupId);
+        setSelectedGroup(response?.data || response || null);
       } catch (err) {
         setSelectedGroup(null);
         setGroupError(err?.message || 'No se pudo obtener el grupo');
@@ -51,32 +53,311 @@ export const useGroup = (groupId = null) => {
     };
 
     loadSpecificGroup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupId, fetchGroupById]);
 
-  // ...otros métodos y lógica...
+  /**
+   * Validación del formulario para crear/editar grupo.
+   */
+  const validateForm = useCallback((data) => {
+    const errors = {};
+    if (!data.name.trim()) {
+      errors.name = 'El nombre del grupo es obligatorio';
+    }
+    if (data.name.trim().length < 3) {
+      errors.name = 'El nombre del grupo debe tener al menos 3 caracteres';
+    }
+    if (data.name.trim().length > 100) {
+      errors.name = 'El nombre del grupo no puede exceder 100 caracteres';
+    }
+    if (data.description.length > 500) {
+      errors.description = 'La descripción no puede exceder 500 caracteres';
+    }
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  }, []);
 
+  /**
+   * Manejo del cambio de inputs en el formulario.
+   */
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (formErrors[name]) {
+      setFormErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  }, [formErrors]);
+
+  /**
+   * Limpia el formulario y los estados asociados.
+   */
+  const resetForm = useCallback(() => {
+    setFormData({ name: '', description: '' });
+    setFormErrors({});
+    setSuccessMessage('');
+    setIsEditing(false);
+  }, []);
+
+  /**
+   * Carga los datos de un grupo en el formulario para editar.
+   */
+  const loadGroupForEdit = useCallback((group) => {
+    if (!group) return;
+    setFormData({
+      name: group.name || '',
+      description: group.description || ''
+    });
+    setFormErrors({});
+    setSuccessMessage('');
+    setIsEditing(true);
+  }, []);
+
+  /**
+   * Cancela el modo edición y limpia los estados de formulario.
+   */
+  const cancelEdit = useCallback(() => {
+    setIsEditing(false);
+    setFormData({ name: '', description: '' });
+    setFormErrors({});
+    setSuccessMessage('');
+  }, []);
+
+  /**
+   * Crear un grupo nuevo.
+   * Valida, llama al servicio y muestra feedback.
+   */
+  const handleCreateGroup = useCallback(
+    async (data) => {
+      setSuccessMessage('');
+      if (!validateForm(data)) return null;
+      try {
+        const response = await communityService.createGroup(data);
+        setSuccessMessage('Grupo creado correctamente');
+        resetForm();
+        return response;
+      } catch (error) {
+        const errorMessage =
+          error?.response?.data?.message ||
+          error?.message ||
+          'Error al crear el grupo';
+        setFormErrors({ general: errorMessage });
+        return null;
+      }
+    },
+    [validateForm, resetForm]
+  );
+
+  /**
+   * Actualiza los datos de un grupo existente.
+   */
+  const handleUpdateGroup = useCallback(async (groupId, data) => {
+    if (!groupId) {
+      setFormErrors({ general: 'ID de grupo no válido' });
+      return null;
+    }
+    setSuccessMessage('');
+    setUpdateLoading(true);
+
+    if (!validateForm(data)) {
+      setUpdateLoading(false);
+      return null;
+    }
+    try {
+      const response = await communityService.updateGroup(groupId, data);
+      if (response?.data) {
+        setSelectedGroup(response.data);
+      }
+      setSuccessMessage('Grupo actualizado correctamente');
+      setIsEditing(false);
+      return response;
+    } catch (error) {
+      const errorMessage = error?.response?.data?.message ||
+        error?.message ||
+        'Error al actualizar el grupo';
+      setFormErrors({ general: errorMessage });
+      return null;
+    } finally {
+      setUpdateLoading(false);
+    }
+  }, [validateForm]);
+
+  /**
+   * Unirse a un grupo.
+   */
+  const handleJoinGroup = useCallback(async (targetGroupId) => {
+    setSuccessMessage('');
+    setFormErrors({});
+    try {
+      await communityService.joinGroup(targetGroupId);
+      setSuccessMessage('¡Te has unido al grupo correctamente!');
+    } catch (error) {
+      setFormErrors({
+        general: error?.response?.data?.message ||
+          error?.message ||
+          'No se pudo unir al grupo'
+      });
+    }
+  }, []);
+
+  /**
+   * Elimina un grupo.
+   */
+  const handleDeleteGroup = useCallback(async (targetGroupId) => {
+    setSuccessMessage('');
+    setFormErrors({});
+    try {
+      await communityService.deleteGroup(targetGroupId);
+      setSuccessMessage('Grupo eliminado correctamente');
+      if (selectedGroup && selectedGroup.id === parseInt(targetGroupId)) {
+        setTimeout(() => {
+          navigate('/groups');
+        }, 1500);
+      }
+      return true;
+    } catch (error) {
+      const errorMessage = error?.response?.data?.message ||
+        error?.message ||
+        'No se pudo eliminar el grupo';
+      setFormErrors({ general: errorMessage });
+      return false;
+    }
+  }, [selectedGroup, navigate]);
+
+  /**
+   * Limpia los mensajes de éxito y error.
+   */
+  const clearMessages = useCallback(() => {
+    setSuccessMessage('');
+    setFormErrors({});
+  }, []);
+
+  // Retorna todo el API del hook
   return {
     // Estado global de grupos
     groups,
     loading,
     error,
 
-    // Funciones globales
-    fetchGroups,
-    fetchGroupsByUser,
-    fetchGroupById,
+    // Formulario
+    formData,
+    setFormData,
+    formErrors,
+    successMessage,
 
-    // Estado y funciones de grupo individual
+    // Grupo individual
     selectedGroup,
     groupLoading,
     groupError,
 
-    // NUEVO: función para unirse a grupo
-    handleJoinGroup,
+    // Edición
+    isEditing,
+    updateLoading,
 
-    // ...otros métodos que ya retornas...
+    // Funciones de formulario
+    handleChange,
+    resetForm,
+    clearMessages,
+
+    // CRUD
+    handleCreateGroup,
+    handleUpdateGroup,
+    handleJoinGroup,
+    handleDeleteGroup,
+
+    // Edición
+    loadGroupForEdit,
+    cancelEdit,
+
+    // Fetchers globales
+    fetchGroups,
+    fetchGroupsByUser,
+    fetchGroupById,
   };
 };
+
+
+
+
+
+// import { useContext, useState, useEffect, useCallback } from 'react';
+// import { useNavigate } from 'react-router-dom';
+// import { GroupContext } from '../context/GroupContext';
+// import { communityService } from '../services/communityService';
+
+// /**
+//  * Hook personalizado para manejar la lógica de grupos en Germogli.
+//  */
+// export const useGroup = (groupId = null) => {
+//   const { groups, loading, error, fetchGroups, fetchGroupsByUser, fetchGroupById } = useContext(GroupContext);
+//   const navigate = useNavigate();
+
+//   // Estados para manejar grupo individual (por ejemplo, vista de detalle/edición)
+//   const [selectedGroup, setSelectedGroup] = useState(null);
+//   const [groupLoading, setGroupLoading] = useState(false);
+//   const [groupError, setGroupError] = useState(null);
+
+//   // ...otros estados y lógica...
+
+//   // Función para unirse a un grupo (debe ser retornada)
+//   const handleJoinGroup = useCallback(async (targetGroupId) => {
+//     try {
+//       await communityService.joinGroup(targetGroupId);
+//       // Puedes agregar feedback aquí si lo deseas
+//     } catch (error) {
+//       // Maneja el error como prefieras (retornar, lanzar, etc.)
+//       throw error;
+//     }
+//   }, []);
+
+//   useEffect(() => {
+//     if (!groupId) {
+//       setSelectedGroup(null);
+//       setGroupError(null);
+//       setGroupLoading(false);
+//       return;
+//     }
+
+//     const loadSpecificGroup = async () => {
+//       setGroupLoading(true);
+//       setGroupError(null);
+//       try {
+//         const response = await fetchGroupById(groupId);
+//         setSelectedGroup(response || null);
+//       } catch (err) {
+//         setSelectedGroup(null);
+//         setGroupError(err?.message || 'No se pudo obtener el grupo');
+//       } finally {
+//         setGroupLoading(false);
+//       }
+//     };
+
+//     loadSpecificGroup();
+//   }, [groupId, fetchGroupById]);
+
+//   // ...otros métodos y lógica...
+
+//   return {
+//     // Estado global de grupos
+//     groups,
+//     loading,
+//     error,
+
+//     // Funciones globales
+//     fetchGroups,
+//     fetchGroupsByUser,
+//     fetchGroupById,
+
+//     // Estado y funciones de grupo individual
+//     selectedGroup,
+//     groupLoading,
+//     groupError,
+
+//     // NUEVO: función para unirse a grupo
+//     handleJoinGroup,
+
+//     // ...otros métodos que ya retornas...
+//   };
+// };
 
 
 // import { useContext, useState, useEffect, useCallback } from 'react';
