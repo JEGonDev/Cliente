@@ -37,19 +37,17 @@ export function AdminCommunityView() {
       <div className="w-full max-w-4xl bg-white min-h-screen border rounded-md shadow-md p-0 mx-auto pb-20 md:pb-0">
         {/* Header */}
         
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-6 gap-2 md:gap-0">
-          <div className="w-full md:w-auto flex justify-center md:justify-start">
-            <h1 className="text-xl md:text-2xl font-bold mb-2 md:mb-0 text-center md:text-left">
-              Administración de la comunidad
-            </h1>
-          </div>
-          <div className="flex justify-center md:justify-end gap-2 flex-wrap w-full md:w-auto">
-            <PlantGrow className="w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-0" />
-            <PlantGrow className="w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-0" />
-            <PlantGrow className="w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-0" />
-            <PlantGrow className="w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-0" />
-          </div>
+        <div className="flex flex-col items-center justify-center lg:flex-row lg:items-start lg:justify-between mb-6 gap-2 lg:gap-0">
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight font-poppins mb-2 lg:mb-0 text-center lg:text-left bg-gradient-to-r from-[#23582a] via-[#059669] to-[#10b981] bg-clip-text text-transparent">
+          Administración de la Comunidad
+        </h1>
+        <div className="flex justify-center gap-2 flex-wrap mt-2 lg:mt-0">
+          <PlantGrow className="w-12 h-12 lg:w-16 lg:h-16" />
+          <PlantGrow className="w-12 h-12 lg:w-16 lg:h-16" />
+          <PlantGrow className="w-12 h-12 lg:w-16 lg:h-16" />
+          <PlantGrow className="w-12 h-12 lg:w-16 lg:h-16" />
         </div>
+      </div>
 
         {/* Buscador */}
         <div className="flex justify-center py-3 sm:py-4">
