@@ -63,7 +63,7 @@ export const MobileNavigation = ({ isOpen, onClose, logoProps }) => {
               ) : (
                 <>
                   <ItemsNavbar
-                    link="/community"
+                    link="/comunity"
                     style="block text-white hover:text-gray-300 py-2 font-inter"
                     text="Comunidad"
                     onClick={onClose}

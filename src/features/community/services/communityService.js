@@ -43,7 +43,7 @@ export const communityService = {
   getPostsByUser: async (userId = null) => {
     try {
       // Si no se proporciona userId, el backend usará el usuario autenticado
-      const url = userId ? `/posts/by-user?userId=${userId}` : '/posts/by-user';
+      const url = userId ? `/posts/by-user?userId=${userId}` : "/posts/by-user";
       const response = await API.get(url);
 
       // Procesamos la respuesta según el formato del API
@@ -55,7 +55,7 @@ export const communityService = {
 
       return [];
     } catch (error) {
-      handleError(error, 'obtener publicaciones del usuario');
+      handleError(error, "obtener publicaciones del usuario");
       return [];
     }
   },
@@ -73,8 +73,8 @@ export const communityService = {
       // Configurar headers correctamente según el tipo de datos
       const config = isFormData
         ? {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
+            headers: { "Content-Type": "multipart/form-data" },
+          }
         : undefined;
 
       // Realizar la petición con la configuración adecuada
@@ -109,23 +109,42 @@ export const communityService = {
       }
 
       // Filtrar solo los posts que no pertenecen a hilos ni grupos
-      return posts.filter(post => !post.threadId && !post.groupId);
+      return posts.filter((post) => !post.threadId && !post.groupId);
     } catch (error) {
       handleError(error, "obtener todos los posts");
       return []; // Retornar array vacío en caso de error
     }
   },
 
+  getAllPostsRaw: async () => {
+    try {
+      const response = await API.get(ENDPOINTS.POSTS);
+
+      // Manejar diferentes formatos de respuesta
+      if (response.data && response.data.data) {
+        return response.data.data;
+      } else if (Array.isArray(response.data)) {
+        return response.data;
+      }
+
+      return [];
+    } catch (error) {
+      handleError(error, "obtener todos los posts sin filtrar");
+      return [];
+    }
+  },
+
   updatePost: async (id, updateData) => {
     try {
       // Siempre crear un FormData
-      const formData = updateData instanceof FormData ? updateData : new FormData();
+      const formData =
+        updateData instanceof FormData ? updateData : new FormData();
 
       // Si updateData no es FormData, agregar sus campos al FormData
       if (!(updateData instanceof FormData)) {
-        Object.keys(updateData).forEach(key => {
-          if (key === 'file' && updateData[key]) {
-            formData.append('file', updateData[key]);
+        Object.keys(updateData).forEach((key) => {
+          if (key === "file" && updateData[key]) {
+            formData.append("file", updateData[key]);
           } else {
             formData.append(key, updateData[key]);
           }
@@ -134,10 +153,14 @@ export const communityService = {
 
       // Configurar headers para multipart/form-data
       const config = {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { "Content-Type": "multipart/form-data" },
       };
 
-      const response = await API.put(ENDPOINTS.POST_BY_ID(id), formData, config);
+      const response = await API.put(
+        ENDPOINTS.POST_BY_ID(id),
+        formData,
+        config
+      );
       return response.data;
     } catch (error) {
       handleError(error, `actualizar post con ID ${id}`);
@@ -193,7 +216,12 @@ export const communityService = {
    * @returns {Promise<Object>} Objeto { message, data: Array<Message> }
    */
   getMessagesByThreadId: async (threadId, limit = 50, offset = 0) => {
-    return await communityService.getMessageHistory('thread', threadId, limit, offset);
+    return await communityService.getMessageHistory(
+      "thread",
+      threadId,
+      limit,
+      offset
+    );
   },
 
   // ==================== Peticiones para grupos ====================
@@ -242,7 +270,7 @@ export const communityService = {
     try {
       console.log(`🗑️ Intentando eliminar grupo ${id}...`);
       const response = await API.delete(`/groups/${id}`);
-      console.log('✅ Grupo eliminado exitosamente:', response.data);
+      console.log("✅ Grupo eliminado exitosamente:", response.data);
       return response.data;
     } catch (error) {
       console.error(`❌ Error eliminando grupo ${id}:`, error);
@@ -254,24 +282,31 @@ export const communityService = {
 
         switch (status) {
           case 401:
-            throw new Error('No tienes autorización para eliminar grupos. Inicia sesión nuevamente.');
+            throw new Error(
+              "No tienes autorización para eliminar grupos. Inicia sesión nuevamente."
+            );
           case 403:
-            throw new Error('No tienes permisos de administrador para eliminar grupos.');
+            throw new Error(
+              "No tienes permisos de administrador para eliminar grupos."
+            );
           case 404:
-            throw new Error('El grupo no existe o ya fue eliminado.');
+            throw new Error("El grupo no existe o ya fue eliminado.");
           case 409:
-            throw new Error('No se puede eliminar el grupo porque tiene hilos o miembros asociados.');
+            throw new Error(
+              "No se puede eliminar el grupo porque tiene hilos o miembros asociados."
+            );
           default:
             throw new Error(data?.message || `Error del servidor (${status})`);
         }
       } else if (error.request) {
-        throw new Error('No se pudo conectar con el servidor. Verifica tu conexión.');
+        throw new Error(
+          "No se pudo conectar con el servidor. Verifica tu conexión."
+        );
       } else {
-        throw new Error('Error inesperado al eliminar el grupo.');
+        throw new Error("Error inesperado al eliminar el grupo.");
       }
     }
   },
-
 
   // deleteGroup: async (id) => {
   //   try {
@@ -297,11 +332,47 @@ export const communityService = {
     }
   },
 
+  /**
+   * Hace que el usuario autenticado abandone un grupo.
+   * @param {number|string} groupId - ID del grupo que se quiere abandonar.
+   * @returns {Promise<any>} - Respuesta del servidor.
+   */
+  leaveGroup: async (groupId) => {
+    try {
+      const response = await API.post(`/groups/${groupId}/leave`);
+      return response.data;
+    } catch (error) {
+      handleError(error, `abandonar el grupo con ID ${groupId}`);
+      throw error;
+    }
+  },
+
+  getGroupsByUser: async (userId = null) => {
+    try {
+      // Si no se proporciona userId, el backend usará el usuario autenticado
+      const url = userId
+        ? `/groups/by-user?userId=${userId}`
+        : "/groups/by-user";
+      const response = await API.get(url);
+
+      // Procesar diferentes formatos de respuesta
+      if (response.data && response.data.data) {
+        return response.data.data;
+      } else if (Array.isArray(response.data)) {
+        return response.data;
+      }
+
+      return [];
+    } catch (error) {
+      handleError(error, "obtener grupos del usuario");
+      return [];
+    }
+  },
+
   // ==================== Peticiones para hilos ====================
   getThreadsByGroup: async (groupId) => {
     try {
       const response = await API.get(`/threads/by-group/${groupId}`);
-
 
       return response.data;
     } catch (error) {
@@ -403,13 +474,13 @@ export const communityService = {
    */
   createReaction: async (reactionData) => {
     try {
-      const response = await API.post('/reactions', {
+      const response = await API.post("/reactions", {
         ...reactionData,
-        reactionType: 'heart' // Siempre usamos el tipo 'heart'
+        reactionType: "heart", // Siempre usamos el tipo 'heart'
       });
       return response.data;
     } catch (error) {
-      handleError(error, 'crear reacción');
+      handleError(error, "crear reacción");
       throw error;
     }
   },
@@ -435,7 +506,7 @@ export const communityService = {
    */
   getAllReactions: async () => {
     try {
-      const response = await API.get('/reactions');
+      const response = await API.get("/reactions");
 
       // Procesamos la respuesta según el formato del API
       if (response.data && response.data.data) {
@@ -446,7 +517,7 @@ export const communityService = {
 
       return [];
     } catch (error) {
-      handleError(error, 'obtener todas las reacciones');
+      handleError(error, "obtener todas las reacciones");
       return [];
     }
   },
@@ -519,16 +590,21 @@ export const communityService = {
   /**
    * Obtiene historial de mensajes por contexto
    */
-  getMessageHistory: async (contextType, contextId = null, limit = 50, offset = 0) => {
+  getMessageHistory: async (
+    contextType,
+    contextId = null,
+    limit = 50,
+    offset = 0
+  ) => {
     try {
       const params = new URLSearchParams({
         contextType,
         limit: limit.toString(),
-        offset: offset.toString()
+        offset: offset.toString(),
       });
 
       if (contextId !== null) {
-        params.append('contextId', contextId.toString());
+        params.append("contextId", contextId.toString());
       }
 
       const response = await API.get(`${ENDPOINTS.MESSAGES}/history?${params}`);
@@ -544,7 +620,12 @@ export const communityService = {
    */
   getMessagesByPost: async (postId, limit = 50, offset = 0) => {
     try {
-      return await communityService.getMessageHistory('post', postId, limit, offset);
+      return await communityService.getMessageHistory(
+        "post",
+        postId,
+        limit,
+        offset
+      );
     } catch (error) {
       handleError(error, `obtener mensajes de la publicación ${postId}`);
       throw error;
@@ -556,7 +637,12 @@ export const communityService = {
    */
   getMessagesByGroup: async (groupId, limit = 50, offset = 0) => {
     try {
-      return await communityService.getMessageHistory('group', groupId, limit, offset);
+      return await communityService.getMessageHistory(
+        "group",
+        groupId,
+        limit,
+        offset
+      );
     } catch (error) {
       handleError(error, `obtener mensajes del grupo ${groupId}`);
       throw error;
@@ -568,9 +654,14 @@ export const communityService = {
    */
   getForumMessages: async (limit = 50, offset = 0) => {
     try {
-      return await communityService.getMessageHistory('forum', null, limit, offset);
+      return await communityService.getMessageHistory(
+        "forum",
+        null,
+        limit,
+        offset
+      );
     } catch (error) {
-      handleError(error, 'obtener mensajes del foro');
+      handleError(error, "obtener mensajes del foro");
       throw error;
     }
   },

@@ -181,6 +181,33 @@ export const usePost = () => {
   }
 };
 
+/**
+ *  obtener publicaciones sin filtro
+ */
+const fetchAllPostsRaw = async () => {
+  setLoading(true);
+  setError(null);
+
+  try {
+    const response = await communityService.getAllPostsRaw();
+    console.log('Publicaciones SIN FILTRO obtenidas:', response);
+
+    if (Array.isArray(response)) {
+      setPosts(response);
+    } else if (response && Array.isArray(response.data)) {
+      setPosts(response.data);
+    } else {
+      setPosts([]);
+    }
+  } catch (err) {
+    console.error('Error al obtener publicaciones sin filtro:', err);
+    setError('Error al cargar las publicaciones sin filtro. Inténtalo de nuevo.');
+    setPosts([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
   /**
    * Obtiene publicaciones por ID de grupo
    * @param {number} groupId - ID del grupo
@@ -411,6 +438,7 @@ export const usePost = () => {
 
     // Operaciones CRUD
     fetchAllPosts,
+    fetchAllPostsRaw,
     fetchPostsByGroupId,
     handleCreatePost,
     handleUpdatePost,

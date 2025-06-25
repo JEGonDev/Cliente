@@ -1,25 +1,36 @@
-import React, { useState, useContext, useCallback, useRef } from "react";
+import React, { useState, useContext, useCallback, useRef, useEffect } from "react";
 import { FaPlus, FaSearch } from "react-icons/fa";
-import { MessageSquare, Users, Hash, Wifi, WifiOff } from "lucide-react";
+import { MessageSquare, Hash, Wifi, WifiOff, User } from "lucide-react";
 import { ThreadFormModal } from "../ui/ThreadFormModal";
 import { AuthContext } from "../../authentication/context/AuthContext";
 import { ThreadList } from "../ui/ThreadList";
 import { MessageList } from "../ui/MessageList";
 import { MessageForm } from "../ui/MessageForm";
 import { useForumMessages } from "../hooks/useForumMessages";
+import { useThread } from "../hooks/useThread";
 import { websocketService } from "../../../common/services/webSocketService";
 
 export const ThreadForumView = () => {
   const { user } = useContext(AuthContext);
   const reloadThreadsRef = useRef(null);
 
-  // Estados para la UI
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [activeTab, setActiveTab] = useState("messages"); // "messages" o "threads"
+  const [activeTab, setActiveTab] = useState("messages");
   const [wsConnected, setWsConnected] = useState(false);
+  const [showOnlyUserThreads, setShowOnlyUserThreads] = useState(false);
+  const [selectedThreadId, setSelectedThreadId] = useState(null);
 
-  // Hook para manejar mensajes del foro
+  const {
+    threads,
+    loading: threadsLoading,
+    error: threadsError,
+    fetchForumThreads,
+    fetchThreadsByUser,
+  } = useThread();
+
+  const [displayThreads, setDisplayThreads] = useState([]);
+
   const {
     messages,
     loading: messagesLoading,
@@ -31,59 +42,90 @@ export const ThreadForumView = () => {
     clearError
   } = useForumMessages();
 
-  // Callbacks optimizados
-  const handleCloseModal = useCallback(() => setShowModal(false), []);
-
-  // Handler que se ejecuta tras crear un hilo
-  const handleThreadCreated = useCallback(() => {
-    setShowModal(false);
-    // Llama a la función de recarga si existe
-    if (reloadThreadsRef.current) {
-      reloadThreadsRef.current();
-    }
+  useEffect(() => {
+    fetchForumThreads();
+    // eslint-disable-next-line
   }, []);
 
-  // Handler para enviar mensaje
-  const handleSendMessage = useCallback(async (content) => {
-    const result = await sendForumMessage(content);
-    if (result) {
-      // Mensaje enviado exitosamente
-      console.log('Mensaje enviado:', result);
+  const handleThreadCreated = useCallback(async () => {
+    setShowModal(false);
+    if (showOnlyUserThreads && user) {
+      await fetchThreadsByUser(user.id);
+    } else {
+      await fetchForumThreads();
     }
-  }, [sendForumMessage]);
+  }, [showOnlyUserThreads, user, fetchForumThreads, fetchThreadsByUser]);
 
-  // Handler para eliminar mensaje
-  const handleDeleteMessage = useCallback(async (messageId) => {
-    return await deleteForumMessage(messageId);
-  }, [deleteForumMessage]);
+  useEffect(() => {
+    let filtered = threads;
 
-  // Cambiar entre pestañas
+    if (showOnlyUserThreads && user) {
+      filtered = filtered.filter(thread =>
+        (thread.userId || thread.user_id) === user.id
+      );
+    }
+
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      filtered = filtered.filter(
+        thread =>
+          (thread.title && thread.title.toLowerCase().includes(q)) ||
+          (thread.content && thread.content.toLowerCase().includes(q))
+      );
+    }
+
+    setDisplayThreads(filtered);
+  }, [threads, search, showOnlyUserThreads, user]);
+
+  const handleToggleUserThreads = async () => {
+    if (!user) return;
+    if (showOnlyUserThreads) {
+      await fetchForumThreads();
+    } else {
+      await fetchThreadsByUser(user.id);
+    }
+    setShowOnlyUserThreads(!showOnlyUserThreads);
+    setSelectedThreadId(null); // Limpiar selección al cambiar filtro
+  };
+
+  const handleSearch = (e) => {
+    setSearch(e.target.value);
+  };
+
   const handleTabChange = (tab) => {
     setActiveTab(tab);
+    setSelectedThreadId(null); // Limpiar selección al cambiar tab
     if (messagesError) {
       clearError();
     }
   };
 
-  // Monitorear estado de conexión WebSocket
-  React.useEffect(() => {
+  useEffect(() => {
     const checkConnection = () => {
       setWsConnected(websocketService.isConnected());
     };
 
-    // Verificar estado inicial
     checkConnection();
-
-    // Verificar cada 5 segundos
     const interval = setInterval(checkConnection, 5000);
-
     return () => clearInterval(interval);
   }, []);
+
+  const handleSendMessage = useCallback(async (content) => {
+    const result = await sendForumMessage(content);
+    if (result) {
+      // Mensaje enviado exitosamente
+      // ...
+    }
+  }, [sendForumMessage]);
+
+  const handleDeleteMessage = useCallback(async (messageId) => {
+    return await deleteForumMessage(messageId);
+  }, [deleteForumMessage]);
 
   return (
     <div className="w-full px-0 sm:px-4 my-8">
       {/* Header */}
-      <div className="flex items-center justify-between border-b pb-2 mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-2 mb-6 gap-2">
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold">Foro de Comunidad</h1>
           {/* Indicador de conexión WebSocket */}
@@ -101,7 +143,6 @@ export const ThreadForumView = () => {
             )}
           </div>
         </div>
-
         {/* Botón para crear hilo */}
         <button
           className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded font-semibold hover:bg-green-700 transition-colors"
@@ -110,7 +151,6 @@ export const ThreadForumView = () => {
           <FaPlus /> Crear hilo
         </button>
       </div>
-
       {/* Navegación por pestañas */}
       <div className="mb-6">
         <nav className="flex space-x-8 border-b border-gray-200">
@@ -144,32 +184,46 @@ export const ThreadForumView = () => {
           </button>
         </nav>
       </div>
-
-      {/* Barra de búsqueda (solo para hilos por ahora) */}
+      {/* Barra de búsqueda y filtro de usuario (solo para hilos) */}
       {activeTab === "threads" && (
         <div className="flex flex-col sm:flex-row items-center gap-4 mb-8">
-          <div className="flex-grow flex items-center gap-2">
+          <div className="flex-grow flex items-center gap-2 w-full">
             <input
               type="text"
               className="border rounded-full px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              placeholder="Buscar hilos..."
+              placeholder="Buscar hilos por título o contenido..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              disabled
+              onChange={handleSearch}
+              autoFocus
             />
             <button className="text-gray-600" tabIndex={-1} type="button" disabled>
               <FaSearch />
             </button>
           </div>
+          {user && (
+            <button
+              onClick={handleToggleUserThreads}
+              className={`flex items-center gap-2 px-3 py-2 rounded-full border font-medium text-sm transition-colors
+                ${showOnlyUserThreads
+                  ? "bg-primary text-white border-primary"
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"}`}
+              title={
+                showOnlyUserThreads
+                  ? "Mostrar todos los hilos"
+                  : "Mostrar solo mis hilos"
+              }
+            >
+              <User className="w-4 h-4" />
+              {showOnlyUserThreads ? "Mis hilos" : "Filtrar mis hilos"}
+            </button>
+          )}
         </div>
       )}
-
       {/* Contenido de las pestañas */}
       <div className="space-y-6">
         {activeTab === "messages" ? (
           // Sección de Mensajes
           <div className="flex flex-col h-[calc(100vh-300px)] max-h-[600px]">
-            {/* Lista de mensajes - Área scrolleable */}
             <div className="flex-1 overflow-y-auto mb-4">
               <MessageList
                 messages={messages}
@@ -180,8 +234,6 @@ export const ThreadForumView = () => {
                 autoScroll={true}
               />
             </div>
-
-            {/* Formulario para enviar mensaje - Fijo en la parte inferior */}
             <div className="flex-shrink-0 border-t border-gray-200 pt-4">
               <MessageForm
                 onSendMessage={handleSendMessage}
@@ -208,24 +260,623 @@ export const ThreadForumView = () => {
                 </div>
               </div>
             </div>
-
-            {/* Lista de hilos */}
             <ThreadList
-              groupId={null}
-              refetchRef={reloadThreadsRef}
+              threads={displayThreads}
+              loading={threadsLoading}
+              error={threadsError}
+              showCards={true}
+              selectedThreadId={selectedThreadId}
+              onSelectThread={setSelectedThreadId}
+              modalOpen={showModal}
             />
           </div>
         )}
       </div>
-
       {/* Modal para crear hilo */}
       {showModal && (
         <ThreadFormModal
           groupId={null}
-          onClose={handleCloseModal}
+          onClose={() => setShowModal(false)}
           onThreadCreated={handleThreadCreated}
         />
       )}
     </div>
   );
 };
+
+
+// import React, { useState, useContext, useCallback, useRef, useEffect } from "react";
+// import { FaPlus, FaSearch } from "react-icons/fa";
+// import { MessageSquare, Hash, Wifi, WifiOff, User } from "lucide-react";
+// import { ThreadFormModal } from "../ui/ThreadFormModal";
+// import { AuthContext } from "../../authentication/context/AuthContext";
+// import { ThreadList } from "../ui/ThreadList";
+// import { MessageList } from "../ui/MessageList";
+// import { MessageForm } from "../ui/MessageForm";
+// import { useForumMessages } from "../hooks/useForumMessages";
+// import { useThread } from "../hooks/useThread";
+// import { websocketService } from "../../../common/services/webSocketService";
+
+// export const ThreadForumView = () => {
+//   const { user } = useContext(AuthContext);
+//   const reloadThreadsRef = useRef(null);
+
+//   // Estados para la UI y datos
+//   const [search, setSearch] = useState("");
+//   const [showModal, setShowModal] = useState(false);
+//   const [activeTab, setActiveTab] = useState("messages"); // "messages" o "threads"
+//   const [wsConnected, setWsConnected] = useState(false);
+//   const [showOnlyUserThreads, setShowOnlyUserThreads] = useState(false);
+
+//   // Estados para hilos y filtrado
+//   const {
+//     threads,
+//     loading: threadsLoading,
+//     error: threadsError,
+//     fetchForumThreads,
+//     fetchThreadsByUser,
+//   } = useThread();
+
+//   const [displayThreads, setDisplayThreads] = useState([]);
+
+//   // Hook para manejar mensajes del foro
+//   const {
+//     messages,
+//     loading: messagesLoading,
+//     error: messagesError,
+//     sendingMessage,
+//     sendForumMessage,
+//     deleteForumMessage,
+//     refreshMessages,
+//     clearError
+//   } = useForumMessages();
+
+//   // Fetch threads al montar (solo foro general)
+//   useEffect(() => {
+//     fetchForumThreads();
+//     // eslint-disable-next-line
+//   }, []);
+
+//   // Refrescar lista si se crea un hilo
+//   const handleThreadCreated = useCallback(async () => {
+//     setShowModal(false);
+//     if (showOnlyUserThreads && user) {
+//       await fetchThreadsByUser(user.id);
+//     } else {
+//       await fetchForumThreads();
+//     }
+//   }, [showOnlyUserThreads, user, fetchForumThreads, fetchThreadsByUser]);
+
+//   // Actualizar displayThreads cuando threads, search o filtro cambian
+//   useEffect(() => {
+//     let filtered = threads;
+
+//     // Filtro por usuario
+//     if (showOnlyUserThreads && user) {
+//       filtered = filtered.filter(thread =>
+//         (thread.userId || thread.user_id) === user.id
+//       );
+//     }
+
+//     // Búsqueda por título o contenido
+//     if (search.trim()) {
+//       const q = search.trim().toLowerCase();
+//       filtered = filtered.filter(
+//         thread =>
+//           (thread.title && thread.title.toLowerCase().includes(q)) ||
+//           (thread.content && thread.content.toLowerCase().includes(q))
+//       );
+//     }
+
+//     setDisplayThreads(filtered);
+//   }, [threads, search, showOnlyUserThreads, user]);
+
+//   // Handler para cambio de filtro de usuario
+//   const handleToggleUserThreads = async () => {
+//     if (!user) return;
+//     if (showOnlyUserThreads) {
+//       await fetchForumThreads();
+//     } else {
+//       await fetchThreadsByUser(user.id);
+//     }
+//     setShowOnlyUserThreads(!showOnlyUserThreads);
+//   };
+
+//   // Handler para buscar
+//   const handleSearch = (e) => {
+//     setSearch(e.target.value);
+//   };
+
+//   // Handler para tabs
+//   const handleTabChange = (tab) => {
+//     setActiveTab(tab);
+//     if (messagesError) {
+//       clearError();
+//     }
+//   };
+
+//   // WebSocket status
+//   useEffect(() => {
+//     const checkConnection = () => {
+//       setWsConnected(websocketService.isConnected());
+//     };
+
+//     checkConnection();
+//     const interval = setInterval(checkConnection, 5000);
+//     return () => clearInterval(interval);
+//   }, []);
+
+//   // Mensajes
+//   const handleSendMessage = useCallback(async (content) => {
+//     const result = await sendForumMessage(content);
+//     if (result) {
+//       // Mensaje enviado exitosamente
+//       // ...
+//     }
+//   }, [sendForumMessage]);
+
+//   const handleDeleteMessage = useCallback(async (messageId) => {
+//     return await deleteForumMessage(messageId);
+//   }, [deleteForumMessage]);
+
+//   return (
+//     <div className="w-full px-0 sm:px-4 my-8">
+//       {/* Header */}
+//       <div className="flex items-center justify-between border-b pb-2 mb-6">
+//         <div className="flex items-center gap-4">
+//           <h1 className="text-2xl font-bold">Foro de Comunidad</h1>
+//           {/* Indicador de conexión WebSocket */}
+//           <div className={`flex items-center gap-1 text-sm ${wsConnected ? 'text-green-600' : 'text-red-600'}`}>
+//             {wsConnected ? (
+//               <>
+//                 <Wifi className="w-4 h-4" />
+//                 <span className="hidden sm:inline">Conectado</span>
+//               </>
+//             ) : (
+//               <>
+//                 <WifiOff className="w-4 h-4" />
+//                 <span className="hidden sm:inline">Desconectado</span>
+//               </>
+//             )}
+//           </div>
+//         </div>
+//         {/* Botón para crear hilo */}
+//         <button
+//           className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded font-semibold hover:bg-green-700 transition-colors"
+//           onClick={() => setShowModal(true)}
+//         >
+//           <FaPlus /> Crear hilo
+//         </button>
+//       </div>
+//       {/* Navegación por pestañas */}
+//       <div className="mb-6">
+//         <nav className="flex space-x-8 border-b border-gray-200">
+//           <button
+//             onClick={() => handleTabChange("messages")}
+//             className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === "messages"
+//                 ? "border-primary text-primary"
+//                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+//               }`}
+//           >
+//             <div className="flex items-center space-x-2">
+//               <MessageSquare className="w-4 h-4" />
+//               <span>Mensajes</span>
+//               <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
+//                 {messages.length}
+//               </span>
+//             </div>
+//           </button>
+
+//           <button
+//             onClick={() => handleTabChange("threads")}
+//             className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === "threads"
+//                 ? "border-primary text-primary"
+//                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+//               }`}
+//           >
+//             <div className="flex items-center space-x-2">
+//               <Hash className="w-4 h-4" />
+//               <span>Hilos de Discusión</span>
+//             </div>
+//           </button>
+//         </nav>
+//       </div>
+//       {/* Barra de búsqueda y filtro de usuario (solo para hilos) */}
+//       {activeTab === "threads" && (
+//         <div className="flex flex-col sm:flex-row items-center gap-4 mb-8">
+//           <div className="flex-grow flex items-center gap-2">
+//             <input
+//               type="text"
+//               className="border rounded-full px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+//               placeholder="Buscar hilos por título o contenido..."
+//               value={search}
+//               onChange={handleSearch}
+//               autoFocus
+//             />
+//             <button className="text-gray-600" tabIndex={-1} type="button" disabled>
+//               <FaSearch />
+//             </button>
+//           </div>
+//           {user && (
+//             <button
+//               onClick={handleToggleUserThreads}
+//               className={`flex items-center gap-2 px-3 py-2 rounded-full border font-medium text-sm transition-colors
+//                 ${showOnlyUserThreads
+//                   ? "bg-primary text-white border-primary"
+//                   : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"}`}
+//               title={
+//                 showOnlyUserThreads
+//                   ? "Mostrar todos los hilos"
+//                   : "Mostrar solo mis hilos"
+//               }
+//             >
+//               <User className="w-4 h-4" />
+//               {showOnlyUserThreads ? "Mis hilos" : "Filtrar mis hilos"}
+//             </button>
+//           )}
+//         </div>
+//       )}
+//       {/* Contenido de las pestañas */}
+//       <div className="space-y-6">
+//         {activeTab === "messages" ? (
+//           // Sección de Mensajes
+//           <div className="flex flex-col h-[calc(100vh-300px)] max-h-[600px]">
+//             {/* Lista de mensajes - Área scrolleable */}
+//             <div className="flex-1 overflow-y-auto mb-4">
+//               <MessageList
+//                 messages={messages}
+//                 isLoading={messagesLoading}
+//                 error={messagesError}
+//                 onDeleteMessage={handleDeleteMessage}
+//                 onRefresh={refreshMessages}
+//                 autoScroll={true}
+//               />
+//             </div>
+//             {/* Formulario para enviar mensaje - Fijo en la parte inferior */}
+//             <div className="flex-shrink-0 border-t border-gray-200 pt-4">
+//               <MessageForm
+//                 onSendMessage={handleSendMessage}
+//                 isLoading={sendingMessage}
+//                 placeholder="Comparte algo con la comunidad..."
+//                 disabled={!wsConnected}
+//               />
+//             </div>
+//           </div>
+//         ) : (
+//           // Sección de Hilos
+//           <div>
+//             <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+//               <div className="flex items-start space-x-3">
+//                 <Hash className="w-5 h-5 text-blue-600 mt-0.5" />
+//                 <div>
+//                   <h3 className="text-sm font-medium text-blue-900">
+//                     Hilos de Discusión
+//                   </h3>
+//                   <p className="text-sm text-blue-700 mt-1">
+//                     Los hilos son conversaciones organizadas sobre temas específicos.
+//                     Crea un hilo para iniciar una discusión profunda sobre un tema particular.
+//                   </p>
+//                 </div>
+//               </div>
+//             </div>
+//             {/* Lista de hilos filtrada */}
+//             <ThreadList
+//               threads={displayThreads}
+//               loading={threadsLoading}
+//               error={threadsError}
+//               showCards={true}
+//             />
+//           </div>
+//         )}
+//       </div>
+//       {/* Modal para crear hilo */}
+//       {showModal && (
+//         <ThreadFormModal
+//           groupId={null}
+//           onClose={() => setShowModal(false)}
+//           onThreadCreated={handleThreadCreated}
+//         />
+//       )}
+//     </div>
+//   );
+// };
+
+
+
+
+// import React, { useState, useContext, useCallback, useRef, useEffect } from "react";
+// import { FaPlus, FaSearch } from "react-icons/fa";
+// import { MessageSquare, Hash, Wifi, WifiOff, User } from "lucide-react";
+// import { ThreadFormModal } from "../ui/ThreadFormModal";
+// import { AuthContext } from "../../authentication/context/AuthContext";
+// import { ThreadList } from "../ui/ThreadList";
+// import { MessageList } from "../ui/MessageList";
+// import { MessageForm } from "../ui/MessageForm";
+// import { useForumMessages } from "../hooks/useForumMessages";
+// import { useThread } from "../hooks/useThread";
+// import { websocketService } from "../../../common/services/webSocketService";
+
+// export const ThreadForumView = () => {
+//   const { user } = useContext(AuthContext);
+//   const reloadThreadsRef = useRef(null);
+
+//   // Estados para la UI y datos
+//   const [search, setSearch] = useState("");
+//   const [showModal, setShowModal] = useState(false);
+//   const [activeTab, setActiveTab] = useState("messages"); // "messages" o "threads"
+//   const [wsConnected, setWsConnected] = useState(false);
+//   const [showOnlyUserThreads, setShowOnlyUserThreads] = useState(false);
+
+//   // Estados para hilos y filtrado
+//   const {
+//     threads,
+//     loading: threadsLoading,
+//     error: threadsError,
+//     fetchForumThreads,
+//     fetchThreadsByUser,
+//   } = useThread();
+
+//   const [displayThreads, setDisplayThreads] = useState([]);
+
+//   // Hook para manejar mensajes del foro
+//   const {
+//     messages,
+//     loading: messagesLoading,
+//     error: messagesError,
+//     sendingMessage,
+//     sendForumMessage,
+//     deleteForumMessage,
+//     refreshMessages,
+//     clearError
+//   } = useForumMessages();
+
+//   // Fetch threads al montar (solo foro general)
+//   useEffect(() => {
+//     fetchForumThreads();
+//     // eslint-disable-next-line
+//   }, []);
+
+//   // Refrescar lista si se crea un hilo
+//   const handleThreadCreated = useCallback(async () => {
+//     setShowModal(false);
+//     if (showOnlyUserThreads && user) {
+//       await fetchThreadsByUser(user.id);
+//     } else {
+//       await fetchForumThreads();
+//     }
+//   }, [showOnlyUserThreads, user, fetchForumThreads, fetchThreadsByUser]);
+
+//   // Actualizar displayThreads cuando threads, search o filtro cambian
+//   useEffect(() => {
+//     let filtered = threads;
+
+//     // Filtro por usuario
+//     if (showOnlyUserThreads && user) {
+//       filtered = filtered.filter(thread =>
+//         (thread.userId || thread.user_id) === user.id
+//       );
+//     }
+
+//     // Búsqueda por título o contenido
+//     if (search.trim()) {
+//       const q = search.trim().toLowerCase();
+//       filtered = filtered.filter(
+//         thread =>
+//           (thread.title && thread.title.toLowerCase().includes(q)) ||
+//           (thread.content && thread.content.toLowerCase().includes(q))
+//       );
+//     }
+
+//     setDisplayThreads(filtered);
+//   }, [threads, search, showOnlyUserThreads, user]);
+
+//   // Handler para cambio de filtro de usuario
+//   const handleToggleUserThreads = async () => {
+//     if (!user) return;
+//     if (showOnlyUserThreads) {
+//       await fetchForumThreads();
+//     } else {
+//       await fetchThreadsByUser(user.id);
+//     }
+//     setShowOnlyUserThreads(!showOnlyUserThreads);
+//   };
+
+//   // Handler para buscar
+//   const handleSearch = (e) => {
+//     setSearch(e.target.value);
+//   };
+
+//   // Handler para tabs
+//   const handleTabChange = (tab) => {
+//     setActiveTab(tab);
+//     if (messagesError) {
+//       clearError();
+//     }
+//   };
+
+//   // WebSocket status
+//   useEffect(() => {
+//     const checkConnection = () => {
+//       setWsConnected(websocketService.isConnected());
+//     };
+
+//     checkConnection();
+//     const interval = setInterval(checkConnection, 5000);
+//     return () => clearInterval(interval);
+//   }, []);
+
+//   // Mensajes
+//   const handleSendMessage = useCallback(async (content) => {
+//     const result = await sendForumMessage(content);
+//     if (result) {
+//       // Mensaje enviado exitosamente
+//       // ...
+//     }
+//   }, [sendForumMessage]);
+
+//   const handleDeleteMessage = useCallback(async (messageId) => {
+//     return await deleteForumMessage(messageId);
+//   }, [deleteForumMessage]);
+
+//   return (
+//     <div className="w-full px-0 sm:px-4 my-8">
+//       {/* Header */}
+//       <div className="flex items-center justify-between border-b pb-2 mb-6">
+//         <div className="flex items-center gap-4">
+//           <h1 className="text-2xl font-bold">Foro de Comunidad</h1>
+//           {/* Indicador de conexión WebSocket */}
+//           <div className={`flex items-center gap-1 text-sm ${wsConnected ? 'text-green-600' : 'text-red-600'}`}>
+//             {wsConnected ? (
+//               <>
+//                 <Wifi className="w-4 h-4" />
+//                 <span className="hidden sm:inline">Conectado</span>
+//               </>
+//             ) : (
+//               <>
+//                 <WifiOff className="w-4 h-4" />
+//                 <span className="hidden sm:inline">Desconectado</span>
+//               </>
+//             )}
+//           </div>
+//         </div>
+//         {/* Botón para crear hilo */}
+//         <button
+//           className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded font-semibold hover:bg-green-700 transition-colors"
+//           onClick={() => setShowModal(true)}
+//         >
+//           <FaPlus /> Crear hilo
+//         </button>
+//       </div>
+//       {/* Navegación por pestañas */}
+//       <div className="mb-6">
+//         <nav className="flex space-x-8 border-b border-gray-200">
+//           <button
+//             onClick={() => handleTabChange("messages")}
+//             className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === "messages"
+//                 ? "border-primary text-primary"
+//                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+//               }`}
+//           >
+//             <div className="flex items-center space-x-2">
+//               <MessageSquare className="w-4 h-4" />
+//               <span>Mensajes</span>
+//               <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
+//                 {messages.length}
+//               </span>
+//             </div>
+//           </button>
+
+//           <button
+//             onClick={() => handleTabChange("threads")}
+//             className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === "threads"
+//                 ? "border-primary text-primary"
+//                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+//               }`}
+//           >
+//             <div className="flex items-center space-x-2">
+//               <Hash className="w-4 h-4" />
+//               <span>Hilos de Discusión</span>
+//             </div>
+//           </button>
+//         </nav>
+//       </div>
+//       {/* Barra de búsqueda y filtro de usuario (solo para hilos) */}
+//       {activeTab === "threads" && (
+//         <div className="flex flex-col sm:flex-row items-center gap-4 mb-8">
+//           <div className="flex-grow flex items-center gap-2">
+//             <input
+//               type="text"
+//               className="border rounded-full px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+//               placeholder="Buscar hilos por título o contenido..."
+//               value={search}
+//               onChange={handleSearch}
+//               autoFocus
+//             />
+//             <button className="text-gray-600" tabIndex={-1} type="button" disabled>
+//               <FaSearch />
+//             </button>
+//           </div>
+//           {user && (
+//             <button
+//               onClick={handleToggleUserThreads}
+//               className={`flex items-center gap-2 px-3 py-2 rounded-full border font-medium text-sm transition-colors
+//                 ${showOnlyUserThreads
+//                   ? "bg-primary text-white border-primary"
+//                   : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"}`}
+//               title={
+//                 showOnlyUserThreads
+//                   ? "Mostrar todos los hilos"
+//                   : "Mostrar solo mis hilos"
+//               }
+//             >
+//               <User className="w-4 h-4" />
+//               {showOnlyUserThreads ? "Mis hilos" : "Filtrar mis hilos"}
+//             </button>
+//           )}
+//         </div>
+//       )}
+//       {/* Contenido de las pestañas */}
+//       <div className="space-y-6">
+//         {activeTab === "messages" ? (
+//           // Sección de Mensajes
+//           <div className="flex flex-col h-[calc(100vh-300px)] max-h-[600px]">
+//             {/* Lista de mensajes - Área scrolleable */}
+//             <div className="flex-1 overflow-y-auto mb-4">
+//               <MessageList
+//                 messages={messages}
+//                 isLoading={messagesLoading}
+//                 error={messagesError}
+//                 onDeleteMessage={handleDeleteMessage}
+//                 onRefresh={refreshMessages}
+//                 autoScroll={true}
+//               />
+//             </div>
+//             {/* Formulario para enviar mensaje - Fijo en la parte inferior */}
+//             <div className="flex-shrink-0 border-t border-gray-200 pt-4">
+//               <MessageForm
+//                 onSendMessage={handleSendMessage}
+//                 isLoading={sendingMessage}
+//                 placeholder="Comparte algo con la comunidad..."
+//                 disabled={!wsConnected}
+//               />
+//             </div>
+//           </div>
+//         ) : (
+//           // Sección de Hilos
+//           <div>
+//             <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+//               <div className="flex items-start space-x-3">
+//                 <Hash className="w-5 h-5 text-blue-600 mt-0.5" />
+//                 <div>
+//                   <h3 className="text-sm font-medium text-blue-900">
+//                     Hilos de Discusión
+//                   </h3>
+//                   <p className="text-sm text-blue-700 mt-1">
+//                     Los hilos son conversaciones organizadas sobre temas específicos.
+//                     Crea un hilo para iniciar una discusión profunda sobre un tema particular.
+//                   </p>
+//                 </div>
+//               </div>
+//             </div>
+//             {/* Lista de hilos filtrada */}
+//             <ThreadList
+//               threads={displayThreads}
+//               loading={threadsLoading}
+//               error={threadsError}
+//               showCards={true}
+//             />
+//           </div>
+//         )}
+//       </div>
+//       {/* Modal para crear hilo */}
+//       {showModal && (
+//         <ThreadFormModal
+//           groupId={null}
+//           onClose={() => setShowModal(false)}
+//           onThreadCreated={handleThreadCreated}
+//         />
+//       )}
+//     </div>
+//   );
+// };
+

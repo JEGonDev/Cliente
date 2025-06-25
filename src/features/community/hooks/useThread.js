@@ -68,12 +68,12 @@ export const useThread = () => {
   };
 
   const setFormDataFromThread = (thread) => {
-  setFormData({
-    title: thread.title || "",
-    content: thread.content || "",
-    groupId: thread.groupId || null,
-  });
-};
+    setFormData({
+      title: thread.title || "",
+      content: thread.content || "",
+      groupId: thread.groupId || null,
+    });
+  };
 
   // Función para resetear el formulario
   const resetForm = () => {
@@ -112,28 +112,28 @@ export const useThread = () => {
    * @param {number} id - ID del hilo
    */
   const fetchThreadById = async (id) => {
-  setLoading(true);
-  setError(null);
-  
-  try {
-    const response = await communityService.getThreadById(id);
-    
-    // ✅ Logs para debugging
-    console.log('Respuesta completa del servicio:', response);
-    console.log('Datos del hilo:', response.data);
-    
-    // ✅ Guardar el hilo individual en el array threads (para compatibilidad con el render)
-    setThreads([response.data]);
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching thread ${id}:`, error);
-    setError(error.message || `Error al cargar el hilo ${id}`);
-    setThreads([]);
-    return null;
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await communityService.getThreadById(id);
+
+      // ✅ Logs para debugging
+      console.log("Respuesta completa del servicio:", response);
+      console.log("Datos del hilo:", response.data);
+
+      // ✅ Guardar el hilo individual en el array threads (para compatibilidad con el render)
+      setThreads([response.data]);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching thread ${id}:`, error);
+      setError(error.message || `Error al cargar el hilo ${id}`);
+      setThreads([]);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
   // // Función para obtener UN hilo por id
   // const fetchThreadById = async (threadId) => {
   //   setLoading(true);
@@ -154,39 +154,41 @@ export const useThread = () => {
   //   }
   // };
 
-// Función para obtener hilos de un grupo específico
-const fetchThreadsByGroup = async (groupId) => {
+  // Función para obtener hilos de un grupo específico
+  const fetchThreadsByGroup = async (groupId) => {
+    setLoading(true);
+    setError(null);
 
-  setLoading(true);
-  setError(null);
+    try {
+      const response = await communityService.getThreadsByGroup(groupId);
+      setThreads(response.data || []);
+    } catch (err) {
+      setError(err.message || "Error al obtener los hilos del grupo");
+      setThreads([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  try {
-    const response = await communityService.getThreadsByGroup(groupId);
-    setThreads(response.data || []);
-  } catch (err) {
-    setError(err.message || "Error al obtener los hilos del grupo");
-    setThreads([]);
-  } finally {
-    setLoading(false);
-  }
-};
-
-  // Función para obtener todos los hilos
   const fetchAllThreads = async () => {
     setLoading(true);
     setError(null);
 
     try {
       const response = await communityService.getAllThreads();
+      console.log("Hilos SIN FILTRO obtenidos:", response);
 
-      if (response && response.data) {
+      if (Array.isArray(response)) {
+        setThreads(response);
+      } else if (response && Array.isArray(response.data)) {
         setThreads(response.data);
       } else {
         setThreads([]);
       }
     } catch (err) {
-      console.error("Error al obtener hilos:", err);
-      setError(err.message || "Error al obtener los hilos");
+      console.error("Error al obtener hilos sin filtro:", err);
+      setError("Error al cargar los hilos sin filtro. Inténtalo de nuevo.");
+      setThreads([]);
     } finally {
       setLoading(false);
     }

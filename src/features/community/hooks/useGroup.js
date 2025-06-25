@@ -5,34 +5,29 @@ import { communityService } from '../services/communityService';
 
 /**
  * Hook personalizado para manejar la lógica de grupos en Germogli.
- * Modular, sin lógica redundante ni estados locales de recarga.
- * Explica cada sección con comentarios claros para mantener la arquitectura limpia y desacoplada.
  */
 export const useGroup = (groupId = null) => {
-  // Trae el estado global de grupos y la función para refrescar desde el contexto
-  const { groups, loading, error, fetchGroups } = useContext(GroupContext);
-
-  // Navegación para redireccionar si es necesario (por ejemplo, tras borrar un grupo)
+  const { groups, loading, error, fetchGroups, fetchGroupsByUser, fetchGroupById } = useContext(GroupContext);
   const navigate = useNavigate();
-
-  // Estados locales para formularios de creación/edición de grupo
-  const [formData, setFormData] = useState({ name: '', description: '' });
-  const [formErrors, setFormErrors] = useState({});
-  const [successMessage, setSuccessMessage] = useState('');
 
   // Estados para manejar grupo individual (por ejemplo, vista de detalle/edición)
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [groupLoading, setGroupLoading] = useState(false);
   const [groupError, setGroupError] = useState(null);
 
-  // Estados para edición
-  const [isEditing, setIsEditing] = useState(false);
-  const [updateLoading, setUpdateLoading] = useState(false);
+  // ...otros estados y lógica...
 
-  /**
-   * Efecto para cargar un grupo específico por ID (detalle o edición).
-   * Si no hay groupId, limpia el seleccionado.
-   */
+  // Función para unirse a un grupo (debe ser retornada)
+  const handleJoinGroup = useCallback(async (targetGroupId) => {
+    try {
+      await communityService.joinGroup(targetGroupId);
+      // Puedes agregar feedback aquí si lo deseas
+    } catch (error) {
+      // Maneja el error como prefieras (retornar, lanzar, etc.)
+      throw error;
+    }
+  }, []);
+
   useEffect(() => {
     if (!groupId) {
       setSelectedGroup(null);
@@ -45,8 +40,8 @@ export const useGroup = (groupId = null) => {
       setGroupLoading(true);
       setGroupError(null);
       try {
-        const response = await communityService.getGroupById(groupId);
-        setSelectedGroup(response?.data || null);
+        const response = await fetchGroupById(groupId);
+        setSelectedGroup(response || null);
       } catch (err) {
         setSelectedGroup(null);
         setGroupError(err?.message || 'No se pudo obtener el grupo');
@@ -56,234 +51,406 @@ export const useGroup = (groupId = null) => {
     };
 
     loadSpecificGroup();
-  }, [groupId]);
+  }, [groupId, fetchGroupById]);
 
-  /**
-   * Validación del formulario para crear/editar grupo.
-   * Recibe los datos a validar y retorna true/false según validez.
-   * Deja los errores listos para mostrar en la UI.
-   */
-  const validateForm = useCallback((data) => {
-    const errors = {};
-    if (!data.name.trim()) {
-      errors.name = 'El nombre del grupo es obligatorio';
-    }
-    if (data.name.trim().length < 3) {
-      errors.name = 'El nombre del grupo debe tener al menos 3 caracteres';
-    }
-    if (data.name.trim().length > 100) {
-      errors.name = 'El nombre del grupo no puede exceder 100 caracteres';
-    }
-    if (data.description.length > 500) {
-      errors.description = 'La descripción no puede exceder 500 caracteres';
-    }
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  }, []);
+  // ...otros métodos y lógica...
 
-  /**
-   * Manejo del cambio de inputs en el formulario.
-   * Actualiza el estado local y limpia errores de ese input si existían.
-   */
-  const handleChange = useCallback((e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-
-    // Limpia solo el error del campo editado
-    if (formErrors[name]) {
-      setFormErrors(prev => ({ ...prev, [name]: '' }));
-    }
-  }, [formErrors]);
-
-  /**
-   * Limpia el formulario y los estados asociados.
-   */
-  const resetForm = useCallback(() => {
-    setFormData({ name: '', description: '' });
-    setFormErrors({});
-    setSuccessMessage('');
-    setIsEditing(false);
-  }, []);
-
-  /**
-   * Carga los datos de un grupo en el formulario para editar.
-   */
-  const loadGroupForEdit = useCallback((group) => {
-    if (!group) return;
-    setFormData({
-      name: group.name || '',
-      description: group.description || ''
-    });
-    setFormErrors({});
-    setSuccessMessage('');
-    setIsEditing(true);
-  }, []);
-
-  /**
-   * Cancela el modo edición y limpia los estados de formulario.
-   */
-  const cancelEdit = useCallback(() => {
-    setIsEditing(false);
-    setFormData({ name: '', description: '' });
-    setFormErrors({});
-    setSuccessMessage('');
-  }, []);
-
-  /**
-   * Crear un grupo nuevo.
-   * Valida, llama al servicio y muestra feedback.
-   * ¡IMPORTANTE! No refresca la lista aquí, eso lo hace el componente padre tras crearlo (para mantener modularidad).
-   */
-  const handleCreateGroup = useCallback(
-    async (data) => {
-      setSuccessMessage('');
-      if (!validateForm(data)) return null;
-      try {
-        const response = await communityService.createGroup(data);
-        setSuccessMessage('Grupo creado correctamente');
-        resetForm();
-        // No se refresca aquí, lo hace el padre llamando a fetchGroups
-        return response;
-      } catch (error) {
-        const errorMessage =
-          error?.response?.data?.message ||
-          error?.message ||
-          'Error al crear el grupo';
-        setFormErrors({ general: errorMessage });
-        return null;
-      }
-    },
-    [validateForm, resetForm]
-  );
-
-  /**
-   * Actualiza los datos de un grupo existente.
-   * Valida y llama al servicio. El componente padre debe refrescar la lista tras éxito.
-   */
-  const handleUpdateGroup = useCallback(async (groupId, data) => {
-    if (!groupId) {
-      setFormErrors({ general: 'ID de grupo no válido' });
-      return null;
-    }
-    setSuccessMessage('');
-    setUpdateLoading(true);
-
-    if (!validateForm(data)) {
-      setUpdateLoading(false);
-      return null;
-    }
-    try {
-      const response = await communityService.updateGroup(groupId, data);
-      if (response?.data) {
-        setSelectedGroup(response.data);
-      }
-      setSuccessMessage('Grupo actualizado correctamente');
-      setIsEditing(false);
-      return response;
-    } catch (error) {
-      const errorMessage = error?.response?.data?.message ||
-        error?.message ||
-        'Error al actualizar el grupo';
-      setFormErrors({ general: errorMessage });
-      return null;
-    } finally {
-      setUpdateLoading(false);
-    }
-  }, [validateForm]);
-
-  /**
-   * Unirse a un grupo.
-   */
-  const handleJoinGroup = useCallback(async (targetGroupId) => {
-    setSuccessMessage('');
-    setFormErrors({});
-    try {
-      await communityService.joinGroup(targetGroupId);
-      setSuccessMessage('¡Te has unido al grupo correctamente!');
-    } catch (error) {
-      setFormErrors({
-        general: error?.response?.data?.message ||
-          error?.message ||
-          'No se pudo unir al grupo'
-      });
-    }
-  }, []);
-
-  /**
-   * Elimina un grupo.
-   * El componente padre debe refrescar la lista tras éxito.
-   */
-  const handleDeleteGroup = useCallback(async (targetGroupId) => {
-    setSuccessMessage('');
-    setFormErrors({});
-    try {
-      await communityService.deleteGroup(targetGroupId);
-      setSuccessMessage('Grupo eliminado correctamente');
-      // Si el usuario está viendo el grupo eliminado, lo redirige al listado
-      if (selectedGroup && selectedGroup.id === parseInt(targetGroupId)) {
-        setTimeout(() => {
-          navigate('/groups');
-        }, 1500);
-      }
-      return true;
-    } catch (error) {
-      const errorMessage = error?.response?.data?.message ||
-        error?.message ||
-        'No se pudo eliminar el grupo';
-      setFormErrors({ general: errorMessage });
-      return false;
-    }
-  }, [selectedGroup, navigate]);
-
-  /**
-   * Limpia los mensajes de éxito y error.
-   */
-  const clearMessages = useCallback(() => {
-    setSuccessMessage('');
-    setFormErrors({});
-  }, []);
-
-  // Retorna todos los estados y funciones útiles para los componentes UI
-  // La función fetchGroups es la ÚNICA responsable de refrescar la lista global de grupos
   return {
     // Estado global de grupos
     groups,
     loading,
     error,
 
-    // Formulario
-    formData,
-    formErrors,
-    successMessage,
+    // Funciones globales
+    fetchGroups,
+    fetchGroupsByUser,
+    fetchGroupById,
 
-    // Grupo individual
+    // Estado y funciones de grupo individual
     selectedGroup,
     groupLoading,
     groupError,
 
-    // Edición
-    isEditing,
-    updateLoading,
-
-    // Funciones de formulario
-    handleChange,
-    resetForm,
-    clearMessages,
-
-    // CRUD
-    handleCreateGroup,
-    handleUpdateGroup,
+    // NUEVO: función para unirse a grupo
     handleJoinGroup,
-    handleDeleteGroup,
 
-    // Edición
-    loadGroupForEdit,
-    cancelEdit,
-
-    // Refresca la lista global de grupos (pedir SIEMPRE aquí tras crear/editar/eliminar)
-    fetchGroups,
+    // ...otros métodos que ya retornas...
   };
 };
+
+
+// import { useContext, useState, useEffect, useCallback } from 'react';
+// import { useNavigate } from 'react-router-dom';
+// import { GroupContext } from '../context/GroupContext';
+// import { communityService } from '../services/communityService';
+
+// /**
+//  * Hook personalizado para manejar la lógica de grupos en Germogli.
+//  */
+// export const useGroup = (groupId = null) => {
+//   // Trae el estado global de grupos y funciones del contexto
+//   const { groups, loading, error, fetchGroups, fetchGroupsByUser, fetchGroupById } = useContext(GroupContext);
+
+//   const navigate = useNavigate();
+
+//   // ... (el resto de tu código igual, estados, formularios, etc.) ...
+
+//   // Estados para manejar grupo individual (por ejemplo, vista de detalle/edición)
+//   const [selectedGroup, setSelectedGroup] = useState(null);
+//   const [groupLoading, setGroupLoading] = useState(false);
+//   const [groupError, setGroupError] = useState(null);
+
+//   // Cargar grupo individual al montar/cambiar groupId
+//   useEffect(() => {
+//     if (!groupId) {
+//       setSelectedGroup(null);
+//       setGroupError(null);
+//       setGroupLoading(false);
+//       return;
+//     }
+
+//     const loadSpecificGroup = async () => {
+//       setGroupLoading(true);
+//       setGroupError(null);
+//       try {
+//         // Usa fetchGroupById del contexto (puedes usar communityService directamente si prefieres)
+//         const response = await fetchGroupById(groupId);
+//         setSelectedGroup(response || null);
+//       } catch (err) {
+//         setSelectedGroup(null);
+//         setGroupError(err?.message || 'No se pudo obtener el grupo');
+//       } finally {
+//         setGroupLoading(false);
+//       }
+//     };
+
+//     loadSpecificGroup();
+//   }, [groupId, fetchGroupById]);
+
+//   // ... (el resto de tu código igual...)
+
+//   return {
+//     // Estado global de grupos
+//     groups,
+//     loading,
+//     error,
+
+//     // Funciones globales
+//     fetchGroups,
+//     fetchGroupsByUser,
+//     fetchGroupById, // <-- ¡Ya disponible!
+
+//     // Estado y funciones de grupo individual
+//     selectedGroup,
+//     groupLoading,
+//     groupError,
+//     // ...etc.
+//     // (el resto de tu hook como ya lo tienes)
+//   };
+// };
+
+
+// import { useContext, useState, useEffect, useCallback } from 'react';
+// import { useNavigate } from 'react-router-dom';
+// import { GroupContext } from '../context/GroupContext';
+// import { communityService } from '../services/communityService';
+
+// /**
+//  * Hook personalizado para manejar la lógica de grupos en Germogli.
+//  * Modular, sin lógica redundante ni estados locales de recarga.
+//  * Explica cada sección con comentarios claros para mantener la arquitectura limpia y desacoplada.
+//  */
+// export const useGroup = (groupId = null) => {
+//   // Trae el estado global de grupos y la función para refrescar desde el contexto
+//   const { groups, loading, error, fetchGroups } = useContext(GroupContext);
+
+//   // Navegación para redireccionar si es necesario (por ejemplo, tras borrar un grupo)
+//   const navigate = useNavigate();
+
+//   // Estados locales para formularios de creación/edición de grupo
+//   const [formData, setFormData] = useState({ name: '', description: '' });
+//   const [formErrors, setFormErrors] = useState({});
+//   const [successMessage, setSuccessMessage] = useState('');
+
+//   // Estados para manejar grupo individual (por ejemplo, vista de detalle/edición)
+//   const [selectedGroup, setSelectedGroup] = useState(null);
+//   const [groupLoading, setGroupLoading] = useState(false);
+//   const [groupError, setGroupError] = useState(null);
+
+//   // Estados para edición
+//   const [isEditing, setIsEditing] = useState(false);
+//   const [updateLoading, setUpdateLoading] = useState(false);
+
+//   /**
+//    * Efecto para cargar un grupo específico por ID (detalle o edición).
+//    * Si no hay groupId, limpia el seleccionado.
+//    */
+//   useEffect(() => {
+//     if (!groupId) {
+//       setSelectedGroup(null);
+//       setGroupError(null);
+//       setGroupLoading(false);
+//       return;
+//     }
+
+//     const loadSpecificGroup = async () => {
+//       setGroupLoading(true);
+//       setGroupError(null);
+//       try {
+//         const response = await communityService.getGroupById(groupId);
+//         setSelectedGroup(response?.data || null);
+//       } catch (err) {
+//         setSelectedGroup(null);
+//         setGroupError(err?.message || 'No se pudo obtener el grupo');
+//       } finally {
+//         setGroupLoading(false);
+//       }
+//     };
+
+//     loadSpecificGroup();
+//   }, [groupId]);
+
+//   /**
+//    * Validación del formulario para crear/editar grupo.
+//    * Recibe los datos a validar y retorna true/false según validez.
+//    * Deja los errores listos para mostrar en la UI.
+//    */
+//   const validateForm = useCallback((data) => {
+//     const errors = {};
+//     if (!data.name.trim()) {
+//       errors.name = 'El nombre del grupo es obligatorio';
+//     }
+//     if (data.name.trim().length < 3) {
+//       errors.name = 'El nombre del grupo debe tener al menos 3 caracteres';
+//     }
+//     if (data.name.trim().length > 100) {
+//       errors.name = 'El nombre del grupo no puede exceder 100 caracteres';
+//     }
+//     if (data.description.length > 500) {
+//       errors.description = 'La descripción no puede exceder 500 caracteres';
+//     }
+//     setFormErrors(errors);
+//     return Object.keys(errors).length === 0;
+//   }, []);
+
+//   /**
+//    * Manejo del cambio de inputs en el formulario.
+//    * Actualiza el estado local y limpia errores de ese input si existían.
+//    */
+//   const handleChange = useCallback((e) => {
+//     const { name, value } = e.target;
+//     setFormData(prev => ({ ...prev, [name]: value }));
+
+//     // Limpia solo el error del campo editado
+//     if (formErrors[name]) {
+//       setFormErrors(prev => ({ ...prev, [name]: '' }));
+//     }
+//   }, [formErrors]);
+
+//   /**
+//    * Limpia el formulario y los estados asociados.
+//    */
+//   const resetForm = useCallback(() => {
+//     setFormData({ name: '', description: '' });
+//     setFormErrors({});
+//     setSuccessMessage('');
+//     setIsEditing(false);
+//   }, []);
+
+//   /**
+//    * Carga los datos de un grupo en el formulario para editar.
+//    */
+//   const loadGroupForEdit = useCallback((group) => {
+//     if (!group) return;
+//     setFormData({
+//       name: group.name || '',
+//       description: group.description || ''
+//     });
+//     setFormErrors({});
+//     setSuccessMessage('');
+//     setIsEditing(true);
+//   }, []);
+
+//   /**
+//    * Cancela el modo edición y limpia los estados de formulario.
+//    */
+//   const cancelEdit = useCallback(() => {
+//     setIsEditing(false);
+//     setFormData({ name: '', description: '' });
+//     setFormErrors({});
+//     setSuccessMessage('');
+//   }, []);
+
+//   /**
+//    * Crear un grupo nuevo.
+//    * Valida, llama al servicio y muestra feedback.
+//    * ¡IMPORTANTE! No refresca la lista aquí, eso lo hace el componente padre tras crearlo (para mantener modularidad).
+//    */
+//   const handleCreateGroup = useCallback(
+//     async (data) => {
+//       setSuccessMessage('');
+//       if (!validateForm(data)) return null;
+//       try {
+//         const response = await communityService.createGroup(data);
+//         setSuccessMessage('Grupo creado correctamente');
+//         resetForm();
+//         // No se refresca aquí, lo hace el padre llamando a fetchGroups
+//         return response;
+//       } catch (error) {
+//         const errorMessage =
+//           error?.response?.data?.message ||
+//           error?.message ||
+//           'Error al crear el grupo';
+//         setFormErrors({ general: errorMessage });
+//         return null;
+//       }
+//     },
+//     [validateForm, resetForm]
+//   );
+
+//   /**
+//    * Actualiza los datos de un grupo existente.
+//    * Valida y llama al servicio. El componente padre debe refrescar la lista tras éxito.
+//    */
+//   const handleUpdateGroup = useCallback(async (groupId, data) => {
+//     if (!groupId) {
+//       setFormErrors({ general: 'ID de grupo no válido' });
+//       return null;
+//     }
+//     setSuccessMessage('');
+//     setUpdateLoading(true);
+
+//     if (!validateForm(data)) {
+//       setUpdateLoading(false);
+//       return null;
+//     }
+//     try {
+//       const response = await communityService.updateGroup(groupId, data);
+//       if (response?.data) {
+//         setSelectedGroup(response.data);
+//       }
+//       setSuccessMessage('Grupo actualizado correctamente');
+//       setIsEditing(false);
+//       return response;
+//     } catch (error) {
+//       const errorMessage = error?.response?.data?.message ||
+//         error?.message ||
+//         'Error al actualizar el grupo';
+//       setFormErrors({ general: errorMessage });
+//       return null;
+//     } finally {
+//       setUpdateLoading(false);
+//     }
+//   }, [validateForm]);
+
+//   /**
+//    * Unirse a un grupo.
+//    */
+//   const handleJoinGroup = useCallback(async (targetGroupId) => {
+//     setSuccessMessage('');
+//     setFormErrors({});
+//     try {
+//       await communityService.joinGroup(targetGroupId);
+//       setSuccessMessage('¡Te has unido al grupo correctamente!');
+//     } catch (error) {
+//       setFormErrors({
+//         general: error?.response?.data?.message ||
+//           error?.message ||
+//           'No se pudo unir al grupo'
+//       });
+//     }
+//   }, []);
+
+//    const fetchGroupsByUser = async (userId = null) => {
+//     try {
+//       const userGroups = await communityService.getGroupsByUser(userId);
+//       // Si tienes un estado global de groups, actualízalo:
+//       // setGroups(userGroups); // Descomenta si usas setGroups en tu contexto
+//       return userGroups;
+//     } catch (error) {
+//       // Maneja el error como prefieras
+//       return [];
+//     }
+//   };
+
+  
+
+//   /**
+//    * Elimina un grupo.
+//    * El componente padre debe refrescar la lista tras éxito.
+//    */
+//   const handleDeleteGroup = useCallback(async (targetGroupId) => {
+//     setSuccessMessage('');
+//     setFormErrors({});
+//     try {
+//       await communityService.deleteGroup(targetGroupId);
+//       setSuccessMessage('Grupo eliminado correctamente');
+//       // Si el usuario está viendo el grupo eliminado, lo redirige al listado
+//       if (selectedGroup && selectedGroup.id === parseInt(targetGroupId)) {
+//         setTimeout(() => {
+//           navigate('/groups');
+//         }, 1500);
+//       }
+//       return true;
+//     } catch (error) {
+//       const errorMessage = error?.response?.data?.message ||
+//         error?.message ||
+//         'No se pudo eliminar el grupo';
+//       setFormErrors({ general: errorMessage });
+//       return false;
+//     }
+//   }, [selectedGroup, navigate]);
+
+//   /**
+//    * Limpia los mensajes de éxito y error.
+//    */
+//   const clearMessages = useCallback(() => {
+//     setSuccessMessage('');
+//     setFormErrors({});
+//   }, []);
+
+//   // Retorna todos los estados y funciones útiles para los componentes UI
+//   // La función fetchGroups es la ÚNICA responsable de refrescar la lista global de grupos
+//   return {
+//     // Estado global de grupos
+//     groups,
+//     loading,
+//     error,
+
+//     // Formulario
+//     formData,
+//     formErrors,
+//     successMessage,
+
+//     // Grupo individual
+//     selectedGroup,
+//     groupLoading,
+//     groupError,
+
+//     // Edición
+//     isEditing,
+//     updateLoading,
+
+//     // Funciones de formulario
+//     handleChange,
+//     resetForm,
+//     clearMessages,
+
+//     // CRUD
+//     handleCreateGroup,
+//     handleUpdateGroup,
+//     handleJoinGroup,
+//     handleDeleteGroup,
+
+//     // Edición
+//     loadGroupForEdit,
+//     cancelEdit,
+
+//     // Refresca la lista global de grupos (pedir SIEMPRE aquí tras crear/editar/eliminar)
+//     fetchGroups,
+//     fetchGroupsByUser,
+//   };
+// };
 
 
 // import { useContext, useState, useEffect, useCallback } from 'react';

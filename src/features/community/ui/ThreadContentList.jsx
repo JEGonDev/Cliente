@@ -26,6 +26,8 @@ export const ThreadContentList = React.forwardRef(({
   const contentEndRef = useRef(null);
   const prevContentLengthRef = useRef(0);
 
+  console.log('ThreadId:', threadId);
+
   // Exponer métodos a través de la referencia
   React.useImperativeHandle(ref, () => ({
     updatePostsLocally: (newPost) => {
@@ -58,6 +60,7 @@ export const ThreadContentList = React.forwardRef(({
     }
   };
 
+console.log('ThreadId:', threadId);
   // Cargar posts del hilo
   useEffect(() => {
     if (threadId) {

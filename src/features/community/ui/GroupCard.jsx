@@ -5,7 +5,12 @@ export const GroupCard = ({ group }) => {
   const navigate = useNavigate();
 
   return (
-    <div className="border rounded-md shadow-md p-4 flex flex-col justify-between h-full">
+    <div
+      className="
+        border rounded-md shadow-md p-4 flex flex-col justify-between h-full
+        transition duration-300 transform hover:-translate-y-1 hover:shadow-lg cursor-pointer
+      "
+    >
       <div>
         <h3 className="text-lg font-semibold break-words">{group.name}</h3>
         {/* 
@@ -28,6 +33,38 @@ export const GroupCard = ({ group }) => {
     </div>
   );
 };
+
+
+// import React from "react";
+// import { useNavigate } from "react-router-dom";
+
+// export const GroupCard = ({ group }) => {
+//   const navigate = useNavigate();
+
+//   return (
+//     <div className="border rounded-md shadow-md p-4 flex flex-col justify-between h-full">
+//       <div>
+//         <h3 className="text-lg font-semibold break-words">{group.name}</h3>
+//         {/* 
+//           line-clamp-3: muestra solo 3 líneas antes de truncar con "..." 
+//           break-words: evita desbordes por palabras largas
+//           overflow-hidden: oculta cualquier desborde 
+//         */}
+//         <p className="text-sm text-gray-600 mt-2 line-clamp-3 break-words overflow-hidden">
+//           {group.description}
+//         </p>
+//       </div>
+//       <div className="flex justify-end mt-4">
+//         <button
+//           onClick={() => navigate(`/comunity/groups/${group.id}`)}
+//           className="text-secondary underline text-sm"
+//         >
+//           Ver detalles
+//         </button>
+//       </div>
+//     </div>
+//   );
+// };
 
 
 // import React from "react";

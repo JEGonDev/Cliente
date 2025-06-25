@@ -37,9 +37,7 @@ import { CropsPage } from "../features/crops/pages/CropsPage";
 import { RealTimeMonitoringPage } from "../features/crops/pages/RealTimeMonitoringPage";
 import { CreateCultivationPage } from "../features/crops/pages/CreateCultivationPage";
 
-// Importaciones de administracion
-import { AdminPage } from "../pages/AdminPage";
-import { AdminRegisterPage } from "../features/authentication/pages/AdminRegisterPage";
+
 
 export const RouterApp = () => { 
   return (
@@ -89,7 +87,7 @@ export const RouterApp = () => {
           <Route path="groups" element={<GroupListView />} />
           <Route path="groups/:groupId" element={<GroupDetailsView />} />
           <Route path="ThreadForum" element={<ThreadForumView />} />
-          <Route path="admin_comunity" element={<AdminCommunityView />} />
+          {/* <Route path="admin_comunity" element={<AdminCommunityView />} /> */}
           
           <Route path="thread/:threadId" element={<ThreadDetailView />} />
         </Route>
@@ -100,7 +98,7 @@ export const RouterApp = () => {
         <Route path="/profile/view/:userId" element={<ProfileView />} />
 
         {/* Rutas del modulo de administracion */}
-        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin" element={<AdminCommunityView />} />
         
         <Route path="/admin/register" element={<AdminRegisterForm />} />
       </Route>
