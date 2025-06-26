@@ -15,10 +15,10 @@ export const MonitoringLayout = ({
   activeSection = 'monitoreo'
 }) => {
   return (
-    <div className="flex-1 overflow-auto px-6">
+    <div className="flex-1 overflow-auto">
       {/* <Header /> */}
       
-      <div className="flex flex-1">
+      <div className="flex flex-1 ">
         {/* Barra lateral de navegación */}
         <MonitoringSidebar activeSection={activeSection} />
         
