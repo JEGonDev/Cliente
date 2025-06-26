@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useMonitoring } from '../hooks/useMonitoring';
-import { X, Plus, Trash2, Settings } from 'lucide-react';
+import { X, Trash2 } from 'lucide-react';
 
 /**
  * Modal completo para gestión de sensores de un cultivo
@@ -231,6 +231,11 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
     }
   };
 
+  // Antes del return principal, calcula los tipos ya asociados:
+  const sensorTypes = ['temperature', 'humidity', 'tds'];
+  const associatedTypes = cropSensors.map(s => s.sensorType);
+  const availableTypes = sensorTypes.filter(type => !associatedTypes.includes(type));
+
   if (!isOpen) return null;
 
   return (
@@ -289,7 +294,7 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
           </div>
         ) : (
           // Paso 2: Gestión de sensores (lo que ya tienes)
-          <>
+          <div>
             {/* Tabs */}
             <div className="flex border-b">
               <button
@@ -355,194 +360,191 @@ export const SensorManagementModal = ({ isOpen, onClose, onSensorChange, crop })
 
               {/* Crear Nuevo Sensor */}
               {activeTab === 'create' && !loading && !isLoading && (
-                <form onSubmit={handleCreateAndAssociate} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tipo de Sensor
-                    </label>
-                    <div className="space-y-2">
-                      <select
-                        value={newSensorData.sensorType}
-                        onChange={(e) => {
-                          const sensorType = e.target.value;
-                          let defaultThresholds = { minThreshold: '', maxThreshold: '' };
-
-                          // Set default thresholds based on sensor type
-                          switch (sensorType) {
-                            case 'temperature':
-                              defaultThresholds = { minThreshold: '18', maxThreshold: '26' };
-                              break;
-                            case 'humidity':
-                              defaultThresholds = { minThreshold: '60', maxThreshold: '80' };
-                              break;
-                            case 'tds':
-                              defaultThresholds = { minThreshold: '500', maxThreshold: '1500' };
-                              break;
-                          }
-
-                          setNewSensorData(prev => ({
-                            ...prev,
-                            sensorType,
-                            thresholds: defaultThresholds
-                          }));
-                        }}
-                        className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
-                        required
-                      >
-                        <option value="">Seleccionar tipo de sensor</option>
-                        <option value="temperature">Temperatura</option>
-                        <option value="humidity">Humedad</option>
-                        <option value="tds">Conductividad Eléctrica (EC)</option>
-                      </select>
-                      <p className="text-sm text-gray-500">
-                        Seleccione el tipo de sensor que desea crear
+                <>
+                  {availableTypes.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-green-700 font-semibold">
+                        Ya has vinculado todos los sensores del kit (Temperatura, Humedad y TDS).
                       </p>
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Unidad de Medida
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={(() => {
-                          switch (newSensorData.sensorType) {
-                            case 'temperature':
-                              return 'Grados centígrados (°C)';
-                            case 'humidity':
-                              return 'Porcentaje (%)';
-                            case 'tds':
-                              return 'Conductividad eléctrica (PPM)';
-                            default:
-                              return '';
-                          }
-                        })()}
-                        className="w-full p-2 border rounded bg-gray-50 focus:ring-0 focus:border-gray-300"
-                        readOnly
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Umbrales
-                    </label>
-                    <div className="grid grid-cols-2 gap-4">
+                  ) : (
+                    <form onSubmit={handleCreateAndAssociate} className="space-y-4">
                       <div>
-                        <label className="block text-sm text-gray-600 mb-1">
-                          Mínimo
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Tipo de Sensor
                         </label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            step={newSensorData.sensorType === 'tds' ? '0.1' : '1'}
-                            value={newSensorData.thresholds.minThreshold}
-                            onChange={(e) => setNewSensorData(prev => ({
-                              ...prev,
-                              thresholds: {
-                                ...prev.thresholds,
-                                minThreshold: e.target.value
+                        <div className="space-y-2">
+                          <select
+                            value={newSensorData.sensorType}
+                            onChange={e => {
+                              const sensorType = e.target.value;
+                              let defaultThresholds = { minThreshold: '', maxThreshold: '' };
+                              switch (sensorType) {
+                                case 'temperature':
+                                  defaultThresholds = { minThreshold: '18', maxThreshold: '26' };
+                                  break;
+                                case 'humidity':
+                                  defaultThresholds = { minThreshold: '60', maxThreshold: '80' };
+                                  break;
+                                case 'tds':
+                                  defaultThresholds = { minThreshold: '500', maxThreshold: '1500' };
+                                  break;
                               }
-                            }))}
+                              setNewSensorData(prev => ({
+                                ...prev,
+                                sensorType,
+                                thresholds: defaultThresholds
+                              }));
+                            }}
                             className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
                             required
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                            {(() => {
-                              switch (newSensorData.sensorType) {
-                                case 'temperature':
-                                  return '°C';
-                                case 'humidity':
-                                  return '%';
-                                case 'tds':
-                                  return 'PPM';
-                                default:
-                                  return '';
-                              }
-                            })()}
-                          </span>
-                        </div>
-                        {newSensorData.sensorType && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            {newSensorData.sensorType === 'temperature' && 'Rango válido: -10°C - 50°C | Recomendado: 18°C - 26°C'}
-                            {newSensorData.sensorType === 'humidity' && 'Rango válido: 0% - 100% | Recomendado: 60% - 80%'}
-                            {newSensorData.sensorType === 'tds' && 'Rango válido: 0 - 2000 PPM | Recomendado: 500 - 1500 PPM'}
+                          >
+                            <option value="">Seleccionar tipo de sensor</option>
+                            <option value="temperature" disabled={associatedTypes.includes('temperature')}>Temperatura</option>
+                            <option value="humidity" disabled={associatedTypes.includes('humidity')}>Humedad</option>
+                            <option value="tds" disabled={associatedTypes.includes('tds')}>Conductividad Eléctrica (EC)</option>
+                          </select>
+                          <p className="text-sm text-gray-500">
+                            Solo puedes vincular un sensor de cada tipo por kit.
                           </p>
-                        )}
+                        </div>
                       </div>
+
                       <div>
-                        <label className="block text-sm text-gray-600 mb-1">
-                          Máximo
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Unidad de Medida
                         </label>
                         <div className="relative">
                           <input
-                            type="number"
-                            step={newSensorData.sensorType === 'tds' ? '0.1' : '1'}
-                            value={newSensorData.thresholds.maxThreshold}
-                            onChange={(e) => setNewSensorData(prev => ({
-                              ...prev,
-                              thresholds: {
-                                ...prev.thresholds,
-                                maxThreshold: e.target.value
-                              }
-                            }))}
-                            className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
-                            required
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                            {(() => {
+                            type="text"
+                            value={(() => {
                               switch (newSensorData.sensorType) {
                                 case 'temperature':
-                                  return '°C';
+                                  return 'Grados centígrados (°C)';
                                 case 'humidity':
-                                  return '%';
+                                  return 'Porcentaje (%)';
                                 case 'tds':
-                                  return 'PPM';
+                                  return 'Conductividad eléctrica (PPM)';
                                 default:
                                   return '';
                               }
                             })()}
-                          </span>
+                            className="w-full p-2 border rounded bg-gray-50 focus:ring-0 focus:border-gray-300"
+                            readOnly
+                            required
+                          />
                         </div>
                       </div>
-                    </div>
-                  </div>
 
-                  <div>
-                    <button
-                      type="submit"
-                      className="w-full py-2 bg-primary text-white rounded hover:bg-green-700 transition-colors"
-                    >
-                      Crear y Asociar Sensor
-                    </button>
-                  </div>
-                </form>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Umbrales
+                        </label>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">
+                              Mínimo
+                            </label>
+                            <div className="relative">
+                              <input
+                                type="number"
+                                step={newSensorData.sensorType === 'tds' ? '0.1' : '1'}
+                                value={newSensorData.thresholds.minThreshold}
+                                onChange={(e) => setNewSensorData(prev => ({
+                                  ...prev,
+                                  thresholds: {
+                                    ...prev.thresholds,
+                                    minThreshold: e.target.value
+                                  }
+                                }))}
+                                className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
+                                required
+                              />
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                                {(() => {
+                                  switch (newSensorData.sensorType) {
+                                    case 'temperature':
+                                      return '°C';
+                                    case 'humidity':
+                                      return '%';
+                                    case 'tds':
+                                      return 'PPM';
+                                    default:
+                                      return '';
+                                  }
+                                })()}
+                              </span>
+                            </div>
+                            {newSensorData.sensorType && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                {newSensorData.sensorType === 'temperature' && 'Rango válido: -10°C - 50°C | Recomendado: 18°C - 26°C'}
+                                {newSensorData.sensorType === 'humidity' && 'Rango válido: 0% - 100% | Recomendado: 60% - 80%'}
+                                {newSensorData.sensorType === 'tds' && 'Rango válido: 0 - 2000 PPM | Recomendado: 500 - 1500 PPM'}
+                              </p>
+                            )}
+                          </div>
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">
+                              Máximo
+                            </label>
+                            <div className="relative">
+                              <input
+                                type="number"
+                                step={newSensorData.sensorType === 'tds' ? '0.1' : '1'}
+                                value={newSensorData.thresholds.maxThreshold}
+                                onChange={(e) => setNewSensorData(prev => ({
+                                  ...prev,
+                                  thresholds: {
+                                    ...prev.thresholds,
+                                    maxThreshold: e.target.value
+                                  }
+                                }))}
+                                className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary"
+                                required
+                              />
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                                {(() => {
+                                  switch (newSensorData.sensorType) {
+                                    case 'temperature':
+                                      return '°C';
+                                    case 'humidity':
+                                      return '%';
+                                    case 'tds':
+                                      return 'PPM';
+                                    default:
+                                      return '';
+                                  }
+                                })()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <button
+                          type="submit"
+                          className="w-full py-2 bg-primary text-white rounded hover:bg-green-700 transition-colors"
+                        >
+                          Crear y Asociar Sensor
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </>
               )}
             </div>
-          </>
+          </div>
         )}
 
-        {/* Footer */}
-        <div className="flex justify-end gap-4 p-6 border-t">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-gray-700 border rounded hover:bg-gray-50 transition-colors"
-          >
-            Cerrar
-          </button>
-        </div>
+        {/* Modal de Confirmación */}
+        <ConfirmationModal
+          isOpen={confirmationModal.isOpen}
+          onClose={() => setConfirmationModal({ isOpen: false, sensorId: null, sensorType: '' })}
+          onConfirm={() => handleRemoveSensor(confirmationModal.sensorId)}
+          sensorType={confirmationModal.sensorType}
+        />
       </div>
-
-      {/* Modal de Confirmación */}
-      <ConfirmationModal
-        isOpen={confirmationModal.isOpen}
-        onClose={() => setConfirmationModal({ isOpen: false, sensorId: null, sensorType: '' })}
-        onConfirm={() => handleRemoveSensor(confirmationModal.sensorId)}
-        sensorType={confirmationModal.sensorType}
-      />
     </div>
   );
 };
