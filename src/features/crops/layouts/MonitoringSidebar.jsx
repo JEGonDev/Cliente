@@ -135,7 +135,7 @@ export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
       {/* Header del sidebar */}
       <div className="p-4 bg-white border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Monitoreo</h2>
+          <h2 className="text-lg font-semibold text-gray-900 pt-8">Monitoreo</h2>
           {loading && (
             <div className="w-4 h-4 border-2 border-gray-300 border-t-primary rounded-full animate-spin"></div>
           )}
