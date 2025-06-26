@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect } from 'react';
 import { authService } from '../services/authService';
+import { Storage } from '../../../storage/Storage';
 
 // Creamos el contexto para la autenticación
 export const AuthContext = createContext({
@@ -19,11 +20,10 @@ export const AuthContext = createContext({
 
 // Proveedor de contexto que encapsula la lógica de autenticación
 export const AuthProvider = ({ children }) => {
-
   // Estado del usuario autenticado (inicializado como null)
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => Storage.get('user'));
   // Estado de autenticación (inicializado como false)
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!Storage.get('user'));
   // Estado de carga
   const [loading, setLoading] = useState(true);
   // Estado de error
@@ -32,19 +32,14 @@ export const AuthProvider = ({ children }) => {
   // Efecto para verificar la autenticación al iniciar la aplicación
   useEffect(() => {
     const checkAuthStatus = async () => {
-      try {
-        const isSessionValid = await refreshAuth();
-        if (!isSessionValid && !isAuthenticated) {
-          setUser(null);
-          setIsAuthenticated(false);
-        }
-      } catch (err) {
-        console.error("Error checking authentication status:", err);
-      } finally {
-        setLoading(false);
+      // Restaurar usuario desde localStorage si existe
+      const storedUser = Storage.get('user');
+      if (storedUser) {
+        setUser(storedUser);
+        setIsAuthenticated(true);
       }
+      setLoading(false);
     };
-
     checkAuthStatus();
   }, []);
 
@@ -119,16 +114,12 @@ export const AuthProvider = ({ children }) => {
     
     try {
       const response = await authService.login(credentials);
-      // Después del login exitoso, obtener los datos del usuario
       const userData = response;
-      console.log('Usuario autenticado:', userData);
-      
       setUser(userData);
       setIsAuthenticated(true);
-      
+      Storage.set('user', userData);
       return userData;
     } catch (err) {
-      console.error('Error en login:', err);
       setError(err);
       throw err;
     } finally {
@@ -142,15 +133,12 @@ export const AuthProvider = ({ children }) => {
     
     try {
       const response = await authService.register(userData);
-      // Extrae los datos del usuario de la respuesta
       const newUser = response;
-      
       setUser(newUser);
       setIsAuthenticated(true);
-      
+      Storage.set('user', newUser);
       return newUser;
     } catch (err) {
-      console.error('Error en registro:', err);
       setError(err);
       throw err;
     } finally {
@@ -179,17 +167,14 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       await authService.logout();
-      
-      // Limpiamos el estado local
       setUser(null);
       setIsAuthenticated(false);
+      Storage.remove('user');
     } catch (err) {
-      console.error('Error en logout:', err);
       setError(err);
-      
-      // Incluso con error, limpiamos el estado local
       setUser(null);
       setIsAuthenticated(false);
+      Storage.remove('user');
     } finally {
       setLoading(false);
     }
