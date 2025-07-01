@@ -145,7 +145,7 @@ export const AddSensorModal = ({ isOpen, onClose, onAddSensor }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div
         ref={modalRef}
-        className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 transform transition-all"
+        className="bg-white rounded-lg shadow-xl w-full max-w-md sm:max-w-sm p-6 transform transition-all"
       >
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
           Agregar Nuevo Sensor
