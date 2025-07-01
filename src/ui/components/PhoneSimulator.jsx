@@ -38,7 +38,7 @@ export const PhoneSimulator = ({ className = '' }) => {
         {/* Contenedor principal con barra lateral y contenido */}
         <div className="flex">
           {/* Barra lateral */}
-          <div className="w-16 bg-gray-100 font-medium p-2 text-[8px] sm:text-[10px] space-y-3 text-gray-400">
+          <div className="w-16 bg-gray-100 font-medium p-1 text-[8px] sm:text-[10px] space-y-3 text-gray-400">
             <p className="border-b border-gray-150 pb-1">Monitoreo</p>
 
             <div className="flex font-bold text-gray-600">
