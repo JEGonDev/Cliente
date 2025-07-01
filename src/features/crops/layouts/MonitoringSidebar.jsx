@@ -5,7 +5,8 @@ import { useMonitoring } from '../hooks/useMonitoring';
 import {
   BarChart2,
   Bell,
-  Clock
+  Clock,
+  Menu
 } from 'lucide-react';
 
 /**
@@ -16,6 +17,7 @@ import {
  */
 export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
   const [notifications, setNotifications] = useState({});
+  const [isOpen, setIsOpen] = useState(false); // Estado para el sidebar en móvil
 
   const {
     crops,
@@ -27,13 +29,13 @@ export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
     fetchUserAlerts
   } = useMonitoring();
 
-  // Cargar datos iniciales para mostrar notificaciones
+  // Cargar datos iniciales
   useEffect(() => {
     fetchUserCrops();
     fetchUserAlerts();
   }, [fetchUserCrops, fetchUserAlerts]);
 
-  // Calcular notificaciones y badges
+  // Calcular notificaciones
   useEffect(() => {
     const newNotifications = {
       cultivos: {
@@ -56,7 +58,6 @@ export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
     setNotifications(newNotifications);
   }, [crops, alerts, sensors]);
 
-  // Definición de las secciones de navegación con datos dinámicos
   const navItems = [
     {
       id: 'cultivos',
@@ -87,7 +88,6 @@ export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
     }
   ];
 
-  // Función para obtener clases CSS del elemento de navegación
   const getNavItemClasses = (item) => {
     const baseClasses = "flex items-center px-4 py-3 text-sm transition-colors duration-200 group";
 
@@ -102,14 +102,12 @@ export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
     return `${baseClasses} text-gray-700 hover:bg-gray-100`;
   };
 
-  // Función para renderizar badge
   const renderBadge = (item) => {
     if (!item.badge && !item.hasAlert) return null;
 
     if (item.hasAlert) {
       return (
-        <span className="ml-auto w-2 h-2 bg-red-500 rounded-full animate-pulse" title="Requiere atención">
-        </span>
+        <span className="ml-auto w-2 h-2 bg-red-500 rounded-full animate-pulse" title="Requiere atención"></span>
       );
     }
 
@@ -131,56 +129,84 @@ export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
   };
 
   return (
-    <aside className="w-64 bg-gray-50 border-r border-gray-200 overflow-auto flex flex-col">
-      {/* Header del sidebar */}
-      <div className="p-4 bg-white border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 pt-8">Monitoreo</h2>
-          {loading && (
-            <div className="w-4 h-4 border-2 border-gray-300 border-t-primary rounded-full animate-spin"></div>
+    <>
+<div className="flex items-center justify-between p-3 md:hidden">
+
+      {/* Botón para abrir sidebar en móvil */}
+      <button
+    className="bg-white rounded shadow p-2"
+        onClick={() => setIsOpen(true)}
+      >
+        <Menu size={20} />
+      </button>
+</div>
+
+      {/* Fondo oscuro cuando el sidebar está abierto en móvil */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-30 z-30 md:hidden"
+          onClick={() => setIsOpen(false)}
+        ></div>
+      )}
+
+      {/* Sidebar */}
+      <aside className={`
+        fixed top-0 left-0 h-full z-40 bg-gray-50 border-r border-gray-200 overflow-auto flex flex-col
+        transition-transform duration-300 ease-in-out
+        w-64
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:static md:translate-x-0 md:w-64
+      `}>
+        {/* Header del sidebar */}
+        <div className="p-4 bg-white border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900 pt-8">Monitoreo</h2>
+            {loading && (
+              <div className="w-4 h-4 border-2 border-gray-300 border-t-primary rounded-full animate-spin"></div>
+            )}
+          </div>
+
+          {selectedCrop && (
+            <div className="mt-2 text-xs text-gray-600">
+              <span className="font-medium">Cultivo activo:</span>
+              <div className="truncate text-primary">{selectedCrop.name}</div>
+            </div>
           )}
         </div>
 
-        {selectedCrop && (
-          <div className="mt-2 text-xs text-gray-600">
-            <span className="font-medium">Cultivo activo:</span>
-            <div className="truncate text-primary">{selectedCrop.name}</div>
+        {/* Navegación principal */}
+        <nav className="flex-1 py-4">
+          <ul className="space-y-1 px-2">
+            {navItems.map((item) => (
+              <li key={item.id}>
+                <Link
+                  to={item.path}
+                  className={getNavItemClasses(item)}
+                  title={item.description}
+                  onClick={() => setIsOpen(false)} // Cierra sidebar al navegar
+                >
+                  <span className={`mr-3 ${item.hasAlert ? 'text-red-500' : 'text-gray-500'}`}>
+                    {item.icon}
+                  </span>
+                  <span className="flex-1">{item.label}</span>
+                  {renderBadge(item)}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        {/* Información adicional en la parte inferior */}
+        <div className="p-4 bg-white border-t border-gray-200">
+          <div className="flex items-center text-xs">
+            <div className={`w-2 h-2 rounded-full mr-2 ${loading ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`}></div>
+            <span className="text-gray-600">
+              Sistema {loading ? 'sincronizando...' : 'conectado'}
+            </span>
           </div>
-        )}
-      </div>
-
-      {/* Navegación principal */}
-      <nav className="flex-1 py-4">
-        <ul className="space-y-1 px-2">
-          {navItems.map((item) => (
-            <li key={item.id}>
-              <Link
-                to={item.path}
-                className={getNavItemClasses(item)}
-                title={item.description}
-              >
-                <span className={`mr-3 ${item.hasAlert ? 'text-red-500' : 'text-gray-500'}`}>
-                  {item.icon}
-                </span>
-                <span className="flex-1">{item.label}</span>
-                {renderBadge(item)}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-
-      {/* Información adicional en la parte inferior */}
-      <div className="p-4 bg-white border-t border-gray-200">
-        {/* Indicador de conectividad */}
-        <div className="flex items-center text-xs">
-          <div className={`w-2 h-2 rounded-full mr-2 ${loading ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`}></div>
-          <span className="text-gray-600">
-            Sistema {loading ? 'sincronizando...' : 'conectado'}
-          </span>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 };
 

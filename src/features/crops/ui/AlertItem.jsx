@@ -112,7 +112,7 @@ export const AlertItem = ({
               </div>
             </div>
 
-            <div className="mt-4 text-sm flex justify-between items-center">
+            <div className="mt-4 text-sm flex-wrap flex justify-between items-center">
               <div>
                 <span className="font-medium text-gray-700">Valor:</span> {value}
               </div>

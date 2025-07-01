@@ -327,7 +327,7 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
         </div>
 
         {/* Encabezado con estado */}
-        <div className="flex justify-between items-start mb-4 pr-16">
+        <div className="flex flex-wrap justify-between items-start mb-4 pr-16">
           <div>
             <h3 className="text-xl font-bold text-gray-800 truncate">
               {crop.cropName || crop.name || 'Sin nombre'}
@@ -352,7 +352,7 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
         </div>
 
         {/* Datos de sensores en grid */}
-        <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
           <div className={`flex flex-col items-center p-3 rounded-lg ${sensorData.humidity > 0 ? 'bg-blue-50' : 'bg-gray-50'}`}>
             <Droplets className={`h-5 w-5 ${sensorData.humidity > 0 ? 'text-blue-500' : 'text-gray-400'} mb-1`} />
             <span className={`text-sm font-medium ${sensorData.humidity > 0 ? 'text-blue-700' : 'text-gray-500'}`}>
@@ -375,6 +375,7 @@ export const CropCard = ({ crop, onClick, onModalOpen, onModalClose }) => {
             <span className="text-xs text-gray-600">TDS</span>
           </div>
         </div>
+
 
         {/* Información de sensores y alertas */}
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">

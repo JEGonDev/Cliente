@@ -91,95 +91,96 @@ export const HomePage = () => {
         </motion.div>
       </motion.div>
 
-      {/* Contenedor para la segunda sección y el PhoneSimulator flotante */}
-      <div className="relative">
-        {/* Segunda sección */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}
-          id="nosotros"
-          className="w-full bg-primary text-white py-24 px-6 md:px-12 flex flex-col md:flex-row items-center justify-between border-b border-gray-200 font-inter relative overflow-hidden"
-        >
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-            className="md:w-1/2 pr-0 md:pr-6 space-y-6 text-left"
-          >
-            <h2 className="text-3xl font-bold leading-tight">
-              ¡Cultiva Conocimiento, Cosecha Comunidad!
-            </h2>
-            <p className="leading-relaxed text-base">
-              Germogli no es solo un sistema de cultivo hidropónico, es una comunidad de aprendizaje que está revolucionando la forma de cultivar y crecer plantas en casa. Comparte tus experiencias, aprende de otros y cultiva conocimiento.
-            </p>
-            <p className="leading-relaxed text-base">
-              La hidroponía facilita tener grandes cantidades de hojas de lechuga. Aquí podrás aprender, monitorear tus planos y compartir tus logros de forma sencilla y ordenada.
-            </p>
-          </motion.div>
-        </motion.div>
-
-        {/* PhoneSimulator flotante - Posicionado para que 80% esté en sección superior y 20% en servicios */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8 }}
-          className="absolute right-4 sm:right-6 md:right-8 lg:right-12 z-30"
-          style={{
-            bottom: 'calc(20% - 30px)', // 20% en la sección de servicios, ajustado para mejor posicionamiento
-            transform: 'translateY(20%)', // Ajuste para el posicionamiento perfecto del 80/20
-          }}
-        >
-          <PhoneSimulator />
-        </motion.div>
-      </div>
-
-      {/* Tercera sección - Servicios con padding-top aumentado para dar espacio al 20% del PhoneSimulator */}
+      {/* Segunda sección */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 1 }}
-        id="servicios"
-        className="py-20 px-6 pt-48 sm:pt-44 md:pt-40 lg:pt-36" // Aumentado padding-top progresivamente para diferentes pantallas
+        id="nosotros"
+        className="w-full bg-primary text-white py-24 px-6 md:px-12 flex flex-col md:flex-row items-center justify-between border-b border-gray-200 font-inter relative overflow-hidden"
       >
-        <h2 className="text-2xl font-bold text-center mb-14 font-poppins tracking-wide text-green-900">
-          EXPLORA TODO LO QUE GERMOGLI TIENE PARA TI
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {[{
-            title: "Educación",
-            img: educacion,
-            desc: "Aprende todo lo básico del cultivo hidropónico a través de nuestros cursos"
-          }, {
-            title: "Comunidad",
-            img: comunidad,
-            desc: "Comparte experiencias y conocimientos con otros agricultores urbanos"
-          }, {
-            title: "Monitoreo",
-            img: monitoreo,
-            desc: "Haz un seguimiento de tus cultivos con nuestra app móvil"
-          }].map((item, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: idx * 0.2 }}
-              className="relative flex flex-col items-center text-center p-4"
-            >
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -z-10 w-40 h-40 opacity-80">
-                <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                  <path fill="#043707" d="M34.7,-42.3C49.2,-29.1,68.3,-22.3,72.8,-10.8C77.3,0.7,67.2,16.8,56.5,30C45.7,43.1,34.4,53.2,20.8,58.8C7.2,64.5,-8.6,65.7,-20.3,59.7C-32,53.7,-39.6,40.5,-45.8,27.5C-52.1,14.6,-56.8,1.9,-59,-14.7C-61.2,-31.2,-60.8,-51.6,-50.5,-65.6C-40.3,-79.5,-20.1,-87.1,-5,-81.1C10.1,-75.1,20.1,-55.5,34.7,-42.3Z" transform="translate(100 100)" />
-                </svg>
-              </div>
-              <div className="mb-6 z-20">
-                <img src={item.img} alt={item.title} className="h-28 w-28 md:h-30 md:w-30" />
-              </div>
-              <h3 className="font-bold text-base md:text-lg mb-3 font-poppins">{item.title}</h3>
-              <p className="text-sm text-gray-600 font-inter">{item.desc}</p>
-            </motion.div>
-          ))}
-        </div>
+        <motion.div
+          initial={{ opacity: 0, x: -30 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+          className="md:w-1/2 pr-0 md:pr-6 space-y-6 text-left"
+        >
+          <h2 className="text-3xl font-bold leading-tight">
+            ¡Cultiva Conocimiento, Cosecha Comunidad!
+          </h2>
+          <p className="leading-relaxed text-base">
+            Germogli no es solo un sistema de cultivo hidropónico, es una comunidad de aprendizaje que está revolucionando la forma de cultivar y crecer plantas en casa. Comparte tus experiencias, aprende de otros y cultiva conocimiento.
+          </p>
+          <p className="leading-relaxed text-base">
+            La hidroponía facilita tener grandes cantidades de hojas de lechuga. Aquí podrás aprender, monitorear tus planos y compartir tus logros de forma sencilla y ordenada.
+          </p>
+        </motion.div>
       </motion.div>
+
+      {/* Contenedor para PhoneSimulator y tercera sección */}
+      <div className="relative">
+        {/* PhoneSimulator flotante - Posicionado entre sección verde y servicios */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8 }}
+          className="absolute z-30 right-2 sm:right-4 md:right-8 lg:right-12"
+          style={{
+            top: 'clamp(-330px, -28vw, -380px)' // ¡Sube un poco más y sigue siendo flexible!
+          }}
+        >
+          <div className="w-[180px] sm:w-[220px] md:w-[260px] lg:w-[300px] max-w-full">
+            <PhoneSimulator />
+          </div>
+        </motion.div>
+
+        {/* Tercera sección - Servicios con padding-top reducido */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1 }}
+          id="servicios"
+          className="py-20 px-6 pt-20" // Padding-top normal para no crear tanto espacio vacío
+        >
+          <h2 className="text-2xl font-bold text-center mb-14 font-poppins tracking-wide text-green-900">
+            EXPLORA TODO LO QUE GERMOGLI TIENE PARA TI
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {[{
+              title: "Educación",
+              img: educacion,
+              desc: "Aprende todo lo básico del cultivo hidropónico a través de nuestros cursos"
+            }, {
+              title: "Comunidad",
+              img: comunidad,
+              desc: "Comparte experiencias y conocimientos con otros agricultores urbanos"
+            }, {
+              title: "Monitoreo",
+              img: monitoreo,
+              desc: "Haz un seguimiento de tus cultivos con nuestra app móvil"
+            }].map((item, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: idx * 0.2 }}
+                className="relative flex flex-col items-center text-center p-4"
+              >
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -z-10 w-40 h-40 opacity-80">
+                  <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="#043707" d="M34.7,-42.3C49.2,-29.1,68.3,-22.3,72.8,-10.8C77.3,0.7,67.2,16.8,56.5,30C45.7,43.1,34.4,53.2,20.8,58.8C7.2,64.5,-8.6,65.7,-20.3,59.7C-32,53.7,-39.6,40.5,-45.8,27.5C-52.1,14.6,-56.8,1.9,-59,-14.7C-61.2,-31.2,-60.8,-51.6,-50.5,-65.6C-40.3,-79.5,-20.1,-87.1,-5,-81.1C10.1,-75.1,20.1,-55.5,34.7,-42.3Z" transform="translate(100 100)" />
+                  </svg>
+                </div>
+                <div className="mb-6 z-20">
+                  <img src={item.img} alt={item.title} className="h-28 w-28 md:h-30 md:w-30" />
+                </div>
+                <h3 className="font-bold text-base md:text-lg mb-3 font-poppins">{item.title}</h3>
+                <p className="text-sm text-gray-600 font-inter">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 30 }}
