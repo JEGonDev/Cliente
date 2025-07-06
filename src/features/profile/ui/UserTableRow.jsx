@@ -93,13 +93,13 @@ export const UserTableRow = ({ user, onEdit, onView, onDelete }) => {
           >
             <Eye size={16} />
           </button>
-          <button
+          {/* <button
             onClick={() => onDelete(user)}
             className="bg-red-600 text-white p-2 rounded-md hover:bg-red-700 transition"
             title="Eliminar usuario"
           >
             <Trash2 size={16} />
-          </button>
+          </button> */}
         </div>
       </td>
     </tr>

@@ -107,7 +107,7 @@ export const UserDetailsModal = ({
               <Edit size={16} className="mr-2" />
               Editar Usuario
             </button>
-            <button
+            {/* <button
               onClick={() => onToggleStatus(user)}
               className={`w-full flex items-center justify-center px-4 py-2 border rounded-md text-sm ${
                 user.isActive 
@@ -116,13 +116,13 @@ export const UserDetailsModal = ({
               }`}
             >
               {user.isActive ? 'Desactivar Usuario' : 'Activar Usuario'}
-            </button>
+            </button> */}
             <button
               onClick={() => onDelete(user)}
               className="w-full flex items-center justify-center px-4 py-2 border border-red-300 rounded-md text-sm text-red-700 hover:bg-red-50"
             >
               <Trash2 size={16} className="mr-2" />
-              Eliminar Usuario
+              Desactivar Usuario
             </button>
           </div>
         </div>
