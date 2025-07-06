@@ -1,138 +1,53 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 export const GroupCard = ({ group }) => {
   const navigate = useNavigate();
 
   return (
-    <div
-      className="
-        border rounded-md shadow-md p-4 flex flex-col justify-between h-full
-        transition duration-300 transform hover:-translate-y-1 hover:shadow-lg cursor-pointer
-      "
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -5 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      onClick={() => navigate(`/comunity/groups/${group.id}`)}
+      className={`
+        flex flex-col rounded-xl shadow-lg bg-white overflow-hidden
+        hover:shadow-2xl transition-all duration-300
+        border border-gray-100 cursor-pointer
+        w-full mx-auto
+      `}
     >
-      <div>
-        <div className="relative h-20 overflow-hidden rounded-t-xl">
-          {/* Capa de degradado que cubre todo el encabezado */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#23582a] to-[#3a8741]" />
+      {/* Cabecera con degradado y título */}
+      <div className="relative h-20 overflow-hidden rounded-t-xl">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#23582a] to-[#3a8741]" />
+        <h3 className="relative font-Poppins font-bold px-4 pt-3 text-white text-lg line-clamp-2">
+          {group.name}
+        </h3>
+      </div>
 
-          {/* Título del módulo con texto blanco y fuente personalizada */}
-          <h3 className="relative font-Poppins font-bold px-4 pt-3 text-white text-lg line-clamp-2">
-            {group.name}
-              
-          </h3>
-        </div>
-
-        
-        {/* 
-          line-clamp-3: muestra solo 3 líneas antes de truncar con "..." 
-          break-words: evita desbordes por palabras largas
-          overflow-hidden: oculta cualquier desborde 
-        */}
-        <p className="text-sm text-gray-600 mt-2 line-clamp-3 break-words overflow-hidden">
+      {/* Contenido principal */}
+      <div className="p-4 flex flex-col flex-grow">
+        <p className="text-sm text-gray-700 mb-3 line-clamp-3 break-words overflow-hidden leading-relaxed">
           {group.description}
         </p>
+
+        <div className="flex-grow" />
+
+        <div className="flex justify-end pt-3 border-t border-gray-100 mt-3">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/comunity/groups/${group.id}`);
+            }}
+            className="bg-gradient-to-r from-[#3a8741] to-[#23582a] hover:from-[#2e6e35] hover:to-[#1f4d24]
+                       text-white text-xs font-medium px-4 py-1.5 rounded-full transition-colors duration-200 shadow-sm"
+          >
+            Ver detalles
+          </button>
+        </div>
       </div>
-      <div className="flex justify-end mt-4">
-        <button
-          onClick={() => navigate(`/comunity/groups/${group.id}`)}
-          className="text-secondary underline text-sm"
-        >
-          Ver detalles
-        </button>
-      </div>
-    </div>
+    </motion.div>
   );
 };
-
-// import React from "react";
-// import { useNavigate } from "react-router-dom";
-
-// export const GroupCard = ({ group }) => {
-//   const navigate = useNavigate();
-
-//   return (
-//     <div className="border rounded-md shadow-md p-4 flex flex-col justify-between h-full">
-//       <div>
-//         <h3 className="text-lg font-semibold break-words">{group.name}</h3>
-//         {/*
-//           line-clamp-3: muestra solo 3 líneas antes de truncar con "..."
-//           break-words: evita desbordes por palabras largas
-//           overflow-hidden: oculta cualquier desborde
-//         */}
-//         <p className="text-sm text-gray-600 mt-2 line-clamp-3 break-words overflow-hidden">
-//           {group.description}
-//         </p>
-//       </div>
-//       <div className="flex justify-end mt-4">
-//         <button
-//           onClick={() => navigate(`/comunity/groups/${group.id}`)}
-//           className="text-secondary underline text-sm"
-//         >
-//           Ver detalles
-//         </button>
-//       </div>
-//     </div>
-//   );
-// };
-
-// import React from "react";
-// import { useNavigate } from "react-router-dom";
-
-// export const GroupCard = ({ group }) => {
-//   const navigate = useNavigate();
-
-//   return (
-//     <div className="border rounded-md shadow-md p-4 flex flex-col justify-between h-full">
-//       <div>
-//         <h3 className="text-lg font-semibold">{group.name}</h3>
-//         <p className="text-sm text-gray-600 mt-2">{group.description}</p>
-//       </div>
-//       <div className="flex justify-end mt-4">
-//         <button
-//           onClick={() => navigate(`/comunity/groups/${group.id}`)}
-//           className="text-secondary underline text-sm"
-//         >
-//           Ver detalles
-//         </button>
-//       </div>
-//     </div>
-//   );
-// };
-
-// import React from "react";
-// import { FaUsers } from "react-icons/fa";
-// import { useNavigate } from "react-router-dom";
-
-// export const GroupCard = ({ group, onJoin }) => {
-//   const navigate = useNavigate();
-
-//   return (
-//     <div className="border rounded-md shadow-md p-4 flex flex-col justify-between h-full">
-//       <div>
-//         <h3 className="text-lg font-semibold">{group.name}</h3>
-//         <p className="text-sm text-gray-600 mt-2">{group.description}</p>
-//       </div>
-//       <div className="flex items-center justify-between mt-4">
-//         <div className="flex items-center gap-2 text-gray-500">
-//           <FaUsers />
-//           <span className="text-sm">{group.members_count ?? 0}</span>
-//         </div>
-//         <div className="flex gap-2">
-//           <button
-//             onClick={() => onJoin(group)}
-//             className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm"
-//           >
-//             Unirse
-//           </button>
-//           <button
-//             onClick={() => navigate(`/comunity/groups/${group.group_id}`)}
-//             className="text-blue-500 underline text-sm"
-//           >
-//             Ver detalles
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };

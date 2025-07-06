@@ -97,9 +97,16 @@ export const GroupListView = () => {
     <div className="p-2 md:p-4 w-full max-w-full">
       {/* HEADER */}
       <div className="flex flex-col items-center justify-center lg:flex-row lg:items-start lg:justify-between mb-6 gap-2 lg:gap-0">
-        <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight font-poppins mb-2 lg:mb-0 text-center lg:text-left bg-gradient-to-r from-[#23582a] via-[#059669] to-[#10b981] bg-clip-text text-transparent">
-          Grupos de Comunidad
-        </h1>
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight font-poppins mb-4 bg-gradient-to-r from-[#23582a] via-[#059669] to-[#10b981] bg-clip-text text-transparent">
+            Grupos de Comunidad
+          </h1>
+          <p className="text-gray-600 text-base sm:text-lg font-inter mb-4">
+            Únete, comparte y crece junto a tu comunidad.
+
+          </p>
+        </div>
+
         <div className="flex justify-center gap-2 flex-wrap mt-2 lg:mt-0">
           <PlantGrow className="w-12 h-12 lg:w-16 lg:h-16" />
           <PlantGrow className="w-12 h-12 lg:w-16 lg:h-16" />
@@ -121,10 +128,9 @@ export const GroupListView = () => {
           <button
             onClick={toggleUserGroupsFilter}
             className={`flex items-center px-2 py-2 md:px-3 rounded-md border text-sm md:text-base
-              ${
-                showOnlyUserGroups
-                  ? "bg-primary text-white border-primary"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+              ${showOnlyUserGroups
+                ? "bg-primary text-white border-primary"
+                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
               }`}
             title={
               showOnlyUserGroups
@@ -220,8 +226,8 @@ export const GroupListView = () => {
                 {searchQuery
                   ? `No se encontraron grupos para "${searchQuery}"`
                   : showOnlyUserGroups
-                  ? "Aún no has creado o te has unido a grupos."
-                  : "No hay grupos disponibles."}
+                    ? "Aún no has creado o te has unido a grupos."
+                    : "No hay grupos disponibles."}
               </p>
               {canManageSystem() && (
                 <button

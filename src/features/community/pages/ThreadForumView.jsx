@@ -139,10 +139,15 @@ export const ThreadForumView = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-2 mb-6 gap-2">
         <div className="flex items-center gap-4">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight font-poppins mb-4 bg-gradient-to-r from-[#23582a] via-[#059669] to-[#10b981] bg-clip-text text-transparent">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight font-poppins mb-4 bg-gradient-to-r from-[#23582a] via-[#059669] to-[#10b981] bg-clip-text text-transparent">
             Foro de Comunidad
           </h1>
-
+          <p className="text-gray-600 text-base sm:text-lg font-inter mb-4">
+            Debate, pregunta y comparte conocimientos.
+          </p>
+          </div>
+          
           {/* Indicador de conexión WebSocket */}
           <div
             className={`flex items-center gap-1 text-sm ${
