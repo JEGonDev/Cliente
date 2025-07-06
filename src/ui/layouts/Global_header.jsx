@@ -1,49 +1,48 @@
-import imgLogo from "../../assets/header/logo2.png"; // Importa la imagen del logo
-import { MobileMenuButton } from "../components/MobileMenuButton"; // Botón para abrir el menú móvil
-import { MobileNavigation } from "../components/MobileNavigation"; // Componente para la navegación en dispositivos móviles
-import { useState } from "react"; // Hook de React para manejar el estado
-import { Header_logo } from "../components/Header_logo"; // Componente para mostrar el logo en el header
-import { DesktopNavigation } from "../components/DesktopNavigation"; // Componente para la navegación en dispositivos de escritorio
+import imgLogo from "../../assets/header/logo2.png"; 
+import { MobileMenuButton } from "../components/MobileMenuButton"; 
+import { MobileNavigation } from "../components/MobileNavigation"; 
+import { useState } from "react"; 
+import { Header_logo } from "../components/Header_logo"; 
+import { DesktopNavigation } from "../components/DesktopNavigation";
 
 export const Global_header = () => {
-  // Estado para controlar si el menú móvil está abierto o cerrado
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Propiedades del logo que se pasan al componente Header_logo
   const logoProps = {
-    filePath: imgLogo, // Ruta de la imagen del logo
-    alt: "Logo_header" // Texto alternativo para accesibilidad
+    filePath: imgLogo,
+    alt: "Logo_header"
   };
 
   return (
     <header className="bg-primary">
-      {/* Barra de navegación principal */}
       <nav
-        aria-label="Global" // Etiqueta ARIA para describir la navegación global
-        className="mx-auto flex max-w-7xl items-center justify-between p-2 lg:px-8"
+        aria-label="Global"
+        className="mx-auto flex max-w-8xl items-center justify-between p-2 sm:p-4 lg:pl-2 lg:pr-2 lg:py-6" 
       >
-        {/* Sección del logo */}
-        <div className="flex lg:flex-1">
+        {/* Logo pegado al borde izquierdo */}
+        <div className="flex flex-shrink-0 items-center lg:-ml-2">
           <Header_logo filePath={imgLogo} alt="Logo_header" />
         </div>
 
-        {/* Botón para abrir el menú móvil (visible solo en pantallas pequeñas) */}
+        {/* Botón menú móvil */}
         <div className="flex lg:hidden">
           <MobileMenuButton
-            isOpen={false} // Estado inicial del botón
-            onClick={() => setMobileMenuOpen(true)} // Abre el menú móvil al hacer clic
+            isOpen={false}
+            onClick={() => setMobileMenuOpen(true)}
           />
         </div>
 
-        {/* Navegación para pantallas grandes (escritorio) */}
-        <DesktopNavigation />
+        {/* Navegación escritorio pegada al borde derecho */}
+        <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:-mr-2">
+          <DesktopNavigation />
+        </div>
       </nav>
 
-      {/* Navegación para dispositivos móviles */}
-      <MobileNavigation 
-        isOpen={mobileMenuOpen} // Controla si el menú móvil está abierto
-        onClose={() => setMobileMenuOpen(false)} // Cierra el menú móvil
-        logoProps={logoProps} // Pasa las propiedades del logo al menú móvil
+      {/* Navegación móvil */}
+      <MobileNavigation
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        logoProps={logoProps}
       />
     </header>
   );

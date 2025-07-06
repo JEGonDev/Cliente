@@ -8,7 +8,7 @@ export const CommunityLayout = () => {
   const location = useLocation();
 
   return (
-    <div className=" flex md:flex-row min-h-screen bg-gradient-to-tr from-gray-50 to-gray-100">
+    <div className=" flex md:flex-row min-h-screen bg-white from-gray-50 to-gray-100">
       {/* Aside barra lateral (escritorio) */}
       <aside
         className="hidden md:flex flex-col items-center py-8 px-2 gap-4

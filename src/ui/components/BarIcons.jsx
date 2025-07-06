@@ -8,6 +8,12 @@ export const BarIcons = ({ title, activeSection, setActiveSection }) => {
 
   const items = [
     {
+      key: "home",
+      label: "Inicio",
+      icon: HomeIcon,
+      route: "/comunity",
+    },
+    {
       key: "forum",
       label: "Foro",
       icon: MessageCircleMore,
@@ -18,13 +24,7 @@ export const BarIcons = ({ title, activeSection, setActiveSection }) => {
       label: "Grupos",
       icon: Users,
       route: "/comunity/groups",
-    },
-    {
-      key: "home",
-      label: "Inicio",
-      icon: HomeIcon,
-      route: "/comunity",
-    },
+    }
   ];
 
   return (
