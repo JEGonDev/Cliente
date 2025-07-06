@@ -121,7 +121,7 @@ export const GroupListView = () => {
           <SearchBar
             onSearch={setSearchQuery}
             className="w-full"
-            placeholder="Buscar grupo por nombre, descripción o tipo..."
+            placeholder="Buscar grupo por nombre o descripción..."
           />
         </div>
         <div className="flex gap-2 justify-end">

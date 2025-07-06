@@ -181,7 +181,7 @@ export const PostListView = () => {
           <SearchBar
             onSearch={handleSearch}
             className="w-full"
-            placeholder="Buscar por contenido, autor o tipo..."
+            placeholder="Buscar por contenido o tipo..."
           />
         </div>
         <div className="flex gap-2 justify-end flex-wrap">
