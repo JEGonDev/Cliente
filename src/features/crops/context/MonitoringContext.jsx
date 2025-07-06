@@ -270,7 +270,6 @@ export const MonitoringProvider = ({ children }) => {
     processBatchReadings,
 
     // Métodos para alertas
-    alerts,
     fetchUserAlerts,
     fetchAlertsByCropId,
     fetchAlertById,
