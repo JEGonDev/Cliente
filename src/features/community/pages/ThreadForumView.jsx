@@ -5,6 +5,7 @@ import React, {
   useRef,
   useEffect,
 } from "react";
+import { useAuthRoles } from "../../authentication/hooks/useAuthRoles";
 import { FaPlus, FaSearch } from "react-icons/fa";
 import { MessageSquare, Hash, Wifi, WifiOff, User } from "lucide-react";
 import { ThreadFormModal } from "../ui/ThreadFormModal";
@@ -17,6 +18,7 @@ import { websocketService } from "../../../common/services/webSocketService";
 
 export const ThreadForumView = () => {
   const { user } = useContext(AuthContext);
+  const { isAdmin } = useAuthRoles();
   const reloadThreadsRef = useRef(null);
 
   const [search, setSearch] = useState("");
@@ -174,7 +176,7 @@ export const ThreadForumView = () => {
               <FaSearch />
             </button>
           </div>
-          {user && (
+          {user && isAdmin && (
             <button
               onClick={handleToggleUserThreads}
               className={`flex items-center gap-2 px-3 py-2 rounded-full border font-medium text-sm transition-colors
