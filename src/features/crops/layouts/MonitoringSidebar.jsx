@@ -130,16 +130,13 @@ export const MonitoringSidebar = ({ activeSection = 'monitoreo' }) => {
 
   return (
     <>
-<div className="flex items-center justify-between p-3 md:hidden">
+<button
+  className="bg-white rounded shadow w-10 h-10 flex items-center justify-center"
+  onClick={() => setIsOpen(true)}
+>
+  <Menu size={20} />
+</button>
 
-      {/* Botón para abrir sidebar en móvil */}
-      <button
-    className="bg-white rounded shadow p-2"
-        onClick={() => setIsOpen(true)}
-      >
-        <Menu size={20} />
-      </button>
-</div>
 
       {/* Fondo oscuro cuando el sidebar está abierto en móvil */}
       {isOpen && (
